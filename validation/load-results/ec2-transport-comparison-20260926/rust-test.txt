@@ -1,0 +1,31 @@
+   Compiling grainlift-rust-hello-world v0.1.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift-rust-hello-world)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.40s
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/grainlift_rust_hello_world-fd90aafad267f815)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/grainlift_rust_hello_world-51aac66e5ea95e15)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/worker.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/worker-0146e97e02584b4e)
+
+running 5 tests
+test allocation_budget_and_dimension_boundaries ... ok
+test supplied_options_are_not_silently_ignored ... ok
+test early_drop_does_not_generate_remaining_batches ... ok
+test independent_statements_recover_after_structured_failure ... ok
+test row_boundaries_schema_and_every_value_match_python ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests grainlift_rust_hello_world
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

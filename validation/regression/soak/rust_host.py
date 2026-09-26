@@ -38,6 +38,11 @@ def serve(control: Pipe, token: str, clients: int, rows: int, batch_rows: int, p
         raise ValueError("Rust synthetic comparison requires one client")
     binary = Path(os.environ["GRAINLIFT_SYNTHETIC_RUST_SERVER"]).resolve(strict=True)
     report = Path(os.environ["GRAINLIFT_DIAGNOSTIC_OUTPUT"])
+    tls_args = (
+        ["--tls-dir", os.environ["GRAINLIFT_MATCHED_TLS_DIR"]]
+        if os.environ.get("GRAINLIFT_MATCHED_TRANSPORT") == "mtls"
+        else []
+    )
     with subprocess.Popen(
         [
             str(binary),
@@ -49,6 +54,7 @@ def serve(control: Pipe, token: str, clients: int, rows: int, batch_rows: int, p
             str(payload),
             "--report",
             str(report),
+            *tls_args,
         ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,

@@ -1,0 +1,102 @@
+{
+  "rust-http": {
+    "mean_ms": 9.37379538766254,
+    "qps": 104.34343296163301,
+    "p99_ms_range": [
+      10.653188233079911,
+      10.976020790730468
+    ],
+    "stage_ms": {
+      "client.execute_success": 1.7122269676510768,
+      "client.fetch_reader": 0.01808560833402832,
+      "client.pull_batch": 5.437786572590994,
+      "client.verify_batch": 0.8446033994587197,
+      "client.pull_end": 0.5969892319553765,
+      "client.close_reader": 0.6250309993326179
+    },
+    "server_cpu_ms_per_success": 4.0,
+    "peak_rss_mib_range": [
+      13.41796875,
+      14.85546875
+    ],
+    "retained_rss_mib_range": [
+      3.44921875,
+      4.875
+    ]
+  },
+  "python-http": {
+    "mean_ms": 17.603172129329323,
+    "qps": 55.02411486113917,
+    "p99_ms_range": [
+      20.75063924536023,
+      21.167747194192
+    ],
+    "stage_ms": {
+      "client.execute_success": 3.490519593696566,
+      "client.fetch_reader": 0.01862557099593687,
+      "client.pull_batch": 10.60350545666491,
+      "client.verify_batch": 0.8458026126754703,
+      "client.pull_end": 1.1556125646820874,
+      "client.close_reader": 1.344963798369766
+    },
+    "server_cpu_ms_per_success": 12.643333333333333,
+    "peak_rss_mib_range": [
+      116.07421875,
+      116.23828125
+    ],
+    "retained_rss_mib_range": [
+      1.83203125,
+      1.88671875
+    ]
+  },
+  "rust-mtls": {
+    "mean_ms": 49.99471159967894,
+    "qps": 19.96775519709952,
+    "p99_ms_range": [
+      50.30904149376919,
+      50.812141908706835
+    ],
+    "stage_ms": {
+      "client.execute_success": 46.714851613323845,
+      "client.fetch_reader": 0.01976206700419425,
+      "client.pull_batch": 2.0278916722963913,
+      "client.verify_batch": 0.7450380265533264,
+      "client.pull_end": 0.11144022299170804,
+      "client.close_reader": 0.2588739909636691
+    },
+    "server_cpu_ms_per_success": 5.886666666666667,
+    "peak_rss_mib_range": [
+      9.7109375,
+      9.890625
+    ],
+    "retained_rss_mib_range": [
+      0.62109375,
+      0.65234375
+    ]
+  },
+  "python-mtls": {
+    "mean_ms": 18.721657626655844,
+    "qps": 52.37127025158724,
+    "p99_ms_range": [
+      21.3794346661339,
+      21.3794346661339
+    ],
+    "stage_ms": {
+      "client.execute_success": 9.59865537662093,
+      "client.fetch_reader": 0.01868431068699768,
+      "client.pull_batch": 5.9651719413074415,
+      "client.verify_batch": 0.7464253256875963,
+      "client.pull_end": 0.22966842935905638,
+      "client.close_reader": 2.0490288996564536
+    },
+    "server_cpu_ms_per_success": 14.070000000000002,
+    "peak_rss_mib_range": [
+      105.9140625,
+      106.015625
+    ],
+    "retained_rss_mib_range": [
+      -0.8984375,
+      -0.87890625
+    ]
+  }
+}

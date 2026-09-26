@@ -118,6 +118,8 @@ def main() -> None:
     parser.add_argument("--host", choices=("rust", "python-direct", "python-isolated"), required=True)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--rust-server", type=Path)
+    parser.add_argument("--transport", choices=("http", "mtls"), default="http")
+    parser.add_argument("--tls-dir", type=Path)
     parser.add_argument("--queries", type=int, default=1000)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--rows", type=int, default=4096)
@@ -125,6 +127,8 @@ def main() -> None:
     parser.add_argument("--payload-bytes", type=int, default=64)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if args.transport == "mtls" and (args.tls_dir is None or args.host == "python-isolated"):
+        parser.error("mTLS needs --tls-dir and an in-process backend")
     if not 1 <= args.queries <= 10000 or not 0 <= args.warmup <= 100:
         parser.error("queries must be 1..10000 and warmup 0..100")
     LoadWorker(args.rows, args.batch_rows, args.payload_bytes)
@@ -133,15 +137,21 @@ def main() -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     host_output = output.with_suffix(".host.json")
     os.environ["GRAINLIFT_DIAGNOSTIC_OUTPUT"] = str(host_output)
+    os.environ["GRAINLIFT_MATCHED_TRANSPORT"] = args.transport
+    if args.tls_dir is not None:
+        os.environ["GRAINLIFT_MATCHED_TLS_DIR"] = str(args.tls_dir.resolve(strict=True))
     os.environ["GRAINLIFT_DIAGNOSTIC_HTTP"] = "rust" if args.host == "rust" else "granian"
     os.environ["GRAINLIFT_DIAGNOSTIC_WORKER"] = "isolated" if args.host == "python-isolated" else "direct"
     os.environ["GRAINLIFT_DIAGNOSTIC_TIMINGS"] = "off"
+    if args.host == "python-direct" and args.transport == "mtls":
+        os.environ["GRAINLIFT_DIAGNOSTIC_HTTP"] = "python-mtls"
     if args.host == "rust":
         if args.rust_server is None:
             parser.error("--rust-server is required for the Rust host")
         os.environ["GRAINLIFT_SYNTHETIC_RUST_SERVER"] = str(args.rust_server.resolve(strict=True))
     report: dict[str, Any] = {}
     with _host(args.rows, args.batch_rows, args.payload_bytes) as (ready, token, _):
+        authentication = client_auth(args.transport, token, args.tls_dir)
         process = psutil.Process(ready["sample_pid"])
         baseline = _sample(process, 0)
         histogram = Histogram()
@@ -155,7 +165,7 @@ def main() -> None:
                 db_kwargs={
                     "grainlift.uri": ready["endpoint"],
                     "grainlift.target": "default",
-                    "grainlift.auth.bearer_token": token,
+                    **authentication,
                 },
                 autocommit=True,
             ) as connection,
@@ -213,6 +223,7 @@ def main() -> None:
         report = {
             "recorded_utc": datetime.now(UTC).isoformat(),
             "host": args.host,
+            "transport": args.transport,
             "clients": 1,
             "queries": histogram.count,
             "warmup_queries": args.warmup,
@@ -265,11 +276,34 @@ def main() -> None:
         and not failures
         and recovery["descendants"] == 0
         and recovery["server_descriptors"] <= baseline["server_descriptors"] + 4
+        and (
+            args.host != "python-direct"
+            or args.transport != "mtls"
+            or (
+                host_report["active_connections"] == 0
+                and host_report["connections_opened"] == host_report["connections_closed"]
+                and host_report["remaining_sessions"] == 0
+            )
+        )
     )
     output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("host", "passed", "queries_per_second", "latency_ms")}))
     if not report["passed"]:
         raise SystemExit(1)
+
+
+def client_auth(transport: str, token: str, directory: Path | None) -> dict[str, str]:
+    """Build equivalent authenticated client settings for the chosen transport."""
+    if transport == "http":
+        return {"grainlift.auth.bearer_token": token}
+    if directory is None:
+        raise ValueError("Certificate directory required")
+    return {
+        "grainlift.tls.ca": str(directory.resolve() / "ca.pem"),
+        "grainlift.tls.cert": str(directory.resolve() / "client.pem"),
+        "grainlift.tls.key": str(directory.resolve() / "client-key.pem"),
+        "grainlift.tls.server_name": "localhost",
+    }
 
 
 if __name__ == "__main__":

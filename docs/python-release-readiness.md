@@ -200,12 +200,19 @@ context-preserving adapter is tested in the diagnostic harness. Granian is not
 yet the SDK default; deployment, cancellation, slow-client and active-shutdown
 qualification remain necessary before adopting that host in production.
 The [matched synthetic comparison](../validation/load-results/ec2-matched-synthetic-20260926/README.md)
-now compares identical results through one native client: Python/Granian's
+now compares identical results through one native HTTP client: Python/Granian's
 mean latency is 1.89 times Rust's with both backends in-process, and 2.36 times
 with Python process isolation. Repeated request handling accounts for most of
 the difference; the measurements do not establish the GIL as its cause.
 This replaces comparisons of different Rust database and Python synthetic
 workloads for assessing this particular single-client gap.
+The [HTTP/TCP follow-up](../validation/load-results/ec2-transport-comparison-20260926/README.md)
+uses an experimental authenticated Python TCP host, not a supported SDK listener.
+TCP lowers batch-consumption cost but does not improve total Python latency
+with the current per-result connection creation. Rust TCP has an independently
+traced 50 ms accept-loop delay. Connection reuse and event-driven acceptance
+remain unimplemented performance opportunities; the results do not isolate
+TLS encryption cost or qualify production TCP hosting in the Python SDK.
 Multi-minute loopback runs are useful regression evidence;
 they are not hours-long stability tests or capacity planning for a real database
 worker. Separate GC diagnostics found roughly stable tracked-object counts and

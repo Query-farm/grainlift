@@ -1,0 +1,3 @@
+Resolved 3 packages in 79ms
+Installed 1 package in 25ms
+ + cryptography==50.0.1

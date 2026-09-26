@@ -15,7 +15,52 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# HTTP latency counterfactuals
+# Transport and HTTP latency diagnostics
+
+## Matched HTTP and TCP comparison
+
+The experimental `soak.tcp_host` serves the unchanged Python SDK protocol over
+VGI's authenticated TCP transport. Rust uses the sibling example's `--tls-dir`
+mode. Both are loopback-only, require verified client certificates, and permit
+only the test identity `spiffe://benchmark.test/client`. The normal SDK remains
+HTTP-only; this harness is not a production TCP hosting API.
+
+Install `requirements-granian.txt` and `requirements-mtls.txt` into the remote
+regression environment and build the Rust example in release mode. On EC2:
+
+```console
+bash validation/diagnostics/make_test_tls.sh /private/new-test-certificates
+bash validation/diagnostics/run_transports.sh /absolute/grainlift /absolute/new-evidence /absolute/unchanged-driver.so /absolute/grainlift-rust-hello-world /private/new-test-certificates
+```
+
+The script rotates three repetitions of each of the four combinations, then
+runs four one-batch controls. It retains the matched harness's one client,
+ten warmups, 1,000 measured queries, 100 expected errors, exact result checking
+and post-load recovery per case. All backends are in-process. No compilers,
+profilers or other measured cases may overlap. TCP uses mTLS; HTTP uses bearer
+authentication without TLS. Each TCP result opens a separate stream connection,
+so per-query TLS handshakes and connection acceptance are included. This is
+a comparison of complete deployed paths, not an isolated HTTP framing cost.
+
+The Python diagnostic bounds concurrent connections at eight, individual Arrow
+reads at 2 MiB before reading, total connection input at 64 MiB, TLS handshakes
+at five seconds, and synthetic batches at the existing worker budget. The total
+input budget limits connection lifetime; it is not a generic per-message framing
+validator. Service request and handle quotas remain enabled. Its dedicated
+process suppresses all logging to avoid exposing VGI arguments/errors.
+VGI 0.47.1 has no explicit TCP listener shutdown API: the diagnostic closes
+the service, checks accepted RPC connections have drained within five seconds,
+and exits its owning process, which closes the listener. Failure falls back
+to the harness's bounded process termination. This is not active-client
+graceful-shutdown qualification. Rust retains the upstream listener's existing
+limits and shutdown implementation; see the example README for those bounds.
+
+The certificate directory is private (umask 077), contains one-day disposable
+keys, and must remain outside committed evidence. Integration tests in
+`tests/test_tcp_matched.py` require `GRAINLIFT_SYNTHETIC_RUST_SERVER`,
+`GRAINLIFT_MATCHED_DRIVER`, and `GRAINLIFT_MATCHED_TLS_DIR`. They verify missing
+client certificates, unauthorized identities, incorrect server names, malformed
+IPC/disconnect recovery, partial result cleanup, structured errors and shutdown.
 
 ## Matched Rust/Python synthetic worker
 

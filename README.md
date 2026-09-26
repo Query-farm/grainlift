@@ -435,10 +435,14 @@ evaluates an alternative WSGI host with the same native driver and workload.
 It includes a bounded response adapter for Granian's eager header capture;
 the SDK's default host remains unchanged.
 The [matched synthetic comparison](validation/load-results/ec2-matched-synthetic-20260926/README.md)
-uses one client and identical Arrow results: Rust averages 9.39 ms/query,
+uses one HTTP client and identical Arrow results: Rust averages 9.39 ms/query,
 Python/Granian 17.72 ms, and Python/Granian with process isolation 22.19 ms.
 The Rust example reuses the server library and is available in
 [grainlift-rust-hello-world](https://github.com/Query-farm/grainlift-rust-hello-world).
+The [HTTP/TCP comparison](validation/load-results/ec2-transport-comparison-20260926/README.md)
+then measured Python at 17.60 ms over HTTP and 18.72 ms over TCP/mTLS. TCP
+fetches batches faster, but per-result connection setup offsets that saving.
+Rust TCP exposes a separate, traced 50 ms accept-loop polling delay.
 
 ## Repository layout
 

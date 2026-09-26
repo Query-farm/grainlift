@@ -1,0 +1,9 @@
+All checks passed!
+5 files already formatted
+Success: no issues found in 5 source files
+Skipping files that match this pattern: \.git|\.tox
+soak/tcp_host.py
+soak/matched.py
+soak/rust_host.py
+tests/test_tcp_matched.py
+🎉 No violations 🎉

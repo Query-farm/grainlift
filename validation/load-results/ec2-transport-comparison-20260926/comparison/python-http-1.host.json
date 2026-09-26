@@ -1,0 +1,16 @@
+{
+  "http_host": "granian",
+  "granian_version": "2.8.3",
+  "worker": "direct",
+  "host_timings": false,
+  "primed_wsgi_response": true,
+  "workers": 1,
+  "blocking_threads": 8,
+  "runtime_threads": 1,
+  "backpressure": 20,
+  "host_elapsed_seconds": 30.517092999998567,
+  "host_cpu_seconds": 12.857056098,
+  "supervisor_rss_bytes_at_shutdown": 107900928,
+  "remaining_children": 0,
+  "diagnostic_source_sha256": "cf1dbcf2cb5dc40d31a9f53b220a15d98d8a269d1da7d4897217e4d3d7b034d3"
+}

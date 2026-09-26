@@ -1,0 +1,2051 @@
+{
+  "recorded_utc": "2026-09-26T21:20:15.288986+00:00",
+  "host": "rust",
+  "transport": "mtls",
+  "clients": 1,
+  "queries": 1000,
+  "warmup_queries": 10,
+  "rows_per_query": 4096,
+  "batch_rows": 512,
+  "payload_bytes": 64,
+  "expected_errors": 100,
+  "unexpected_errors": 0,
+  "elapsed_seconds": 50.081461343997944,
+  "queries_per_second": 19.967468463654285,
+  "query_seconds": 49.99608711998735,
+  "expected_error_seconds": 0.07910162599364412,
+  "latency_ms": {
+    "mean": 49.99608711998735,
+    "p50": 50.30904149376919,
+    "p95": 50.30904149376919,
+    "p99": 50.30904149376919,
+    "maximum": 50.569398001243826
+  },
+  "client_stages": {
+    "client.execute_success": {
+      "count": 1000.0,
+      "wall_seconds": 46.73886653601221,
+      "thread_cpu_seconds": 0.2903468350000035,
+      "max_wall_seconds": 0.0470043679997616
+    },
+    "client.fetch_reader": {
+      "count": 1000.0,
+      "wall_seconds": 0.02022622797812801,
+      "thread_cpu_seconds": 0.020436476000001536,
+      "max_wall_seconds": 7.646300218766555e-05
+    },
+    "client.pull_batch": {
+      "count": 8000.0,
+      "wall_seconds": 2.008326598952408,
+      "thread_cpu_seconds": 0.19556588900001437,
+      "max_wall_seconds": 0.0005589969987340737
+    },
+    "client.verify_batch": {
+      "count": 8000.0,
+      "wall_seconds": 0.7413124539743876,
+      "thread_cpu_seconds": 0.7449094350000061,
+      "max_wall_seconds": 0.00013426900113699958
+    },
+    "client.pull_end": {
+      "count": 1000.0,
+      "wall_seconds": 0.11003513998002745,
+      "thread_cpu_seconds": 0.020117472000003522,
+      "max_wall_seconds": 0.00015558499944745563
+    },
+    "client.close_reader": {
+      "count": 1000.0,
+      "wall_seconds": 0.2580843239556998,
+      "thread_cpu_seconds": 0.18317609199999796,
+      "max_wall_seconds": 0.0003313060005893931
+    }
+  },
+  "serving_cpu_seconds": 5.86,
+  "backend_child_cpu_seconds": 0,
+  "baseline": {
+    "seconds": 0,
+    "server_rss_bytes": 7114752,
+    "descendant_rss_bytes": 0,
+    "descendants": 0,
+    "server_descriptors": 10,
+    "descendant_descriptors": 0,
+    "unreadable_descendants": 0,
+    "client_rss_bytes": 101298176
+  },
+  "warmed": {
+    "seconds": 0,
+    "server_rss_bytes": 9523200,
+    "descendant_rss_bytes": 0,
+    "descendants": 0,
+    "server_descriptors": 13,
+    "descendant_descriptors": 0,
+    "unreadable_descendants": 0,
+    "client_rss_bytes": 108974080
+  },
+  "samples": [
+    {
+      "seconds": 0.25,
+      "server_rss_bytes": 9555968,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109264896
+    },
+    {
+      "seconds": 0.509,
+      "server_rss_bytes": 9588736,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109268992
+    },
+    {
+      "seconds": 0.767,
+      "server_rss_bytes": 9613312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109268992
+    },
+    {
+      "seconds": 1.025,
+      "server_rss_bytes": 9646080,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109268992
+    },
+    {
+      "seconds": 1.284,
+      "server_rss_bytes": 9670656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109273088
+    },
+    {
+      "seconds": 1.543,
+      "server_rss_bytes": 9699328,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109273088
+    },
+    {
+      "seconds": 1.801,
+      "server_rss_bytes": 9723904,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109277184
+    },
+    {
+      "seconds": 2.059,
+      "server_rss_bytes": 9764864,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109281280
+    },
+    {
+      "seconds": 2.317,
+      "server_rss_bytes": 9785344,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109281280
+    },
+    {
+      "seconds": 2.576,
+      "server_rss_bytes": 9805824,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109281280
+    },
+    {
+      "seconds": 2.834,
+      "server_rss_bytes": 9838592,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 3.094,
+      "server_rss_bytes": 9879552,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 3.353,
+      "server_rss_bytes": 9895936,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 3.611,
+      "server_rss_bytes": 9920512,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 3.87,
+      "server_rss_bytes": 9949184,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 4.128,
+      "server_rss_bytes": 9969664,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 4.386,
+      "server_rss_bytes": 9990144,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 4.645,
+      "server_rss_bytes": 10014720,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 4.904,
+      "server_rss_bytes": 10035200,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 5.162,
+      "server_rss_bytes": 10051584,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 5.42,
+      "server_rss_bytes": 10084352,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 5.678,
+      "server_rss_bytes": 10104832,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109285376
+    },
+    {
+      "seconds": 5.936,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109301760
+    },
+    {
+      "seconds": 6.195,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109301760
+    },
+    {
+      "seconds": 6.453,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109301760
+    },
+    {
+      "seconds": 6.711,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109301760
+    },
+    {
+      "seconds": 6.969,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 7.228,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 7.486,
+      "server_rss_bytes": 10125312,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 7.745,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 8.005,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 8.263,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 8.521,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 8.78,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 9.038,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 9.296,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 9.555,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 9.814,
+      "server_rss_bytes": 10129408,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 10.072,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 10.331,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 10.589,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 10.848,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 11.107,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 11.365,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 11.623,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 11.882,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 12.14,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109305856
+    },
+    {
+      "seconds": 12.398,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 12.658,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 12.916,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 13.174,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 13.432,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 13.69,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 13.948,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 14.207,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 14.466,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 14.724,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 14.983,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 15.241,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 15.5,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 15.758,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 16.018,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 16.276,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 16.534,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 16.793,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 17.051,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 17.309,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 17.569,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 17.828,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 18.087,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 18.345,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 18.604,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 18.862,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 19.122,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 19.38,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 19.639,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 19.897,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 20.155,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 20.414,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 20.673,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 20.932,
+      "server_rss_bytes": 10133504,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 21.19,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 21.448,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 21.706,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 21.964,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 22.224,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 22.483,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 22.741,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 22.999,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 23.257,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 23.515,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 23.773,
+      "server_rss_bytes": 10141696,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 24.033,
+      "server_rss_bytes": 10141696,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 24.291,
+      "server_rss_bytes": 10137600,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 24.549,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 24.807,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 25.065,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 25.324,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 25.584,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 25.842,
+      "server_rss_bytes": 10166272,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 26.101,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 26.36,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 26.619,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 26.877,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 27.137,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 27.396,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 27.654,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 27.913,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 28.171,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 28.43,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 28.689,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 28.947,
+      "server_rss_bytes": 10174464,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 29.206,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 29.464,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 29.722,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 29.98,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 30.239,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 30.498,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 30.757,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 31.015,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 31.273,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 31.531,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 31.79,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 32.05,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 32.308,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109322240
+    },
+    {
+      "seconds": 32.566,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 32.825,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 33.083,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 33.342,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 33.602,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 33.861,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 34.119,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 34.377,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 34.635,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 34.893,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 35.152,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 35.411,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 35.669,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 35.927,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 36.185,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 36.444,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 36.703,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 36.962,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 37.22,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 37.479,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 37.737,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 37.996,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109338624
+    },
+    {
+      "seconds": 38.255,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 38.514,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 38.772,
+      "server_rss_bytes": 10178560,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 39.03,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 39.288,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 39.547,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 39.805,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 40.064,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 40.323,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 40.581,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 40.84,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 41.098,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 41.357,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 41.616,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 41.874,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 42.133,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 42.391,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 42.649,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 42.908,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 43.167,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 43.425,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 43.684,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 43.942,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 44.2,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 44.458,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 44.716,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109355008
+    },
+    {
+      "seconds": 44.976,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 45.234,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 45.492,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 45.75,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 46.009,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 46.268,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 46.527,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 46.785,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 47.043,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 47.302,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 47.561,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 47.819,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 48.079,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 48.338,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 48.596,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 48.855,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 49.114,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 16,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 49.372,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 49.631,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 49.889,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109363200
+    },
+    {
+      "seconds": 50.081,
+      "server_rss_bytes": 10182656,
+      "descendant_rss_bytes": 0,
+      "descendants": 0,
+      "server_descriptors": 13,
+      "descendant_descriptors": 0,
+      "unreadable_descendants": 0,
+      "client_rss_bytes": 109383680
+    }
+  ],
+  "recovery": {
+    "seconds": 62.09,
+    "server_rss_bytes": 10190848,
+    "descendant_rss_bytes": 0,
+    "descendants": 0,
+    "server_descriptors": 10,
+    "descendant_descriptors": 0,
+    "unreadable_descendants": 0,
+    "client_rss_bytes": 109383680
+  },
+  "peak_serving_rss_bytes": 10182656,
+  "peak_backend_rss_bytes": 0,
+  "sampling_failures": [],
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "3.14.7",
+  "driver_sha256": "f441c8545ec3c43c13d25f026984c4f67c684e5f62a311b833f8cc90fbedbc2b",
+  "harness_sha256": "239399cd1e31a694c3eb4c23df187136fa328fc91498cc39b951f933b16ab7a6",
+  "packages": {
+    "grainlift-python": "0.1.0",
+    "vgi-rpc": "0.47.1",
+    "granian": "2.8.3",
+    "pyarrow": "25.0.1",
+    "adbc-driver-manager": "1.12.0"
+  },
+  "passed": true
+}

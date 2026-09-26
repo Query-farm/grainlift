@@ -172,6 +172,11 @@ class _ThreadedServer(ThreadingMixIn, WSGIServer):
 
 
 def _serve(control: Pipe, token: str, clients: int, rows: int, batch_rows: int, payload: int) -> None:
+    if os.environ.get("GRAINLIFT_DIAGNOSTIC_HTTP") == "python-mtls":
+        from .tcp_host import serve as serve_tcp
+
+        serve_tcp(control, token, clients, rows, batch_rows, payload)
+        return
     if os.environ.get("GRAINLIFT_DIAGNOSTIC_HTTP") == "rust":
         from .rust_host import serve as serve_rust
 
@@ -350,7 +355,7 @@ def main() -> None:
         raise SystemExit("Set GRAINLIFT_DIAGNOSTIC_OUTPUT")
     choices = {
         "GRAINLIFT_DIAGNOSTIC_WORKER": {"direct", "isolated"},
-        "GRAINLIFT_DIAGNOSTIC_HTTP": {"waitress", "wsgiref", "granian", "rust"},
+        "GRAINLIFT_DIAGNOSTIC_HTTP": {"waitress", "wsgiref", "granian", "rust", "python-mtls"},
         "GRAINLIFT_DIAGNOSTIC_TIMINGS": {"on", "off"},
         "GRAINLIFT_DIAGNOSTIC_READINESS": {"observe", "skip_locked"},
         "GRAINLIFT_DIAGNOSTIC_PROFILE_CLOCK": {"wall", "thread_cpu"},

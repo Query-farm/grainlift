@@ -23,6 +23,19 @@ original provenance and are not rewritten as current measurements.
 
 ## Protocol 0.4 EC2 rerun — 2026-09-26
 
+The subsequent [four-way transport comparison](load-results/ec2-transport-comparison-20260926/README.md)
+ran the same synthetic worker with one client and in-process backends over
+HTTP and authenticated TCP/mTLS. Three repetitions averaged 9.37 ms/query
+for Rust HTTP, 17.60 ms for Python HTTP/Granian, 49.99 ms for Rust TCP/mTLS
+and 18.72 ms for Python TCP/mTLS. All sixteen cases, including one-batch
+controls, passed 16,000 measured queries and 1,600 expected errors with zero
+unexpected errors and full descriptor/worker recovery. TCP batch consumption
+is faster, but result startup offsets it in Python. A separate syscall trace
+confirms a 50 ms accept-loop sleep dominates Rust TCP. The unchanged driver
+opens a new TCP/TLS connection per result. These measurements do not isolate
+TLS cost or measure the benefits of connection reuse. The report records
+stage timings, resource limits, RSS, environment and raw evidence.
+
 The later [matched synthetic comparison](load-results/ec2-matched-synthetic-20260926/README.md)
 holds the workload, native client binary, client count and verification constant.
 Across three 1,000-query repetitions with one client, Rust averages 9.39 ms/query

@@ -1,0 +1,2 @@
+   Compiling grainlift-rust-hello-world v0.1.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift-rust-hello-world)
+    Finished `release` profile [optimized] target(s) in 4.29s
