@@ -17,6 +17,42 @@ limitations under the License.
 
 # HTTP latency counterfactuals
 
+## Matched Rust/Python synthetic worker
+
+Build the sibling [Rust example](https://github.com/Query-farm/grainlift-rust-hello-world)
+in release mode on EC2, using its locked dependencies. With the existing
+regression environment, Python SDK and pinned Granian installed, run:
+
+```console
+bash validation/diagnostics/run_matched.sh /absolute/grainlift /absolute/evidence /absolute/unchanged-driver.so /absolute/grainlift-rust-hello-world
+```
+
+The script runs eleven cases sequentially: three rotated repetitions each of
+Rust, Python/Granian in-process and Python/Granian with an isolated backend,
+then one-batch Rust/Python controls. Each uses one connection, ten warmups,
+1,000 measured queries and 100 intentional structured errors. All cases return
+4,096 rows and 64-byte payloads, checking every value, exact Arrow schema and
+batch boundaries. The native driver binary is identical. Host timers and
+profilers are disabled. Startup/connection opening is outside measured query
+time. Recovery and server shutdown follow every case.
+
+Run the optional real C-ABI integration test using these environment variables:
+
+```console
+cd validation/regression
+GRAINLIFT_SYNTHETIC_RUST_SERVER=/absolute/grainlift-rust-hello-world \
+GRAINLIFT_MATCHED_DRIVER=/absolute/unchanged-driver.so \
+.venv/bin/pytest -q tests/test_matched.py
+```
+
+The test checks authentication rejection, structured errors, partial result
+close, a subsequent full query and balanced shutdown resources. Without those
+paths only the native integration case skips. See the
+[recorded results](../load-results/ec2-matched-synthetic-20260926/README.md)
+for methodology, resource accounting and limitations.
+
+## Native HTTP client reuse experiments
+
 These patches are experimental inputs to the EC2 latency investigation. They
 are not installed in the normal native driver or Python SDK. Apply them only
 to an isolated checkout. Both patches are relative to the unchanged native

@@ -49,7 +49,7 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
         # Preserve original JUnit, profiler and diagnostic-log payloads byte-for-byte.
-        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/ec2-python-latency-20260926/.*\.txt)$
+        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/(ec2-python-latency-20260926|ec2-matched-synthetic-20260926)/.*\.txt)$
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: trailing-whitespace

@@ -23,6 +23,21 @@ original provenance and are not rewritten as current measurements.
 
 ## Protocol 0.4 EC2 rerun — 2026-09-26
 
+The later [matched synthetic comparison](load-results/ec2-matched-synthetic-20260926/README.md)
+holds the workload, native client binary, client count and verification constant.
+Across three 1,000-query repetitions with one client, Rust averages 9.39 ms/query
+(104.11 queries/s), Python/Granian in-process 17.72 ms (54.66/s), and
+Python/Granian with an isolated backend 22.19 ms (43.59/s). Python's mean
+latency is respectively 1.89 and 2.36 times Rust's. All eleven cases, including
+two one-batch controls, passed: 11,000 measured queries, 1,100 expected errors,
+zero unexpected errors, full value/schema/batch verification and descriptor/
+worker recovery. Peak serving RSS in the repeated cases was 14.45–14.86 MiB
+for Rust, 108.08–108.14 MiB for Python direct, and 107.12–107.30 MiB plus
+91.79–91.92 MiB in the isolated worker. Supervisors are excluded. These are
+short loopback service comparisons, not pure language or scaling benchmarks;
+neither host's long-term memory plateau is established. See the report for
+stage timings, fresh worker-only controls, build provenance and checks.
+
 The [full report and raw evidence](load-results/ec2-v04-20260926/README.md)
 record all runs, failed attempts, profiler limitations and source/binary hashes.
 Host: 48 ARM Neoverse-N1 cores, 92.6 GiB RAM, Amazon Linux 2023, kernel 6.18.41.

@@ -1,0 +1,26 @@
+{
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "3.14.7",
+  "logical_cpus": 48,
+  "memory_bytes": 99422273536,
+  "rust_toolchain": "1.97.1",
+  "rust_example_revision": "e064dcb",
+  "grainlift_server_revision": "1a1044f0c3152c1a8350b9c010101a8ad380ef91",
+  "python_sdk_revision": "9ca8f3621320bd19c93afe243fbf3f523872c763",
+  "remote_checkout_head": "1bce17804eb19a945f90d6e5a8cb5c5be4723cee",
+  "source_note": "Remote Grainlift checkout contains copied current harness files. File hashes identify measured sources. Native client was not rebuilt for these cases.",
+  "sha256": {
+    "grainlift-rust-hello-world/Cargo.lock": "3ef97a9b2bf57c6da683ddc22c46d5eddd148f8faa7df555daa8c2aeb35a27d5",
+    "grainlift-rust-hello-world/src/lib.rs": "dd44800b86c8ada853228878d15ace1ba0bce9f4561bfe505c46a48a691c291c",
+    "grainlift-rust-hello-world/src/main.rs": "c5d70031b3555eabd332bc221941caca41c1f44ae5afdba4fce92c884a1175fe",
+    "grainlift-rust-hello-world/tests/worker.rs": "ea09f2542052f8592a68aedb92ad3ee0cd9781a66c641251549c4b41a82c4a1a",
+    "grainlift/target/release/grainlift-rust-hello-world": "192faa9084be7bb90a1f662dbf1d5b26499dfdcdadc7d35ed05009f1f3161bcf",
+    "grainlift/target/release/libadbc_driver_grainlift.so": "f441c8545ec3c43c13d25f026984c4f67c684e5f62a311b833f8cc90fbedbc2b",
+    "grainlift/validation/regression/soak/matched.py": "01eb73c04f07c0eee4c120fb6e015f7af5909197f9a5f62adc655ad9b373d19c",
+    "grainlift/validation/regression/soak/diagnose.py": "81a2e11797eabc85002d01c6e459db0f5d439f1fa5075c8b2b7132a321024703",
+    "grainlift/validation/regression/soak/rust_host.py": "c2f2a5c5d59be5e1f1b59cf79db8318ec7b73a74ec6726afbbba024b4f401d05",
+    "grainlift/validation/regression/soak/worker.py": "6daf7662f485368bc4ef37d02bb61e8fd9037401fc74035febbd9132d1d5af89",
+    "grainlift/validation/regression/soak/granian_host.py": "cf1dbcf2cb5dc40d31a9f53b220a15d98d8a269d1da7d4897217e4d3d7b034d3",
+    "grainlift/validation/regression/soak/wsgi_compat.py": "2b87dbd7d2c90b9b0b3cd06e6814555e0901ae80698f75f4f3d99fd25a416845"
+  }
+}

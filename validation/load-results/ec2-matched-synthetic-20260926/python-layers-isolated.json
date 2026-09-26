@@ -1,0 +1,14 @@
+{
+  "python": "3.14.7",
+  "isolated": true,
+  "queries": 500,
+  "warmup_queries": 10,
+  "rows_per_query": 4096,
+  "batch_rows": 512,
+  "payload_bytes": 64,
+  "mean_ms": 5.226908886063029,
+  "p50_ms": 5.255574535395261,
+  "p99_ms": 5.414854000392275,
+  "remaining_children": 1,
+  "resource_tracker_children": 1
+}

@@ -199,6 +199,13 @@ Granian captures headers before the SDK's lazy response is iterated. A bounded,
 context-preserving adapter is tested in the diagnostic harness. Granian is not
 yet the SDK default; deployment, cancellation, slow-client and active-shutdown
 qualification remain necessary before adopting that host in production.
+The [matched synthetic comparison](../validation/load-results/ec2-matched-synthetic-20260926/README.md)
+now compares identical results through one native client: Python/Granian's
+mean latency is 1.89 times Rust's with both backends in-process, and 2.36 times
+with Python process isolation. Repeated request handling accounts for most of
+the difference; the measurements do not establish the GIL as its cause.
+This replaces comparisons of different Rust database and Python synthetic
+workloads for assessing this particular single-client gap.
 Multi-minute loopback runs are useful regression evidence;
 they are not hours-long stability tests or capacity planning for a real database
 worker. Separate GC diagnostics found roughly stable tracked-object counts and
