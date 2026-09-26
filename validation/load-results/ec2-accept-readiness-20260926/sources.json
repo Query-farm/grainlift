@@ -1,0 +1,13 @@
+{
+  "upstream_final_commit": "7c028e41f851f9e3e79ff1ad4f464804b4ac4f1b",
+  "upstream_runtime_commit": "64ccc582b2f0824411ce108f10b9dce86a3a6094",
+  "baseline_tcp_commit": "eda9115dcdb5477dc0d91bd03d3f7c4619afbcf6",
+  "runtime_tcp_sha256": "2169018c164875b14b00dcaedba2cadc1a995d400b4140b9763ff5663bfc57f5",
+  "baseline_tcp_sha256": "d8697369cfea07ecde275770a5be472bf568475860142f70556cc7eb85a7be06",
+  "example_commit": "b47f27cfb883bd88ef038624e7a3c7e67e571b7a",
+  "harness_sha256": {
+    "validation/regression/soak/cold_connections.py": "8dd2d32afb25364b21b8df3c000065994f7e5570e23be455c87ac379087b8009",
+    "validation/regression/soak/matched.py": "239399cd1e31a694c3eb4c23df187136fa328fc91498cc39b951f933b16ab7a6",
+    "validation/diagnostics/run_accept.sh": "8b289c9a92611cb0e00a1c4dc2238f780d2af449adecc66aca4d5ed7eae69490"
+  }
+}

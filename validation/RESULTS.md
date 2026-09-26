@@ -23,6 +23,14 @@ original provenance and are not rewritten as current measurements.
 
 ## Protocol 0.4 EC2 rerun — 2026-09-26
 
+The [upstream accept-readiness comparison](load-results/ec2-accept-readiness-20260926/README.md)
+uses matched Rust server builds and an unchanged native driver with verified
+mTLS. Three repetitions reduced fresh connection/query/close latency from
+93.33 to 21.58 ms, while warm queries remained 3.75 versus 3.76 ms. All twelve
+cases passed 3,600 measured queries, 120 warmups and 360 expected errors with
+zero unexpected errors and exact descriptor recovery. The fix is in upstream
+source; Grainlift still requires a published VGI dependency update to adopt it.
+
 The latest [supported Python hosting qualification](load-results/ec2-supported-hosting-20260926/README.md)
 uses the public SDK TCP/mTLS and Granian APIs. Each ran for 180 seconds with one
 native ADBC client, 4,096 rows in eight batches, connection turnover, expected
@@ -45,7 +53,8 @@ recovery. Python TCP reports only two sockets per case, both closed at shutdown.
 Seventy Rust tests and thirty Python tests passed, including new pool capacity,
 stale socket, partial-result, failure and authenticated reuse regressions.
 The report records stage times, tails, CPU, RSS, source hashes and limitations;
-the Python TCP host was diagnostic in that run and the upstream accept sleep remains.
+the Python TCP host was diagnostic in that run and the upstream accept sleep
+was still present in its server binary.
 
 The subsequent [four-way transport comparison](load-results/ec2-transport-comparison-20260926/README.md)
 ran the same synthetic worker with one client and in-process backends over

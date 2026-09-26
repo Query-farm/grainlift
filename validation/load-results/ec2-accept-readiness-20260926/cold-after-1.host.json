@@ -1,0 +1,28 @@
+{
+  "after_shutdown": {
+    "bind_uploads": 0,
+    "opening_sessions": 0,
+    "results": 0,
+    "sessions": 0,
+    "statements": 0
+  },
+  "batch_rows": 512,
+  "before_shutdown": {
+    "bind_uploads": 0,
+    "opening_sessions": 0,
+    "results": 0,
+    "sessions": 0,
+    "statements": 0
+  },
+  "connections_closed": 120,
+  "connections_opened": 120,
+  "generated_batches": 880,
+  "http_host": "rust",
+  "intentional_errors": 10,
+  "payload_bytes": 64,
+  "queries": 110,
+  "rows": 4096,
+  "runtime_threads": 1,
+  "transport": "mtls",
+  "worker": "direct"
+}

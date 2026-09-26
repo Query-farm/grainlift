@@ -17,13 +17,36 @@ limitations under the License.
 
 # Transport and HTTP latency diagnostics
 
+## TCP accept readiness
+
+`run_accept.sh` compares two release builds of the Rust synthetic worker using
+one unchanged native driver and the same verified mTLS configuration. Build
+both with the same toolchain, source and dependency versions, varying only the
+VGI TCP accept implementation. A Cargo command-line `patch.crates-io` override
+can select the reviewed upstream source for this experiment; do not commit
+path replacements into the application manifests.
+
+```console
+bash validation/diagnostics/run_accept.sh /absolute/grainlift /absolute/new-evidence /absolute/driver.so /absolute/before /absolute/after /private/test-certificates
+```
+
+Three alternating repetitions measure 100 fresh ADBC connections each and
+500 warm queries each, with ten warmups per case. Each successful query verifies
+4,096 rows in eight batches with 64-byte payloads. The cold harness measures
+connect, query and close separately; its total includes all three. Every tenth
+measured success also exercises a separate expected-error connection, outside
+the successful latency measurements. Warm cases preserve the existing matched
+harness. Both check cleanup and resource recovery. Run cases sequentially,
+without overlapping compilers, tests or profilers.
+
 ## Matched HTTP and TCP comparison
 
 The experimental `soak.tcp_host` serves the unchanged Python SDK protocol over
 VGI's authenticated TCP transport. Rust uses the sibling example's `--tls-dir`
 mode. Both are loopback-only, require verified client certificates, and permit
-only the test identity `spiffe://benchmark.test/client`. The normal SDK remains
-HTTP-only; this harness is not a production TCP hosting API.
+only the test identity `spiffe://benchmark.test/client`. This older diagnostic
+host is separate from the SDK's supported TCP/mTLS hosting API; see the
+[supported-host qualification](../load-results/ec2-supported-hosting-20260926/README.md).
 
 Install `requirements-granian.txt` and `requirements-mtls.txt` into the remote
 regression environment and build the Rust example in release mode. On EC2:

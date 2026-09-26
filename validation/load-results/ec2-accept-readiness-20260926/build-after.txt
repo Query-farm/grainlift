@@ -1,0 +1,80 @@
+   Compiling mio v1.2.3
+   Compiling zstd-sys v2.1.0+zstd.1.5.7
+   Compiling aws-lc-sys v0.45.0
+   Compiling arrow-select v59.3.0
+   Compiling netlink-packet-route v0.31.0
+   Compiling hmac v0.12.1
+   Compiling sha2 v0.10.9
+   Compiling iroh v1.1.0
+   Compiling bincode v1.3.3
+   Compiling vgi-rpc-macros v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-macros)
+   Compiling tokio v1.53.1
+   Compiling serde_bytes v0.11.19
+   Compiling seize v0.5.1
+   Compiling cmov v0.5.4
+   Compiling papaya v0.2.5
+   Compiling prost-derive v0.14.4
+   Compiling ctutils v0.4.2
+   Compiling hickory-resolver v0.26.3
+   Compiling rand v0.9.5
+   Compiling adbc_core v0.25.0 (https://github.com/apache/arrow-adbc.git?rev=616acfdfcea9b66956fdb3d11437b6cf24edbc39#616acfdf)
+   Compiling arrow-ord v59.3.0
+   Compiling arrow-ipc v59.3.0
+   Compiling hyper v1.11.1
+   Compiling tower v0.5.3
+   Compiling hyper-util v0.1.20
+   Compiling tokio-util v0.7.19
+   Compiling tokio-rustls v0.26.5
+   Compiling tower-http v0.6.11
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling n0-future v0.3.2
+   Compiling tokio-stream v0.1.19
+   Compiling netlink-sys v0.8.8
+   Compiling netlink-proto v0.12.2
+   Compiling noq v1.3.0
+   Compiling n0-watcher v1.0.0
+   Compiling reqwest v0.12.28
+   Compiling n0-dns-resolver v0.1.0
+   Compiling iroh-dns v1.3.0
+   Compiling tokio-websockets v0.13.3
+   Compiling axum v0.7.9
+   Compiling arrow-cast v59.3.0
+   Compiling netwatch v0.19.3
+   Compiling iroh-relay v1.2.0
+   Compiling backon v1.6.0
+   Compiling futures-executor v0.3.34
+   Compiling serde_spanned v1.1.1
+   Compiling opentelemetry_sdk v0.32.1
+   Compiling prost v0.14.4
+   Compiling matchers v0.2.0
+   Compiling sharded-slab v0.1.7
+   Compiling tracing-log v0.2.0
+   Compiling thread_local v1.1.10
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling tracing-subscriber v0.3.23
+   Compiling opentelemetry-proto v0.32.0
+   Compiling opentelemetry-http v0.32.0
+   Compiling adbc_ffi v0.25.0 (https://github.com/apache/arrow-adbc.git?rev=616acfdfcea9b66956fdb3d11437b6cf24edbc39#616acfdf)
+   Compiling regex v1.13.1
+   Compiling clap_derive v4.6.7
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling libloading v0.8.9
+   Compiling toml v0.9.12+spec-1.1.0
+   Compiling adbc_driver_manager v0.25.0 (https://github.com/apache/arrow-adbc.git?rev=616acfdfcea9b66956fdb3d11437b6cf24edbc39#616acfdf)
+   Compiling clap v4.6.7
+   Compiling opentelemetry-otlp v0.32.0
+   Compiling tracing-opentelemetry v0.33.0
+   Compiling tempfile v3.27.0
+   Compiling zstd-safe v7.3.0
+   Compiling zstd v0.13.3
+   Compiling vgi-iroh-transport v0.27.1
+   Compiling aws-lc-rs v1.18.1
+   Compiling jsonwebtoken v10.4.0
+   Compiling vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc)
+   Compiling vgi-rpc-client v0.27.1
+   Compiling grainlift-protocol v0.4.0 (https://github.com/Query-farm/grainlift.git?rev=1a1044f0c3152c1a8350b9c010101a8ad380ef91#1a1044f0)
+   Compiling vgi-rpc-iroh v0.27.1
+   Compiling grainlift-server v0.4.0 (https://github.com/Query-farm/grainlift.git?rev=1a1044f0c3152c1a8350b9c010101a8ad380ef91#1a1044f0)
+   Compiling grainlift-rust-hello-world v0.1.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/example)
+    Finished `release` profile [optimized] target(s) in 1m 47s

@@ -1,0 +1,15 @@
+{
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "cpu_count": 48,
+  "memory_bytes": 99422273536,
+  "python": "3.14.7",
+  "benchmark_rust": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "workspace_test_rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "sha256": {
+    "accept-investigation/after-example.lock": "208b7b56f3a2b8006106ff6997d6b00f04ee025fb695bbce98e9d151365edcb7",
+    "accept-investigation/before-example.lock": "208b7b56f3a2b8006106ff6997d6b00f04ee025fb695bbce98e9d151365edcb7",
+    "accept-investigation/bin/before": "b18f45ac8928e00086fcb9f429e881f420cefe7c38eeb8768d8c1eb85a7cffca",
+    "accept-investigation/bin/after": "de6ae6090ec40f35b41bce544217e4bce20ec94f9ead32c8ce1bd748bffafbd3",
+    "grainlift/target/release/libadbc_driver_grainlift.so": "cf16e484e65c07350144272acd21c79fd38d4a10282d6436090121ae9d2f9cad"
+  }
+}

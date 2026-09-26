@@ -1,0 +1,12 @@
+   Compiling vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.28s
+     Running tests/tcp_serve.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/tcp_serve-e4ebb722f3bd071b)
+
+running 4 tests
+test tcp_worker_authenticates_canonical_forwarded_iroh_identity ... ok
+test tcp_shutdown_without_a_connection_preserves_startup_grace ... ok
+test tcp_shutdown_interrupts_a_stalled_connection ... ok
+test tcp_worker_serves_then_idle_exits ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+

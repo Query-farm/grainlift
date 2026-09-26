@@ -1,0 +1,54 @@
+{
+  "cold_before": {
+    "repetitions": 3,
+    "queries": 300,
+    "expected_errors": 30,
+    "mean_ms": 93.33137622680321,
+    "p99_ms_range": [
+      101.96895181546932,
+      102.98865133362392
+    ],
+    "peak_rss_mib": 11.9765625,
+    "passed": true,
+    "exact_descriptor_recovery": true
+  },
+  "cold_after": {
+    "repetitions": 3,
+    "queries": 300,
+    "expected_errors": 30,
+    "mean_ms": 21.58399352352717,
+    "p99_ms_range": [
+      21.80918140292322,
+      22.027283216952426
+    ],
+    "peak_rss_mib": 11.796875,
+    "passed": true,
+    "exact_descriptor_recovery": true
+  },
+  "warm_before": {
+    "repetitions": 3,
+    "queries": 1500,
+    "expected_errors": 150,
+    "mean_ms": 3.748650773971652,
+    "p99_ms_range": [
+      4.222112041367534,
+      4.264343161781212
+    ],
+    "peak_rss_mib": 10.83203125,
+    "passed": true,
+    "exact_descriptor_recovery": true
+  },
+  "warm_after": {
+    "repetitions": 3,
+    "queries": 1500,
+    "expected_errors": 150,
+    "mean_ms": 3.7583251987574235,
+    "p99_ms_range": [
+      4.222112041367534,
+      4.264343161781212
+    ],
+    "peak_rss_mib": 10.9296875,
+    "passed": true,
+    "exact_descriptor_recovery": true
+  }
+}

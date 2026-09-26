@@ -1,0 +1,1557 @@
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling portable-atomic v1.15.0
+   Compiling critical-section v1.2.0
+   Compiling zeroize_derive v1.5.0
+   Compiling rand_core v0.10.1
+   Compiling futures-io v0.3.32
+   Compiling futures-sink v0.3.32
+   Compiling slab v0.4.12
+   Compiling futures-channel v0.3.32
+   Compiling futures-macro v0.3.32
+   Compiling typenum v1.20.0
+   Compiling cfg_aliases v0.2.2
+   Compiling equivalent v1.0.2
+   Compiling subtle v2.6.1
+   Compiling getrandom v0.4.2
+   Compiling allocator-api2 v0.2.21
+   Compiling foldhash v0.2.0
+   Compiling zeroize v1.9.0
+   Compiling hashbrown v0.17.1
+   Compiling rustls v0.23.45
+   Compiling rustls-pki-types v1.14.1
+   Compiling jobserver v0.1.34
+   Compiling try-lock v0.2.5
+   Compiling want v0.3.1
+   Compiling cc v1.2.62
+   Compiling generic-array v0.14.7
+   Compiling futures-util v0.3.32
+   Compiling sync_wrapper v1.0.2
+   Compiling webpki-roots v1.0.7
+   Compiling indexmap v2.14.0
+   Compiling dunce v1.0.5
+   Compiling fs_extra v1.3.0
+   Compiling regex-automata v0.4.14
+   Compiling hex v0.4.3
+   Compiling inout v0.1.4
+   Compiling getrandom v0.2.17
+   Compiling parking_lot_core v0.9.12
+   Compiling errno v0.3.14
+   Compiling parking_lot v0.12.5
+   Compiling socket2 v0.6.3
+   Compiling signal-hook-registry v1.4.8
+   Compiling mio v1.2.0
+   Compiling tokio v1.52.3
+   Compiling rand_core v0.6.4
+   Compiling crypto-common v0.1.7
+   Compiling uuid v1.23.1
+   Compiling cpufeatures v0.2.17
+   Compiling getrandom v0.3.4
+   Compiling universal-hash v0.5.1
+   Compiling ring v0.17.14
+   Compiling cipher v0.4.4
+   Compiling aead v0.5.2
+   Compiling serde_json v1.0.149
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+   Compiling url v2.5.8
+   Compiling ipnet v2.12.0
+   Compiling once_cell v1.21.4
+   Compiling tracing-core v0.1.36
+   Compiling rand_core v0.9.5
+   Compiling cmake v0.1.58
+   Compiling tracing v0.1.44
+   Compiling rand_chacha v0.9.0
+   Compiling ahash v0.8.12
+   Compiling aws-lc-sys v0.45.0
+   Compiling debugid v0.8.0
+   Compiling rand v0.9.4
+   Compiling object v0.37.3
+   Compiling arrow-array v59.0.0
+   Compiling gimli v0.32.3
+   Compiling sentry-types v0.48.2
+   Compiling tokio-util v0.7.19
+   Compiling rustls-webpki v0.103.15
+   Compiling h2 v0.4.19
+   Compiling tower v0.5.3
+   Compiling sentry-core v0.48.2
+   Compiling tower-http v0.6.10
+   Compiling arrow-select v59.0.0
+   Compiling addr2line v0.25.1
+   Compiling block-buffer v0.10.4
+   Compiling sentry-contexts v0.48.2
+   Compiling rustc-demangle v0.1.27
+   Compiling aws-lc-rs v1.18.1
+   Compiling backtrace v0.3.76
+   Compiling digest v0.10.7
+   Compiling regex v1.12.3
+   Compiling serde_urlencoded v0.7.1
+   Compiling hyper v1.9.0
+   Compiling uname v0.1.1
+   Compiling hostname v0.4.2
+   Compiling sentry v0.48.2
+   Compiling untrusted v0.7.1
+   Compiling axum-core v0.4.5
+   Compiling tokio-rustls v0.26.4
+   Compiling hyper-util v0.1.20
+   Compiling arrow-ord v59.0.0
+   Compiling sentry-backtrace v0.48.2
+   Compiling chacha20 v0.9.1
+   Compiling poly1305 v0.8.0
+   Compiling rand_chacha v0.3.1
+   Compiling serde_path_to_error v0.1.20
+   Compiling hyper-rustls v0.27.9
+   Compiling signature v2.2.0
+   Compiling axum v0.7.9
+   Compiling reqwest v0.12.28
+   Compiling arrow-cast v59.0.0
+   Compiling rand v0.8.6
+   Compiling chacha20poly1305 v0.10.1
+   Compiling arrow-ipc v59.0.0
+   Compiling sha2 v0.10.9
+   Compiling hmac v0.12.1
+   Compiling bincode v1.3.3
+   Compiling urlencoding v2.1.3
+   Compiling chacha20 v0.10.2
+   Compiling parking v2.2.1
+   Compiling unicode-segmentation v1.13.3
+   Compiling rand v0.10.2
+   Compiling unicode-xid v0.2.6
+   Compiling syn v3.0.4
+   Compiling convert_case v0.10.0
+   Compiling derive_more-impl v2.1.1
+   Compiling hybrid-array v0.4.14
+   Compiling base64ct v1.8.3
+   Compiling crossbeam-utils v0.8.22
+   Compiling heck v0.5.0
+   Compiling pem-rfc7468 v1.0.0
+   Compiling spez v0.1.2
+   Compiling n0-error-macros v1.0.0
+   Compiling const-oid v0.10.2
+   Compiling tinyvec_macros v0.1.1
+   Compiling tinyvec v1.11.0
+   Compiling der v0.8.1
+   Compiling n0-error v1.0.0
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling n0-future v0.3.2
+   Compiling pin-project-internal v1.1.13
+   Compiling cordyceps v0.3.5
+   Compiling derive_more v2.1.1
+   Compiling spin v0.10.1
+   Compiling winnow v1.0.2
+   Compiling diatomic-waker v0.2.3
+   Compiling paste v1.0.15
+   Compiling futures-buffered v0.2.13
+   Compiling digest v0.11.3
+   Compiling spki v0.8.0
+   Compiling pin-project v1.1.13
+   Compiling futures-lite v2.6.1
+   Compiling event-listener v5.4.2
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling curve25519-dalek v5.0.0
+   Compiling noq-udp v1.2.0
+   Compiling base16ct v1.0.0
+   Compiling either v1.18.0
+   Compiling crossbeam-epoch v0.9.20
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling prefix-trie v0.8.4
+   Compiling serdect v0.4.3
+   Compiling toml_edit v0.25.13+spec-1.1.0
+   Compiling event-listener-strategy v0.5.4
+   Compiling pkcs8 v0.11.0
+   Compiling polyval v0.6.2
+   Compiling cpufeatures v0.3.1
+   Compiling signature v3.0.0
+   Compiling data-encoding v2.11.1
+   Compiling ed25519 v3.0.0
+   Compiling zstd-safe v7.2.4
+   Compiling netlink-packet-core v0.8.2
+   Compiling zstd v0.13.3
+   Compiling proc-macro-crate v3.5.0
+   Compiling ghash v0.5.1
+   Compiling sha2 v0.11.0
+   Compiling hickory-proto v0.26.1
+   Compiling async-lock v3.4.2
+   Compiling data-encoding-macro-internal v0.1.19
+   Compiling crossbeam-channel v0.5.16
+   Compiling ctr v0.9.2
+   Compiling aes v0.8.4
+   Compiling tagptr v0.2.0
+   Compiling netlink-packet-core v0.9.0
+   Compiling openssl-probe v0.2.1
+   Compiling netdev v0.46.2
+   Compiling aes-gcm v0.10.3
+   Compiling netlink-packet-route v0.33.0
+   Compiling rustls-native-certs v0.8.4
+   Compiling moka v0.12.16
+   Compiling ed25519-dalek v3.0.0
+   Compiling data-encoding-macro v0.1.21
+   Compiling num_enum_derive v0.7.6
+   Compiling enum-assoc v1.4.1
+   Compiling strum_macros v0.28.0
+   Compiling iroh-metrics-derive v1.0.1
+   Compiling hickory-net v0.26.1
+   Compiling netlink-sys v0.8.8
+   Compiling tracing-log v0.2.0
+   Compiling futures-executor v0.3.32
+   Compiling matchers v0.2.0
+   Compiling blake3 v1.8.7
+   Compiling netlink-sys v0.9.0
+   Compiling netwatch v0.19.3
+   Compiling noq v1.2.0
+   Compiling iroh-dns v1.1.0
+   Compiling rand_pcg v0.10.2
+   Compiling identity-hash v0.1.0
+   Compiling xml-rs v0.8.29
+   Compiling rustc-hash v2.1.2
+   Compiling resolv-conf v0.7.6
+   Compiling mac-addr v0.3.0
+   Compiling sorted-index-buffer v0.2.1
+   Compiling lru-slab v0.1.2
+   Compiling noq-proto v1.2.0
+   Compiling hickory-resolver v0.26.1
+   Compiling strum v0.28.0
+   Compiling xmltree v0.10.3
+   Compiling tracing-subscriber v0.3.23
+   Compiling futures v0.3.32
+   Compiling num_enum v0.7.6
+   Compiling netlink-proto v0.12.2
+   Compiling iroh-metrics v1.0.1
+   Compiling iroh-base v1.1.0
+   Compiling rustls-platform-verifier v0.7.0
+   Compiling netlink-packet-route v0.31.0
+   Compiling n0-watcher v1.0.0
+   Compiling tokio-stream v0.1.19
+   Compiling attohttpc v0.30.1
+   Compiling arc-swap v1.9.2
+   Compiling cobs v0.3.0
+   Compiling simple-dns v0.12.0
+   Compiling iroh-relay v1.1.0
+   Compiling postcard-derive v0.2.2
+   Compiling constant_time_eq v0.4.2
+   Compiling simdutf8 v0.1.5
+   Compiling sha1_smol v1.0.1
+   Compiling tokio-websockets v0.13.3
+   Compiling postcard v1.1.3
+   Compiling igd-next v0.17.1
+   Compiling reqwest v0.13.4
+   Compiling serde_bytes v0.11.19
+   Compiling lru v0.18.3
+   Compiling iroh v1.1.0
+   Compiling seize v0.5.1
+   Compiling cmov v0.5.4
+   Compiling papaya v0.2.5
+   Compiling ctutils v0.4.2
+   Compiling portmapper v0.19.3
+   Compiling backon v1.6.0
+   Compiling tempfile v3.27.0
+   Compiling serde_spanned v1.1.1
+   Compiling wait-timeout v0.2.1
+   Compiling toml v1.1.2+spec-1.1.0
+   Compiling rand_xorshift v0.4.0
+   Compiling rusty-fork v0.3.1
+   Compiling compression-core v0.4.32
+   Compiling compression-codecs v0.4.38
+   Compiling slotmap v1.1.1
+   Compiling proptest v1.11.0
+   Compiling async-compression v0.4.43
+   Compiling hashbrown v0.14.5
+   Compiling tower-http v0.7.1
+   Compiling trybuild v1.0.116
+   Compiling dashmap v6.2.1
+   Compiling base32 v0.5.1
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v1.0.0
+   Compiling anstyle v1.0.14
+   Compiling colorchoice v1.0.5
+   Compiling anstyle-query v1.1.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling nix v0.31.3
+   Compiling anstream v1.0.0
+   Compiling strsim v0.11.1
+   Compiling anyhow v1.0.104
+   Compiling clap_lex v1.1.0
+   Compiling clap_derive v4.6.4
+   Compiling clap_builder v4.6.6
+   Compiling ctrlc v3.5.2
+   Compiling vgi-rpc-macros v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-macros)
+   Compiling clap v4.6.6
+   Compiling jsonwebtoken v10.4.0
+   Compiling vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc)
+   Compiling vgi-rpc-s3 v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-s3)
+   Compiling vgi-rpc-gcs v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-gcs)
+   Compiling vgi-iroh-transport v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-iroh-transport)
+   Compiling vgi-rpc-client v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-client)
+   Compiling query-farm-iroh-http-core v0.6.3
+   Compiling vgi-rpc-iroh v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-iroh)
+   Compiling vgi-iroh-bridge v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-iroh-bridge)
+   Compiling vgi-rpc-iroh-browser v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-iroh-browser)
+   Compiling vgi-iroh-cabi v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-iroh-cabi)
+   Compiling vgi-rpc-conformance-rust v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/conformance-worker)
+   Compiling vgi-rpc-conformance-client-driver v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/conformance-client-driver)
+   Compiling vgi-rpc-tailnet-rust v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/tailnet-integration)
+   Compiling vgi-rpc-benchmark-rust v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/benchmark-worker)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 25s
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_iroh_bridge-53c70920f7fd5008)
+
+running 12 tests
+test tests::fixed_http_upstream_rejects_unsafe_forms_and_joins_paths ... ok
+test tests::http_bridge_defaults_to_transparent_request_bodies ... ok
+test tests::header_sanitizers_strip_spoofs_hops_and_nominated_headers ... ok
+test tests::rejects_zero_limits_and_timeouts ... ok
+test tests::proxy_preamble_matches_canonical_vector ... ok
+test tests::raw_peer_connection_admission_is_shared_and_released ... ok
+test tests::upstream_failure_returns_generic_502_without_identity ... ok
+test tests::handler_drain_rejects_after_close_and_waits_for_active_permit ... ok
+test tests::loopback_http_bridge_preserves_semantics_and_verified_identity ... ok
+test tests::router_shutdown_waits_for_active_raw_response_to_finish ... ok
+test tests::router_shutdown_force_ends_stalled_raw_stream_at_drain_deadline ... ok
+test tests::active_raw_stream_survives_connection_idle_timeout_and_echoes ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.67s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_iroh_bridge-7994424b9a72876d)
+
+running 3 tests
+test tests::raw_upstream_parser_accepts_ip_dns_and_absolute_unix ... ok
+test tests::secret_key_stdin_is_explicit_and_exclusive ... ok
+test tests::cli_overrides_are_scoped_positive_and_preserve_transparency ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_iroh_cabi-e1f62230d68909ad)
+
+running 4 tests
+test tests::abi_version_is_stable ... ok
+test tests::rejects_wrong_abi_without_panicking ... ok
+test tests::host_cancel_callback_is_polled_and_classified ... ok
+test tests::c_abi_raw_loopback_round_trips_and_exposes_id ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_iroh_transport-a986c02e1062555c)
+
+running 3 tests
+test tests::parses_both_key_encodings_and_stable_ids ... ok
+test tests::http_loopback_streams_status_headers_and_body ... ok
+test tests::raw_loopback_reuses_one_authenticated_connection ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.10s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc-0828fb7d148c4d08)
+
+running 387 tests
+test access_log::tests::deferred_records_wait_for_the_response_size ... ok
+test access_log::tests::buffered_writes_via_background_thread ... ok
+test access_log::tests::claims_are_redacted_by_key_without_dropping_keys ... ok
+test access_log::tests::egress_fields_are_absent_when_unmeasured ... ok
+test access_log::tests::emits_json_line_per_call ... ok
+test access_log::tests::error_entries_carry_error_message ... ok
+test access_log::tests::sample_rate_out_of_range_fails_at_construction ... ok
+test access_log::tests::kept_records_carry_the_rate ... ok
+test access_log::tests::no_redaction_opts_out ... ok
+test access_log::tests::redactor_that_panics_fails_closed ... ok
+test arrow_type::tests::describe_names_match_python ... ok
+test access_log::tests::undrained_sink_still_emits ... ok
+test access_log::tests::sampling_never_drops_errors ... ok
+test arrow_type::tests::nullable_flag_only_set_for_option ... ok
+test arrow_type::tests::large_bytes_buffer_roundtrip_reuses_arrow_value_buffer ... ok
+test arrow_type::tests::large_bytes_build_reuses_vec_allocation ... ok
+test arrow_type::tests::roundtrip_bytes ... ok
+test arrow_type::tests::roundtrip_bool ... ok
+test arrow_type::tests::roundtrip_f32 ... ok
+test arrow_type::tests::roundtrip_f64 ... ok
+test arrow_type::tests::roundtrip_i32 ... ok
+test arrow_type::tests::roundtrip_i64 ... ok
+test arrow_type::tests::roundtrip_option_none ... ok
+test arrow_type::tests::roundtrip_option_some ... ok
+test arrow_type::tests::roundtrip_map_str_i64 ... ok
+test access_log::tests::payload_omission_is_distinct_from_size_driven_shedding ... ok
+test arrow_type::tests::roundtrip_map_str_str ... ok
+test arrow_type::tests::roundtrip_string ... ok
+test access_log::tests::unshippable_record_collapses_to_the_sentinel_form ... ok
+test arrow_type::tests::roundtrip_vec_bool ... ok
+test arrow_type::tests::roundtrip_option_string ... ok
+test arrow_type::tests::roundtrip_vec_f64 ... ok
+test arrow_type::tests::roundtrip_vec_i64 ... ok
+test arrow_type::tests::roundtrip_vec_string ... ok
+test auth::bearer::tests::case_insensitive_prefix ... ok
+test auth::bearer::tests::missing_header_is_anonymous ... ok
+test auth::bearer::tests::static_map_authenticates_known_token ... ok
+test arrow_type::tests::roundtrip_vec_vec_i64 ... ok
+test auth::bearer::tests::unknown_token_is_anonymous ... ok
+test auth::identity::tests::all_of_requires_an_identity_linker ... ok
+test auth::identity::tests::ambiguous_available_provider_cannot_downgrade_any_of ... ok
+test auth::identity::tests::duplicate_provider_is_rejected ... ok
+test auth::identity::tests::all_of_requires_application_auth_and_binds_all_factors ... ok
+test auth::identity::tests::capability_only_evidence_satisfies_require_but_not_primary ... ok
+test auth::identity::tests::all_of_binding_includes_application_domain_and_principal ... ok
+test auth::identity::tests::primary_policy_authenticates_issuer_namespaced_subject ... ok
+test auth::identity::tests::resolution_context_rejects_duplicate_headers ... ok
+test auth::identity::tests::unavailable_provider_cannot_downgrade_any_of ... ok
+test auth::iroh::tests::forwarded_http_provider_requires_an_exact_trust_boundary ... ok
+test auth::iroh::tests::forwarded_http_identity_is_stable_and_worker_namespaced ... ok
+test auth::identity::tests::evidence_binding_ignores_network_path_but_not_capabilities ... ok
+test auth::iroh::tests::forwarded_http_identity_fails_closed ... ok
+test auth::jwt::tests::allow_any_audience_opt_out_works ... ok
+test auth::jwt::tests::array_aud_containing_expected_is_accepted ... ok
+test auth::jwt::tests::array_aud_without_expected_is_rejected ... ok
+test auth::jwt::tests::expired_token_is_rejected ... ok
+test auth::jwt::tests::custom_principal_claim_issues_authenticated_ctx ... ok
+test auth::jwt::tests::known_kid_issues_authenticated_ctx ... ok
+test auth::jwt::tests::malformed_nbf_is_rejected_instead_of_treated_as_absent ... ok
+test auth::jwt::tests::missing_custom_principal_claim_is_rejected ... ok
+test auth::jwt::tests::missing_default_principal_claim_is_rejected ... ok
+test auth::identity::tests::structured_json_evidence_is_bounded ... ok
+test auth::jwt::tests::missing_iss_is_rejected ... ok
+test auth::jwt::tests::missing_header_is_anonymous ... ok
+test auth::jwt::tests::unknown_kid_triggers_refresh_then_errors ... ok
+test auth::jwt::tests::missing_exp_is_rejected ... ok
+test auth::mtls::tests::fingerprint_mismatch_anonymous ... ok
+test auth::mtls::tests::fingerprint_allowlist ... ok
+test auth::mtls::tests::quoted_value_preserves_commas ... ok
+test auth::mtls::tests::parse_simple_hop ... ok
+test auth::mtls::tests::takes_leaf_of_chain ... ok
+test auth::oauth::tests::validate_rejects_relative_url ... ok
+test auth::jwt::tests::unconfigured_audience_is_rejected ... ok
+test auth::oauth::tests::json_round_trip_keeps_known_fields ... ok
+test auth::pkce::tests::allowed_origin_matches_scheme_and_host ... ok
+test auth::oauth::tests::www_authenticate_includes_metadata_url ... ok
+test auth::jwt::tests::malformed_principal_claims_are_rejected ... ok
+test auth::pkce::tests::pair_challenge_matches_sha256 ... ok
+test auth::pkce_server::tests::cookie_authenticate_anonymous_without_cookie ... ok
+test auth::pkce::tests::cookie_rejects_bad_signature ... ok
+test auth::pkce_server::tests::cookie_carries_secure_only_when_requested ... ok
+test auth::pkce::tests::state_param_does_not_leak_verifier ... ok
+test auth::pkce::tests::cookie_rejects_when_expired ... ok
+test auth::mtls::tests::pem_authenticate_extracts_subject_and_fingerprint ... ok
+test auth::pkce_server::tests::cookie_authenticate_extracts_token_from_cookie_header ... ok
+test auth::pkce_server::tests::identity_cookie_none_when_no_display_claims ... ok
+test auth::pkce_server::tests::js_cookie_is_not_http_only ... ok
+test auth::pkce_server::tests::sanitize_return_to_accepts_relative ... ok
+test auth::pkce_server::tests::sanitize_return_to_allows_listed_origin ... ok
+test auth::pkce_server::tests::identity_cookie_encodes_display_claims_from_jwt ... ok
+test auth::pkce_server::tests::sanitize_return_to_rejects_protocol_relative ... ok
+test auth::pkce_server::tests::sanitize_return_to_rejects_unlisted_origin ... ok
+test auth::pkce::tests::cookie_round_trip ... ok
+test auth::proof::tests::derivation_matches_python ... ok
+test auth::proof::tests::derivation_separator_is_unambiguous ... ok
+test auth::pkce_server::tests::refresh_endpoint_rejects_missing_token ... ok
+test auth::proof::tests::malformed_tokens_rejected ... ok
+test auth::pkce_server::tests::callback_rejects_state_mismatch ... ok
+test auth::proof::tests::mint_matches_python ... ok
+test auth::pkce_server::tests::start_redirects_to_authorize_url_with_state_cookie ... ok
+test auth::pkce_server::tests::start_with_external_return_to_requests_refresh_token ... ok
+test auth::pkce_server::tests::start_with_relative_return_to_does_not_request_refresh_token ... ok
+test auth::proof::tests::mac_framing_must_be_separated ... ok
+test auth::proof::tests::nonce_cache_expires ... ok
+test access_log::tests::buffered_drops_when_channel_full_instead_of_blocking ... ok
+test auth::tailscale::tests::localapi_records_proxy_address_only_for_an_asserted_peer ... ok
+test auth::proof::tests::parse_secrets_round_trip ... ok
+test auth::tailscale::tests::localapi_rejects_asserted_peer_without_normalizable_immediate_peer_before_io ... ok
+test auth::tests::chain_propagates_a_transient_failure_rather_than_advancing ... ok
+test auth::tests::chain_tries_second_when_first_anonymous ... ok
+test auth::tests::chain_uses_first_when_authenticated ... ok
+test auth::tailscale::tests::serve_user_and_capabilities_are_strict_verified_evidence ... ok
+test auth::tests::require_authenticated_rejects_anonymous ... ok
+test binding::tests::accepts_dot_qualified_identifiers ... ok
+test binding::tests::rejects_what_a_path_segment_or_metric_label_should_never_carry ... ok
+test auth::tailscale::tests::serve_rejects_untrusted_funnel_duplicate_and_malformed_headers ... ok
+test auth::proof::tests::time_window_is_two_sided ... ok
+test auth::proof::tests::replay_rejected ... ok
+test binding::tests::reserves_the_framework_prefix_for_the_framework ... ok
+test crypto::tests::normalize_key_passthrough_and_hash ... ok
+test auth::proof::tests::nonce_cache_capacity_is_hard ... ok
+test auth::proof::tests::verifies_python_minted_token ... ok
+test crypto::tests::roundtrip ... ok
+test crypto::tests::base64_helpers_roundtrip ... ok
+test external::tests::https_only_validator_rejects_plaintext ... ok
+test crypto::tests::wrong_key_aad_version_all_fail_uniformly ... ok
+test auth::spiffe_proxy::tests::exact_proxy_and_raw_header_ambiguity_fail_closed ... ok
+test auth::spiffe_proxy::tests::gcp_requires_every_verified_chain_signal ... ok
+test auth::proof::tests::off_mode_refuses_to_build ... ok
+test auth::tailscale::tests::serve_capability_only_is_available_but_subjectless ... ok
+test external::tests::safe_https_validator_blocks_ssrf_targets ... ok
+test external::tests::small_batch_stays_inline ... ok
+test http::tests::application_authentication_log_class_never_contains_callback_detail ... ok
+test auth::proof::tests::unknown_kid_rejected ... ok
+test http::tests::call_cache_and_token_aad_bind_complete_identity ... ok
+test auth::proof::tests::wrong_origin_rejected ... ok
+test http::tests::compression_disabled_means_uncompressed_whatever_the_client_offers ... ok
+test http::tests::custom_header_alone_negotiates_and_stamps_the_custom_response_header ... ok
+test http::tests::custom_header_wins_over_a_gzip_first_standard_header ... ok
+test http::tests::custom_peer_policy_detail_is_redacted_before_http_response_and_logging ... ok
+test http::tests::decode_base64_key_accepts_padded ... ok
+test http::tests::decode_base64_key_accepts_unpadded ... ok
+test http::tests::decode_base64_key_rejects_short ... ok
+test hooks::tests::chain_hook_fans_out ... ok
+test auth::spiffe_proxy::tests::envoy_identity_is_stable_configured_proxy_evidence ... ok
+test auth::tailscale::tests::localapi_tagged_node_ignores_user_profile ... ok
+test http::tests::accepted_response_budget_uses_strict_safe_integer_grammar ... ok
+test http::tests::decode_content_encoding_passes_through_identity_and_unknown ... ok
+test http::tests::decode_content_encoding_refuses_an_absurd_coding_chain ... ok
+test auth::spiffe_proxy::tests::canonical_transport_identity_vectors ... ok
+test external::tests::zstd_rejects_large_window_even_when_output_is_tiny ... ok
+test auth::tailscale::tests::localapi_accepts_bounded_chunked_response_and_rejects_duplicate_json ... ok
+test http::tests::an_unknown_codec_means_uncompressed ... ok
+test auth::tailscale::tests::localapi_http_lookup_uses_raw_source_endpoint_but_records_only_ip ... ok
+test http::tests::decode_hex_key_rejects_bad_char ... ok
+test http::tests::identity_after_a_producible_codec_does_not_win ... ok
+test http::tests::decode_content_encoding_applies_a_coding_list_in_reverse ... ok
+test http::tests::identity_first_wins_and_suppresses_compression ... ok
+test http::tests::decode_content_encoding_allows_a_chain_up_to_the_cap ... ok
+test http::tests::decode_content_encoding_handles_gzip ... ok
+test auth::identity::tests::resolution_context_budget_is_monotonic ... ok
+test http::tests::no_encoding_headers_means_uncompressed ... ok
+test http::tests::decode_hex_key_roundtrip ... ok
+test http::tests::parse_encoding_list_is_ordered_deduped_and_ignores_q_values ... ok
+test http::tests::hard_response_cap_replaces_output_without_a_cursor ... ok
+test http::tests::missing_is_rethrown_when_peer_policy_leaves_auth_anonymous ... ok
+test http::tests::invalid_or_present_custom_credentials_never_downgrade_to_peer_fallback ... ok
+test http::tests::decode_hex_key_rejects_short ... ok
+test http::tests::decompress_rejects_oversize ... ok
+test http::tests::http_request_resolves_peer_evidence_before_policy ... ok
+test auth::tailscale::tests::localapi_queries_each_request_with_service_scope_and_builds_stable_user ... ok
+test http::tests::response_budget_configuration_rejects_values_above_safe_integer ... ok
+test http::tests::standard_header_alone_still_negotiates_on_the_standard_response_header ... ok
+test http::tests::supported_encodings_is_the_both_directions_intersection ... ok
+test http::tests::response_buffer_ceiling_follows_effective_budget_without_universal_cap ... ok
+test http::tests::http_worker_authenticates_canonical_forwarded_iroh_identity ... ok
+test auth::tailscale::tests::strict_json_enforces_depth_count_and_byte_limits ... ok
+test http::tests::pack_unpack_roundtrip ... ok
+test http::tests::peer_evidence_binds_cursor_and_call_tokens_for_anonymous_auth ... ok
+test http::tests::token_payload_compresses_when_redundant ... ok
+test http::tests::token_payload_stays_raw_when_incompressible ... ok
+test auth::spiffe_proxy::tests::certificate_profiles_reject_wrong_domain_malformed_and_duplicate_pem ... ok
+test http::tests::unpack_rejects_authenticated_replay_of_anonymous_token ... ok
+test http::tests::token_payload_round_trips_under_either_codec ... ok
+test auth::spiffe_proxy::tests::named_certificate_profiles_require_their_trust_signals ... ok
+test http::tests::unpack_rejects_cross_domain_replay ... ok
+test http::tests::unpack_rejects_different_key ... ok
+test http::tests::typed_missing_application_credential_can_defer_to_peer_primary ... ok
+test http::tests::unpack_rejects_different_principal ... ok
+test http::tests::unpack_rejects_malformed_base64 ... ok
+test http::tests::zstd_bounded_passes_small_payload ... ok
+test http::tests::zstd_bounded_rejects_large_window_for_small_output ... ok
+test http::tests::q_values_do_not_reorder_the_walk ... ok
+test http::tests::unpack_rejects_tampered_ciphertext ... ok
+test http::tests::unpack_rejects_tampered_nonce ... ok
+test http::tests::unpack_rejects_unknown_version ... ok
+test http::tests::provider_error_detail_is_redacted_before_auth_logging ... ok
+test http::tests::response_budget_intersects_app_host_client_and_clamps_preference ... ok
+test http::tests::sealed_token_shrinks_with_a_compressible_state ... ok
+test intermediary::tests::find_state_token_is_none_when_absent ... ok
+test http::tests::token_payload_rejects_malformed_input ... ok
+test intermediary::tests::find_state_token_reads_the_batch_metadata ... ok
+test intermediary::tests::error_stream_decodes_back_to_the_error ... ok
+test http::tests::gzip_only_offer_negotiates_and_round_trips ... ok
+test intermediary::tests::finders_return_none_on_garbage ... ok
+test otel::tests::extracts_traceparent ... ok
+test otel::tests::counts_requests_and_errors ... ok
+test protocol_hash::tests::list_child_name_is_normalised_but_nullability_is_kept ... ok
+test intermediary::tests::unary_result_round_trips ... ok
+test http::tests::provider_panic_payload_is_redacted_from_auth_logs ... ok
+test intermediary::tests::read_unary_result_stops_at_an_error_envelope_before_a_data_batch ... ok
+test proxy_protocol::tests::iroh_identity_requires_explicit_unspec_opt_in_and_matches_canonical_vector ... ok
+test intermediary::tests::request_round_trips_through_write_and_read ... ok
+test intermediary::tests::write_request_without_protocol_version_omits_the_key ... ok
+test proxy_protocol::tests::iroh_reader_preserves_following_vgi_bytes ... ok
+test proxy_protocol::tests::ordinary_parser_never_promotes_iroh_tlv_on_an_ip_preamble ... ok
+test proxy_protocol::tests::parses_mapped_ipv6_as_ipv4_and_bounded_tlv ... ok
+test http::tests::token_key_hex_round_trips_through_token ... ok
+test intermediary::tests::find_state_token_walks_concatenated_streams ... ok
+test http::tests::tailscale_serve_duplicate_raw_header_fails_closed ... ok
+test http::tests::unpack_rejects_expired_token ... ok
+test proxy_protocol::tests::parses_tcp_and_preserves_following_bytes ... ok
+test protocol_hash::tests::omits_result_for_a_method_returning_nothing ... ok
+test proxy_protocol::tests::rejects_ambiguous_or_malformed_iroh_identity ... ok
+test protocol_hash::tests::matches_the_python_reference_digest ... ok
+test proxy_protocol::tests::rejects_unsafe_forms_and_malformed_tlvs ... ok
+test intermediary::tests::read_request_rejects_a_non_request_stream ... ok
+test reflection::tests::hosts_exactly_its_two_methods ... ok
+test reflection::tests::canonical_preimage_matches_the_reference ... ok
+test protocol_hash::tests::sorts_methods_by_name ... ok
+test reflection::tests::the_registrations_are_descriptions_only ... ok
+test retry::tests::explicit_jitter_fraction_is_reproducible ... ok
+test reflection::tests::matches_the_reference_hash ... ok
+test intermediary::tests::read_unary_result_skips_leading_log_batches ... ok
+test retry::tests::disabled_yields_single_zero_delay ... ok
+test retry::tests::jitter_stays_non_negative ... ok
+test retry::tests::exponential_growth_capped_at_max ... ok
+test retry::tests::non_finite_multiplier_does_not_panic ... ok
+test retry::tests::jitter_is_not_deterministic_across_calls ... ok
+test retry::tests::retries_are_opt_in ... ok
+test retry::tests::first_attempt_has_no_delay ... ok
+test sentry_sdk::tests::auto_attach_returns_none_without_sentry_init ... ok
+test sentry_sdk::tests::custom_user_claim_map_overrides_defaults ... ok
+test sentry_sdk::tests::ignored_error_types_skip_capture ... ok
+test sentry_sdk::tests::resolve_user_pulls_id_from_principal_plus_claim_map ... ok
+test sentry_sdk::tests::dispatch_lifecycle_is_balanced_when_called_serially ... ok
+test sentry_tracing::tests::counts_only_errors ... ok
+test sentry_sdk::tests::resolve_user_returns_none_when_anonymous_and_no_claims ... ok
+test sentry_tracing::tests::custom_user_claim_map_overrides_defaults ... ok
+test sentry_tracing::tests::default_user_claim_map_maps_sub_email_name ... ok
+test sentry_tracing::tests::tag_claims_round_trip_through_json_field ... ok
+test shm::tests::allocator_first_fit_and_coalesce ... ok
+test shm::tests::allocator_rejects_corrupted_unsorted_table ... ok
+test shm::tests::allocator_returns_none_when_full ... ok
+test shm::tests::attach_existing_segment ... ok
+test server::tests::transport_options_reports_shm_capability_unregistered ... ok
+test shm::tests::attach_rejects_bad_version ... ok
+test shm::tests::attach_rejects_bad_magic ... ok
+test server::tests::panicking_handler_yields_error_envelope_and_loop_survives ... ok
+test shm::tests::header_layout_matches_canonical_golden_bytes ... ok
+test shm::tests::pointer_batch_distinct_from_log_batch ... ok
+test server::tests::shm_requests::pointer_request_without_segment_trips_single_row_guard ... ok
+test shm::tests::resolve_rejects_pointer_with_out_of_bounds_region ... ok
+test access_log::tests::dropped_records_is_reported_on_the_next_record_through ... ok
+test shm::tests::read_batch_overflow_is_rejected_not_panicked ... ok
+test shm::tests::resolve_rejects_pointer_with_unparseable_metadata ... ok
+test shm::tests::shrink_rejects_invalid_inputs ... ok
+test shm::tests::inplace_write_then_resolve_round_trip ... ok
+test shm::tests::shrink_returns_tail_to_free_pool ... ok
+test sticky::tests::draining_rejects_open ... ok
+test sticky::tests::garbage_token_rejected ... ok
+test sticky::tests::cross_peer_evidence_rejected_for_anonymous_application_auth ... ok
+test sticky::tests::registry_open_get_close ... ok
+test sticky::tests::cross_principal_rejected ... ok
+test shm::tests::roundtrip_non_dict_batch ... ok
+test stream::tests::collector_allows_logs_after_data ... ok
+test stream::tests::collector_exposes_clamped_response_budget_snapshot ... ok
+test shm::tests::roundtrip_dict_batch ... ok
+test stream::tests::collector_rejects_a_second_data_batch_as_protocol_error ... ok
+test server::tests::shm_requests::response_routed_through_shm_only_when_request_signalled_shm ... ok
+test sticky::tests::token_roundtrip ... ok
+test shm::tests::inplace_write_is_byte_compatible_with_legacy_path ... ok
+test sticky::tests::wrong_key_rejected ... ok
+test tcp::identity_tests::forwarded_iroh_configuration_and_missing_identity_fail_closed ... ok
+test token_identity::tests::a_caller_off_the_allowlist_is_refused ... ok
+test server::tests::shm_requests::serve_caches_client_segment_for_offset_only_requests ... ok
+test token_identity::tests::a_jws_never_reaches_the_resolver ... ok
+test token_identity::tests::a_padded_jws_never_reaches_the_resolver ... ok
+test token_identity::tests::a_rejection_never_quotes_the_credential ... ok
+test token_identity::tests::absent_auth_time_is_refused ... ok
+test server::tests::shm_requests::pointer_request_batch_resolves_via_segment_named_in_metadata ... ok
+test token_identity::tests::absent_by_default ... ok
+test tcp::identity_tests::raw_tcp_custom_policy_details_are_redacted ... ok
+test token_identity::tests::a_resolution_without_a_ttl_takes_the_default ... ok
+test tcp::accept::tests::queued_connections_are_drained_and_readiness_rearms ... ok
+test token_identity::tests::an_allowlist_is_mandatory - should panic ... ok
+test token_identity::tests::a_blank_credential_is_not_a_credential ... ok
+test token_identity::tests::a_grant_cannot_mint_another_grant ... ok
+test tcp::identity_tests::forwarded_iroh_identity_is_snapshotted_before_connection_policy ... ok
+test tcp::identity_tests::untrusted_proxy_is_rejected_before_waiting_for_a_preamble ... ok
+test token_identity::tests::an_opaque_credential_still_reaches_the_resolver ... ok
+test token_identity::tests::an_unauthenticated_caller_is_refused ... ok
+test token_identity::tests::authorization_precedes_every_look_at_the_subject ... ok
+test token_identity::tests::error_kinds_are_stable ... ok
+test tcp::identity_tests::proxy_identity_is_snapshotted_and_following_vgi_bytes_are_preserved ... ok
+test tcp::identity_tests::raw_tcp_invalid_peer_evidence_never_falls_back_to_application_auth ... ok
+test token_identity::tests::fresh_auth_time_is_accepted ... ok
+test token_identity::tests::introspection_without_a_resolver ... ok
+test token_identity::tests::canonical_preimage_matches_the_reference ... ok
+test token_identity::tests::an_empty_allowlist_is_not_an_allowlist - should panic ... ok
+test token_identity::tests::claims_the_reserved_prefix ... ok
+test shm::tests::direct_large_binary_write_is_stock_arrow_compatible ... ok
+test token_identity::tests::needs_no_allowlist ... ok
+test token_identity::tests::no_hooks_means_no_binding ... ok
+test token_identity::tests::only_methods_with_hooks_are_hosted ... ok
+test token_identity::tests::padding_does_not_smuggle_a_jws_past_the_guard ... ok
+test token_identity::tests::refusal_precedes_the_resolver ... ok
+test token_identity::tests::rejections_are_uniform ... ok
+test token_identity::tests::issuance_without_a_minter ... ok
+test token_identity::tests::hosted_binding_carries_only_the_offered_methods ... ok
+test token_identity::tests::scopes_list_item_is_nullable ... ok
+test token_identity::tests::stale_auth_time_is_refused_actionably ... ok
+test token_identity::tests::the_cap_is_measured_in_utf8_bytes ... ok
+test token_identity::tests::mints_for_the_caller ... ok
+test token_identity::tests::the_enumerated_trim_set_is_covered ... ok
+test token_identity::tests::the_jws_matcher_does_not_catch_opaque_credentials ... ok
+test token_identity::tests::the_digest_is_not_the_token ... ok
+test token_identity::tests::the_minter_receives_the_caller_principal ... ok
+test tcp::identity_tests::raw_tcp_unavailable_provider_fails_required_policies ... ok
+test token_identity::tests::the_grant_payload_declares_an_expiry ... ok
+test token_identity::tests::the_resolver_receives_the_credential_unmodified ... ok
+test token_identity::tests::the_subject_is_the_caller_and_is_not_a_parameter ... ok
+test token_identity::tests::the_token_identity_payload_carries_no_claims ... ok
+test token_identity::tests::resolves_for_an_allowlisted_caller ... ok
+test token_identity::tests::narrowing_the_method_set_changes_the_hash ... ok
+test transport::tests::as_str_matches_python_wire_form ... ok
+test token_identity::tests::unparseable_auth_time_is_refused ... ok
+test token_identity::tests::unavailable_is_transient_not_definitive ... ok
+test token_identity::tests::unauthenticated_transport_fails_closed ... ok
+test transport::tests::failed_hook_does_not_commit_and_retry_refires ... ok
+test transport::tests::notify_transport_fires_hook_once_per_combination ... ok
+test transport::tests::notify_without_hook_is_no_op_safe ... ok
+test unauthorized::tests::detail_is_escaped ... ok
+test transport::tests::transport_kind_and_capabilities_observed_after_notify ... ok
+test unauthorized::tests::envelope_carries_the_hint_when_it_applies ... ok
+test token_identity::tests::matches_the_reference_hash_vectors ... ok
+test unauthorized::tests::envelope_omits_the_hint_when_it_does_not_apply ... ok
+test wire::tests::chunked_writer_clamps_and_retries ... ok
+test wire::tests::malformed_schema_message_is_error_not_panic ... ok
+test wire::tests::oversized_body_claim_costs_nothing_to_refuse ... ok
+test wire::tests::rejects_buffer_descriptor_past_body ... ok
+test wire::tests::write_chunk_stays_under_int_max ... ok
+test wire::tests::rejects_oversize_message_bodylength ... ok
+test wire::tests::rejects_oversize_schema_length_prefix ... ok
+test token_identity::tests::the_length_check_runs_on_the_untrimmed_credential ... ok
+test token_identity::tests::a_concurrent_burst_is_answered_in_full ... ok
+test wire::tests::zero_row_metadata_only ... ok
+test wire::tests::single_large_binary_direct_write_roundtrips_sliced_value_and_metadata ... ok
+test wire::tests::roundtrip_with_metadata ... ok
+test shm::tests::inplace_write_falls_back_when_segment_too_small ... ok
+test sticky::tests::registry_expired_evicted_inline ... ok
+test transport::tests::concurrent_notify_fires_hook_once ... ok
+test token_identity::tests::junk_credentials_do_not_starve_a_valid_one ... ok
+test access_log::tests::sampling_decision_is_deterministic_per_stream ... ok
+test http::tests::zstd_bounded_rejects_zip_bomb_without_full_alloc ... ok
+test tcp::identity_tests::raw_tcp_any_of_preserves_valid_application_auth_during_provider_outage ... ok
+test token_identity::tests::introspection_is_not_rate_limited ... ok
+test tcp::identity_tests::direct_mtls_verifies_and_snapshots_spiffe_after_proxy_v2 ... ok
+test external::tests::sha_mismatch_is_rejected ... ok
+test tcp::accept::tests::connection_wakes_a_long_wait_and_returns_a_blocking_capable_stream ... ok
+test tcp::identity_tests::timed_out_provider_keeps_its_global_capacity_until_it_exits ... ok
+test tcp::identity_tests::direct_mtls_rejects_missing_client_certificate_and_wrong_spiffe_domain ... ok
+test auth::tailscale::tests::localapi_maps_status_protocol_and_timeout_fail_closed ... ok
+test tcp::identity_tests::direct_mtls_handshake_has_one_bounded_deadline ... ok
+test tcp::identity_tests::proxy_preamble_uses_one_total_monotonic_deadline ... ok
+test shm::tests::allocator_invariants_under_random_ops ... ok
+test http::tests::independent_peer_providers_execute_in_parallel ... ok
+test external::tests::zstd_compression_round_trip ... ok
+test external::tests::writer_supplied_provenance_never_reaches_the_pointer ... ok
+test http::tests::provider_deadline_includes_application_authentication_time ... ok
+test external::tests::dictionary_encoded_batch_round_trips_externally ... ok
+test external::tests::externalized_payload_declares_the_enclosing_stream_schema ... ok
+test http::tests::timed_out_peer_provider_keeps_its_concurrency_permit ... ok
+test http::tests::unavailable_provider_fails_require_and_primary_with_503 ... ok
+test external::tests::large_batch_externalizes_and_round_trips ... ok
+test http::tests::decode_content_encoding_bounds_gzip_zip_bombs ... ok
+test shm::tests::allocator_respects_max_allocs_capacity ... ok
+
+test result: ok. 387 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.91s
+
+     Running tests/access_log_egress.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/access_log_egress-7c02f64d74d46448)
+
+running 2 tests
+test http_records_mark_the_payload_as_omitted ... ok
+test response_bytes_reports_the_compressed_body ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/access_log_identity.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/access_log_identity-ec05243564bf7408)
+
+running 12 tests
+test an_unowned_framework_endpoint_falls_back_to_the_primary ... ok
+test the_refusal_names_the_replacement ... ok
+test the_accessor_returns_the_owning_bindings_identity ... ok
+test the_logged_digest_is_the_canonical_one ... ok
+test a_byte_stream_describe_call_is_refused_with_the_replacement ... ok
+test another_reserved_name_keeps_the_generic_answer ... ok
+test the_two_bindings_do_not_share_a_digest ... ok
+test a_byte_stream_reflection_call_is_logged_as_reflection ... ok
+test an_http_describe_call_is_refused_with_the_replacement ... ok
+test an_http_reflection_call_is_logged_as_reflection ... ok
+test a_dispatch_record_may_only_be_built_by_the_one_constructor ... ok
+test no_emit_site_may_stamp_the_protocol_identity_itself ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/access_log_stream.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/access_log_stream-b3a2a77dcb20aec9)
+
+running 7 tests
+test the_stream_id_survives_a_continuation_on_another_worker ... ok
+test a_stream_record_names_its_own_protocol ... ok
+test request_data_is_carried_by_the_init_record_only ... ok
+test response_state_is_present_while_the_stream_is_resumable ... ok
+test every_turn_of_an_http_stream_is_logged ... ok
+test output_rows_are_counted_per_turn ... ok
+test one_call_produces_one_stream_id ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/access_log_trace.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/access_log_trace-3c8bf8373d05f603)
+
+running 1 test
+test trace_ids_are_emitted_together_and_only_when_valid ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/arrow_derive.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/arrow_derive-0448bb948ad286e9)
+
+running 10 tests
+test bounding_box_describe_name_defaults_to_struct_ident ... ok
+test point_describe_name_uses_attribute ... ok
+test point_data_type_is_struct_of_two_f64s ... ok
+test bounding_box_nested_struct_roundtrip ... ok
+test raw_identifier_struct_round_trips ... ok
+test raw_identifiers_keep_their_protocol_spelling ... ok
+test point_roundtrip ... ok
+test struct_with_none_option_field ... ok
+test all_types_roundtrip ... ok
+test struct_with_options_lists_and_maps_roundtrips ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/external_integration.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/external_integration-a78d9f2d86829a15)
+
+running 4 tests
+test caller_metadata_preserved_through_externalization ... ok
+test round_trip_with_zstd_compression ... ok
+test externalized_bytes_are_counted_at_the_upload_choke_point ... ok
+test round_trip_5mb_uncompressed ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.51s
+
+     Running tests/http_auth.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_auth-803d0eda5d9617b3)
+
+running 5 tests
+test oauth_well_known_returns_404_without_metadata ... ok
+test oauth_well_known_served_when_configured ... ok
+test a_transient_authenticator_failure_is_not_a_401 ... ok
+test bearer_auth_rejects_missing_header ... ok
+test anonymous_request_hits_unknown_method_404 ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/http_blocking_dispatch.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_blocking_dispatch-645155d022146c44)
+
+running 1 test
+test slow_producer_turn_does_not_starve_unrelated_http_request ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/http_exchange_metadata.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_exchange_metadata-67fa11a5658bfe38)
+
+running 1 test
+test exchange_turn_carries_user_metadata_without_framework_keys ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/http_identity.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_identity-72d30791b4c8770f)
+
+running 6 tests
+test the_retired_json_route_is_not_served ... ok
+test health_does_not_advertise_the_retired_route ... ok
+test the_routing_key_selects_the_protocol_not_the_path ... ok
+test an_unconfigured_worker_hosts_nothing ... ok
+test a_caller_off_the_allowlist_is_refused_over_http ... ok
+test an_allowlisted_proxy_resolves_over_http ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/http_init_metadata.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_init_metadata-2ea361ea681dfc14)
+
+running 2 tests
+test init_is_one_metadata_bearing_producer_turn ... ok
+test continuation_turn_carries_its_own_request_metadata ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/http_load_balance.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_load_balance-c07cf75c30dec02b)
+
+running 2 tests
+test worker_with_different_key_rejects_peer_token ... ok
+test second_worker_can_resume_stream_from_first ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/http_panic.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_panic-7bc56eb76759ede7)
+
+running 5 tests
+test producer_turn_panic_yields_structured_error_not_500 ... ok
+test stream_init_handler_panic_yields_structured_error_not_500 ... ok
+test unary_handler_panic_yields_structured_error_not_500 ... ok
+test exchange_turn_panic_yields_structured_error_not_500 ... ok
+test cancellation_panic_yields_structured_error_not_500 ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/http_polish.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_polish-fef238cc360d9b5e)
+
+running 23 tests
+test upload_url_contract_is_exported ... ok
+test describe_html_page_served ... ok
+test health_endpoint_returns_ok ... ok
+test cors_exposes_every_vgi_capability_header ... ok
+test health_head_returns_200_with_capabilities ... ok
+test compression_disabled_server_advertises_and_behaves_consistently ... ok
+test compressed_response_still_carries_capability_headers ... ok
+test default_server_compresses_and_advertises_mandatory_codecs ... ok
+test identity_behind_zstd_still_compresses ... ok
+test custom_accept_encoding_alone_compresses_and_stamps_custom_header ... ok
+test custom_header_beats_gzip_first_standard_header ... ok
+test large_response_above_threshold_is_zstd_compressed ... ok
+test default_compression_level_is_one ... ok
+test body_limit_above_axums_default_is_honoured ... ok
+test gzip_only_offers_compress_and_stamp_the_matching_header ... ok
+test preflight_includes_cors_headers ... ok
+test oversize_request_body_is_rejected_by_body_limit ... ok
+test structured_request_error_survives_the_minimum_response_cap ... ok
+test small_response_below_threshold_is_not_compressed ... ok
+test prefix_mounts_routes_under_path ... ok
+test supported_encodings_advertised_on_options_health ... ok
+test require_mode_advertises_the_proof_capability ... ok
+test unproducible_absent_or_identity_offers_yield_no_encoding_header ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests/http_protocol_version.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_protocol_version-7c155af6a5f44466)
+
+running 3 tests
+test compatible_major_reaches_http_dispatch ... ok
+test incompatible_major_is_rejected_before_unary_dispatch ... ok
+test incompatible_major_is_rejected_before_stream_init ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/identity_logging.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/identity_logging-be7bf67987434a1a)
+
+running 1 test
+test the_credential_never_reaches_a_log_record ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/identity_protocol.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/identity_protocol-b11a4198cfad2332)
+
+running 11 tests
+test the_reserved_prefix_is_the_frameworks ... ok
+test co_hosting_identity_does_not_move_the_application_hash ... ok
+test absent_until_configured ... ok
+test an_unconfigured_method_is_not_hosted ... ok
+test an_allowlisted_caller_resolves_a_credential ... ok
+test an_unauthenticated_caller_is_told_to_reauthenticate ... ok
+test the_resolver_receives_the_credential_unmodified_on_the_wire ... ok
+test a_fresh_caller_mints_a_grant_for_themselves ... ok
+test error_kind_rides_on_the_wire ... ok
+test a_padded_jws_is_refused_on_the_wire ... ok
+test reflection_reports_the_narrowed_identity_protocol ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/macro_async.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/macro_async-193c31848314c711)
+
+running 2 tests
+test async_unary_round_trips ... ok
+test async_producer_emits_first_batch ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/macro_compile_fail.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/macro_compile_fail-7c25119d2834d47f)
+
+running 1 test
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling libc v0.2.186
+    Checking cfg-if v1.0.4
+    Checking memchr v2.8.0
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling version_check v0.9.5
+    Checking once_cell v1.21.4
+   Compiling libm v0.2.16
+   Compiling autocfg v1.5.0
+   Compiling zerocopy v0.8.48
+    Checking smallvec v1.15.1
+    Checking bytes v1.11.1
+    Checking stable_deref_trait v1.2.1
+   Compiling serde_core v1.0.228
+    Checking itoa v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling getrandom v0.3.4
+   Compiling serde v1.0.228
+   Compiling syn v2.0.117
+   Compiling generic-array v0.14.7
+    Checking litemap v0.8.2
+    Checking pin-project-lite v0.2.17
+    Checking log v0.4.29
+    Checking writeable v0.6.3
+    Checking getrandom v0.2.17
+   Compiling jobserver v0.1.34
+    Checking typenum v1.20.0
+   Compiling icu_normalizer_data v2.2.0
+    Checking percent-encoding v2.3.2
+    Checking utf8_iter v1.0.4
+   Compiling icu_properties_data v2.2.0
+    Checking rand_core v0.6.4
+   Compiling cc v1.2.62
+   Compiling parking_lot_core v0.9.12
+    Checking futures-core v0.3.32
+   Compiling pkg-config v0.3.33
+   Compiling time-core v0.1.9
+   Compiling num-conv v0.2.2
+   Compiling zmij v1.0.21
+    Checking scopeguard v1.2.0
+    Checking lock_api v0.4.14
+   Compiling time-macros v0.2.30
+    Checking num-integer v0.1.46
+    Checking form_urlencoded v1.2.2
+    Checking errno v0.3.14
+    Checking tracing-core v0.1.36
+    Checking deranged v0.5.8
+   Compiling serde_json v1.0.149
+    Checking futures-sink v0.3.32
+    Checking subtle v2.6.1
+    Checking powerfmt v0.2.0
+    Checking crypto-common v0.1.7
+    Checking signal-hook-registry v1.4.8
+    Checking num-bigint v0.4.6
+    Checking parking_lot v0.12.5
+    Checking rand_core v0.9.5
+    Checking mio v1.2.0
+    Checking socket2 v0.6.3
+    Checking http v1.4.0
+   Compiling semver v1.0.28
+   Compiling rustc_version v0.4.1
+    Checking futures-io v0.3.32
+    Checking slab v0.4.12
+    Checking http-body v1.0.1
+    Checking bitflags v2.11.1
+    Checking futures-task v0.3.32
+   Compiling ahash v0.8.12
+    Checking futures-util v0.3.32
+    Checking regex-syntax v0.8.10
+    Checking tower-service v0.3.3
+    Checking time v0.3.51
+   Compiling httparse v1.10.1
+   Compiling thiserror v2.0.18
+   Compiling ring v0.17.14
+    Checking uuid v1.23.1
+   Compiling cmake v0.1.58
+   Compiling fs_extra v1.3.0
+    Checking untrusted v0.9.0
+    Checking minimal-lexical v0.2.1
+    Checking lexical-util v1.0.7
+    Checking iana-time-zone v0.1.65
+    Checking arrow-schema v59.0.0
+   Compiling thiserror v1.0.69
+   Compiling synstructure v0.13.2
+    Checking base64 v0.22.1
+    Checking try-lock v0.2.5
+   Compiling dunce v1.0.5
+   Compiling aws-lc-sys v0.45.0
+    Checking want v0.3.1
+    Checking regex-automata v0.4.14
+    Checking chrono v0.4.44
+    Checking nom v7.1.3
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+    Checking futures-channel v0.3.32
+    Checking num-complex v0.4.6
+    Checking sync_wrapper v1.0.2
+   Compiling rustls v0.23.45
+    Checking simd-adler32 v0.3.9
+    Checking httpdate v1.0.3
+    Checking atomic-waker v1.1.2
+   Compiling object v0.37.3
+    Checking adler2 v2.0.1
+    Checking tower-layer v0.3.3
+    Checking hashbrown v0.17.1
+    Checking hex v0.4.3
+    Checking miniz_oxide v0.8.9
+    Checking rusticata-macros v4.1.0
+    Checking http-body-util v0.1.3
+   Compiling getrandom v0.4.2
+   Compiling rustix v1.1.4
+    Checking ipnet v2.12.0
+   Compiling rustversion v1.0.22
+    Checking gimli v0.32.3
+    Checking ryu v1.0.23
+    Checking lexical-parse-integer v1.0.6
+    Checking lexical-write-integer v1.0.6
+   Compiling sentry-contexts v0.48.2
+   Compiling flatbuffers v25.12.19
+    Checking block-buffer v0.10.4
+    Checking inout v0.1.4
+   Compiling crc32fast v1.5.0
+    Checking linux-raw-sys v0.12.1
+   Compiling zerocopy-derive v0.8.48
+   Compiling zerofrom-derive v0.1.7
+   Compiling displaydoc v0.2.5
+   Compiling yoke-derive v0.8.2
+   Compiling zerovec-derive v0.11.3
+   Compiling serde_derive v1.0.228
+   Compiling zeroize_derive v1.5.0
+   Compiling tracing-attributes v0.1.31
+   Compiling tokio-macros v2.7.0
+    Checking zerofrom v0.1.7
+    Checking yoke v0.8.2
+    Checking zerovec v0.11.6
+    Checking zerotrie v0.2.4
+    Checking tinystr v0.8.3
+    Checking potential_utf v0.1.5
+    Checking icu_locale_core v2.2.0
+    Checking icu_collections v2.2.0
+    Checking zeroize v1.9.0
+    Checking tokio v1.52.3
+    Checking rustls-pki-types v1.14.1
+   Compiling thiserror-impl v2.0.18
+    Checking icu_provider v2.2.0
+    Checking icu_properties v2.2.0
+    Checking icu_normalizer v2.2.0
+    Checking tracing v0.1.44
+    Checking idna_adapter v1.2.2
+    Checking idna v1.1.0
+   Compiling thiserror-impl v1.0.69
+    Checking ppv-lite86 v0.2.21
+    Checking half v2.7.1
+    Checking rand_chacha v0.9.0
+    Checking url v2.5.8
+    Checking debugid v0.8.0
+    Checking rand v0.9.4
+    Checking arrow-buffer v59.0.0
+    Checking rustls-webpki v0.103.15
+   Compiling asn1-rs-impl v0.2.0
+    Checking sentry-types v0.48.2
+   Compiling asn1-rs-derive v0.5.1
+    Checking arrow-data v59.0.0
+    Checking hyper v1.9.0
+    Checking tower v0.5.3
+    Checking arrow-array v59.0.0
+    Checking addr2line v0.25.1
+    Checking asn1-rs v0.6.2
+   Compiling aws-lc-rs v1.18.1
+    Checking hyper-util v0.1.20
+   Compiling zstd-safe v7.2.4
+   Compiling cfg_aliases v0.2.2
+   Compiling oid-registry v0.7.1
+    Checking rustc-demangle v0.1.27
+    Checking lazy_static v1.5.0
+   Compiling sentry v0.48.2
+    Checking backtrace v0.3.76
+    Checking sentry-core v0.48.2
+    Checking serde_urlencoded v0.7.1
+    Checking arrow-select v59.0.0
+    Checking webpki-roots v1.0.7
+    Checking cipher v0.4.4
+   Compiling async-trait v0.1.89
+    Checking digest v0.10.7
+    Checking lexical-write-float v1.0.6
+    Checking lexical-parse-float v1.0.6
+    Checking regex v1.12.3
+    Checking universal-hash v0.5.1
+    Checking uname v0.1.1
+    Checking hostname v0.4.2
+    Checking tokio-rustls v0.26.4
+    Checking untrusted v0.7.1
+   Compiling rust_decimal v1.42.0
+    Checking fastrand v2.4.1
+    Checking mime v0.3.17
+    Checking opaque-debug v0.3.1
+    Checking poly1305 v0.8.0
+    Checking hyper-rustls v0.27.9
+    Checking sentry-backtrace v0.48.2
+    Checking arrow-ord v59.0.0
+    Checking lexical-core v1.0.6
+    Checking chacha20 v0.9.1
+    Checking tempfile v3.27.0
+    Checking der-parser v9.0.0
+    Checking tower-http v0.6.10
+    Checking rand_chacha v0.3.1
+    Checking aead v0.5.2
+    Checking serde_path_to_error v0.1.20
+    Checking atoi v2.0.0
+    Checking cpufeatures v0.2.17
+    Checking wait-timeout v0.2.1
+    Checking data-encoding v2.11.1
+    Checking matchit v0.7.3
+    Checking signature v2.2.0
+    Checking fnv v1.0.7
+    Checking quick-error v1.2.3
+    Checking arrayvec v0.7.6
+    Checking bit-vec v0.8.0
+    Checking rusty-fork v0.3.1
+    Checking reqwest v0.12.28
+    Checking x509-parser v0.16.0
+    Checking axum-core v0.4.5
+    Checking sha2 v0.10.9
+    Checking bit-set v0.8.0
+    Checking arrow-cast v59.0.0
+    Checking chacha20poly1305 v0.10.1
+    Checking rand v0.8.6
+    Checking arrow-ipc v59.0.0
+    Checking flate2 v1.1.9
+    Checking hmac v0.12.1
+    Checking sharded-slab v0.1.7
+    Checking bincode v1.3.3
+   Compiling vgi-rpc-macros v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc-macros)
+    Checking matchers v0.2.0
+    Checking rand_xorshift v0.4.0
+    Checking tracing-log v0.2.0
+    Checking thread_local v1.1.9
+    Checking urlencoding v2.1.3
+    Checking unarray v0.1.4
+    Checking nu-ansi-term v0.50.3
+    Checking proptest v1.11.0
+    Checking tracing-subscriber v0.3.23
+    Checking axum v0.7.9
+    Checking zstd v0.13.3
+    Checking jsonwebtoken v10.4.0
+    Checking vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc)
+    Checking vgi-rpc-tests v0.0.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/tests/trybuild/vgi-rpc)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 36.09s
+
+
+test compile_fail has been running for over 60 seconds
+test tests/macro_compile_fail/header_without_fn.rs ... ok
+test tests/macro_compile_fail/producer_missing_state.rs ... ok
+test tests/macro_compile_fail/unary_non_result_return.rs ... ok
+
+
+test compile_fail ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.97s
+
+     Running tests/macro_smoke.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/macro_smoke-67f45f29a39c2000)
+
+running 7 tests
+test unary_ping_returns_empty_result ... ok
+test unary_add_returns_sum ... ok
+test unary_echo_string_round_trips ... ok
+test exchange_init_returns_token ... ok
+test dynamic_producer_uses_runtime_schema ... ok
+test producer_emits_first_batch_and_state_token ... ok
+test producer_with_header_emits_header_then_data ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/reflection_self_description.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/reflection_self_description-94639190eab2bd62)
+
+running 5 tests
+test the_described_hash_is_the_reference_one ... ok
+test the_application_surface_is_untouched ... ok
+test describe_returns_both_reflection_methods ... ok
+test the_listing_advertises_the_same_hash ... ok
+test it_answers_what_it_describes ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/stream_state_derive.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/stream_state_derive-3724845c5143310f)
+
+running 4 tests
+test counter_decode_rejects_garbage ... ok
+test counter_roundtrip_via_derive ... ok
+test rebuild_runs_after_decode ... ok
+test rebuild_runs_with_alternate_branch ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/tcp_serve.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/tcp_serve-d3d5e227280918cf)
+
+running 4 tests
+test tcp_worker_authenticates_canonical_forwarded_iroh_identity ... ok
+test tcp_shutdown_without_a_connection_preserves_startup_grace ... ok
+test tcp_shutdown_interrupts_a_stalled_connection ... ok
+test tcp_worker_serves_then_idle_exits ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+     Running tests/unix_idle.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/unix_idle-b8fe5f290a182db8)
+
+running 5 tests
+test unix_listener_refuses_an_active_socket ... ok
+test unix_listener_refuses_regular_files_and_symlinks ... ok
+test unix_cleanup_does_not_unlink_a_replacement_file ... ok
+test unix_shutdown_interrupts_a_stalled_connection ... ok
+test unix_worker_serves_then_idle_exits ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_benchmark_rust-c384713f74b5e06a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_client-ea62cc704d992056)
+
+running 23 tests
+test http::tests::default_caps_assume_zstd ... ok
+test http::tests::caps_assume_zstd_only_when_the_header_is_absent ... ok
+test http::tests::advertised_max_response_bytes_uses_strict_safe_integer_grammar ... ok
+test http::tests::capability_parser_reports_accept_max_response_support ... ok
+test http::tests::response_budget_discovery_requires_success_and_exact_support ... ok
+test http::tests::supported_encodings_separates_absent_from_present_but_empty ... ok
+test http::tests::upload_url_request_uses_shared_nullable_count_schema ... ok
+test http::tests::response_parser_accepts_data_then_zero_row_token_sentinel ... ok
+test http::tests::response_parser_rejects_multiple_data_batches ... ok
+test httpi::tests::parses_canonical_httpi_targets ... ok
+test transport::socks5h_tests::proxy_uri_rejects_credentials_options_and_local_dns ... ok
+test httpi::tests::rejects_noncanonical_httpi_targets ... ok
+test http::tests::decoded_acceptance_does_not_redefine_the_independent_encoded_cap ... ok
+test http::tests::native_client_sends_and_locally_enforces_the_same_default_budget ... ok
+test transport::socks5h_tests::domain_is_idna_encoded_and_resolved_only_by_proxy ... ok
+test http::tests::external_upload_connection_error_redacts_signed_query ... ok
+test transport::socks5h_tests::proxy_rejection_never_connects_directly ... ok
+test http::tests::advertised_acceptance_matches_the_actual_decoded_ceiling_in_any_option_order ... ok
+test transport::reader_join_tests::bounded_reader_join_reaps_a_finished_reader ... ok
+test transport::subprocess_tests::deadline_transport_preserves_multiple_pipe_turns ... ok
+test transport::reader_join_tests::bounded_reader_join_detaches_instead_of_waiting_for_eof ... ok
+test transport::subprocess_tests::timeout_joins_a_reader_even_when_its_channel_is_full ... ok
+test transport::socks5h_tests::negotiation_uses_one_deadline ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests/http_fault.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_fault-91ffc0b9c47f97dd)
+
+running 15 tests
+test known_length_oversize_keep_alive_response_is_discarded_before_recovery ... ok
+test unary_connection_failure_is_not_retried_by_default ... ok
+test gzip_response_decodes_to_a_valid_arrow_result ... ok
+test request_times_out ... ok
+test no_retry_exhausted_is_transport_error ... ok
+test gzip_decoded_response_is_bounded_and_recovers ... ok
+test identity_decoded_response_has_an_independent_cap_and_recovers ... ok
+test identity_known_length_encoded_response_is_bounded_and_recovers ... ok
+test identity_response_is_bounded_by_the_server_advertised_maximum ... ok
+test zstd_large_window_is_rejected_even_for_tiny_output_and_recovers ... ok
+test zstd_chunked_decoded_response_is_bounded_and_recovers ... ok
+test zstd_known_length_decoded_response_is_bounded_and_recovers ... ok
+test identity_chunked_encoded_response_is_bounded_and_recovers ... ok
+test retries_then_succeeds ... ok
+test garbage_response_is_error_not_panic ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.38s
+
+     Running tests/http_resume.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_resume-e440b012af6089e1)
+
+running 2 tests
+test seek_to_token_repositions_an_initialised_session ... ok
+test resume_stream_continues_from_a_per_batch_token ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/http_roundtrip.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/http_roundtrip-480a41b318c3774e)
+
+running 2 tests
+test http_unary_describe_capabilities ... ok
+test http_producer_finite ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/httpi_roundtrip.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/httpi_roundtrip-d06d89c13c4af671)
+
+running 3 tests
+test default_ephemeral_identity_is_process_stable ... ok
+test httpi_resolves_externalized_response_over_separate_http_fetch ... ok
+test typed_unary_capabilities_and_describe_over_httpi ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/inproc_external.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/inproc_external-331f831bb8dc721e)
+
+running 4 tests
+test a_pointer_with_no_resolver_is_an_error_not_an_empty_batch ... ok
+test unary_result_resolves_over_a_byte_stream ... ok
+test an_externalized_stream_header_resolves ... ok
+test producer_batches_resolve_with_their_own_metadata_and_logs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/inproc_roundtrip.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/inproc_roundtrip-74df47e1d797e0dd)
+
+running 5 tests
+test unary_echo ... ok
+test cancel_producer ... ok
+test exchange_stream ... ok
+test producer_stream ... ok
+test describe_and_transport_options ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/python_native_client.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/python_native_client-184e229abda0a637)
+
+running 1 test
+test python_worker_preserves_declared_typed_exchange_schema ... ignored, requires the Python vgi-rpc reference worker
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/subprocess_close.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/subprocess_close-a29e23130fe0ae15)
+
+running 4 tests
+test a_cooperative_child_is_reaped_promptly_and_not_killed ... ok
+test an_exited_wrapper_cannot_leave_a_stdout_holding_descendant ... ok
+test close_does_not_wait_forever_for_a_child_that_never_exits ... ok
+test close_is_idempotent_and_still_bounded ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.30s
+
+     Running tests/subprocess_timeout.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/subprocess_timeout-6e8fb4e364e758bb)
+
+running 2 tests
+test a_zero_timeout_immediately_poisons_the_subprocess ... ok
+test a_stalled_response_kills_and_poisons_the_subprocess ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.00s
+
+     Running tests/tcp_tls.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/tcp_tls-9c266d7f132e9f8a)
+
+running 1 test
+test rpc_client_round_trips_over_direct_mtls ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_conformance_client_driver-6fdf04291e939451)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_conformance_rust-eb6a6d7b9e44bd6e)
+
+running 10 tests
+test identity_fixture::tests::a_zero_ttl_is_a_value_the_hook_set ... ok
+test identity_fixture::tests::an_empty_scope_list_still_echoes_its_separator ... ok
+test identity_fixture::tests::the_minimal_credential_leaves_both_optional_fields_unset ... ok
+test identity_fixture::tests::modes_host_what_their_hooks_justify ... ok
+test identity_fixture::tests::the_minimal_purpose_omits_the_correlation_handle ... ok
+test identity_fixture::tests::the_multibyte_probe_straddles_the_cap ... ok
+test identity_fixture::tests::the_padded_credential_is_distinguishable_from_its_trimmed_form ... ok
+test conformance::wide_types::tests::roundtrip_deep_nested ... ok
+test conformance::wide_types::tests::roundtrip_none ... ok
+test conformance::hash_tests::the_access_log_publishes_the_canonical_digest ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_gcs-e3889ee2e6ff0321)
+
+running 2 tests
+test tests::method_bound_urls_round_trip_through_gcs_wrapper ... ok
+test tests::uploads_via_factory ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_iroh-1c8192d9b55df8ea)
+
+running 9 tests
+test tests::admission_is_bounded_and_permits_are_released_for_drain ... ok
+test tests::defaults_do_not_authenticate_arbitrary_endpoint_keys ... ok
+test tests::custom_policy_error_details_are_redacted_before_logging ... ok
+test tests::canonical_iroh_targets_round_trip ... ok
+test tests::noncanonical_iroh_targets_are_rejected ... ok
+test tests::panic_payload_is_reduced_to_a_fixed_log_class ... ok
+test tests::an_io_deadline_poison_cancels_the_connection_token ... ok
+test tests::handler_shutdown_closes_admission_and_waits_for_active_accepts ... ok
+test tests::first_request_budget_is_absolute_and_response_disarms_it ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/loopback.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/loopback-51b2d3d1ac4e3bab)
+
+running 3 tests
+test one_connection_multiplexes_stateful_transports_with_one_identity_snapshot ... ok
+test shutdown_bounds_an_idle_logical_stream_drain ... ok
+test drip_fed_stream_is_terminated_without_poisoning_its_connection ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_iroh_browser-282d36dc71d2eaa6)
+
+running 1 test
+test tests::protocol_name_is_versioned_and_stable ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/loopback.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/loopback-f33a065bc27b36b1)
+
+running 1 test
+test shared_endpoint_sends_hyper_request_to_iroh_http_core_server ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_macros-927128df68a98b06)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_s3-e51df4cb9a69bf15)
+
+running 4 tests
+test tests::object_key_uses_prefix ... ok
+test tests::factory_error_propagates ... ok
+test tests::fetch_connection_error_redacts_signed_query ... ok
+test tests::method_bound_url_pair_round_trips_locally ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/target/debug/deps/vgi_rpc_tailnet_rust-4fff381723ee3aa6)
+
+running 5 tests
+test tests::qualification_relay_emits_exact_proxy_v2_ipv4_and_ipv6_addresses ... ok
+test tests::qualification_relay_rejects_mixed_address_families ... ok
+test tests::snapshot_rejects_a_serve_subject_derived_from_spoofed_login ... ok
+test tests::server_requires_the_exact_primary_auth_derived_from_peer_evidence ... ok
+test tests::snapshot_requires_issuer_target_and_bound_primary_auth ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_iroh_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_iroh_cabi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_iroh_transport
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_rpc
+
+running 4 tests
+test vgi-rpc/src/auth/jwt.rs - auth::jwt (line 10) ... ignored
+test vgi-rpc/src/access_log.rs - access_log (line 18) - compile ... ok
+test vgi-rpc/src/auth/proof.rs - auth::proof (line 12) - compile ... ok
+test vgi-rpc/src/http.rs - http::shutdown_signal (line 1794) - compile ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests vgi_rpc_client
+
+running 1 test
+test vgi-rpc-client/src/lib.rs - (line 11) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests vgi_rpc_gcs
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_rpc_iroh
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_rpc_iroh_browser
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_rpc_macros
+
+running 2 tests
+test vgi-rpc-macros/src/lib.rs - (line 6) ... ignored
+test vgi-rpc-macros/src/lib.rs - derive_vgi_arrow (line 23) ... ignored
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vgi_rpc_s3
+
+running 1 test
+test vgi-rpc-s3/src/lib.rs - (line 16) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

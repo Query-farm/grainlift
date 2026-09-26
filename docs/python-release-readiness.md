@@ -213,13 +213,21 @@ with the per-result connection creation used in that run. Rust TCP has an
 independently traced 50 ms accept-loop delay. The native driver now retains
 one clean idle TCP/mTLS result connection per ADBC connection, avoiding repeated
 connection setup for sequential queries. Event-driven acceptance remains an
-upstream opportunity. These measurements do not isolate TLS encryption cost
+upstream opportunity in that report. These measurements do not isolate TLS encryption cost
 or qualify production TCP hosting in the Python SDK.
 The [bounded result reuse follow-up](../validation/load-results/ec2-result-reuse-20260926/README.md)
 measures 3.82 ms/query for Rust TCP/mTLS and 8.79 ms for Python TCP/mTLS,
 with two transport connections across 1,010 successful queries per Python case.
 All 16,000 measured queries passed. Native reuse has lifecycle and failure
 regressions; the Python TCP hosting API was diagnostic in that run.
+
+The subsequent [upstream accept-readiness fix](../validation/load-results/ec2-accept-readiness-20260926/README.md)
+reduces Rust fresh mTLS connection/query/close cycles from 93.33 to 21.58 ms with
+the same native driver. Warm queries remain approximately 3.75 ms. All twelve
+comparison cases passed, with exact descriptor recovery. This removes an
+artificial connection-creation delay; it does not reduce the remaining warm
+Python/Rust gap. Grainlift's normal build still needs a published VGI release
+and dependency update to consume the upstream change.
 
 The subsequent [supported-host qualification](../validation/load-results/ec2-supported-hosting-20260926/README.md)
 promotes TCP/mTLS and supervised Granian into the SDK's public API. Installed-wheel

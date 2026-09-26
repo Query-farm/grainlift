@@ -1,0 +1,8 @@
+   Compiling vgi-rpc-macros v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/baseline/vgi-rpc-macros)
+   Compiling vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/baseline/vgi-rpc)
+   Compiling vgi-rpc-client v0.27.1
+   Compiling grainlift-protocol v0.4.0 (https://github.com/Query-farm/grainlift.git?rev=1a1044f0c3152c1a8350b9c010101a8ad380ef91#1a1044f0)
+   Compiling vgi-rpc-iroh v0.27.1
+   Compiling grainlift-server v0.4.0 (https://github.com/Query-farm/grainlift.git?rev=1a1044f0c3152c1a8350b9c010101a8ad380ef91#1a1044f0)
+   Compiling grainlift-rust-hello-world v0.1.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/example)
+    Finished `release` profile [optimized] target(s) in 22.55s

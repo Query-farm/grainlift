@@ -1,0 +1,1 @@
+vgi-rpc v0.27.2 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/accept-investigation/upstream/vgi-rpc)

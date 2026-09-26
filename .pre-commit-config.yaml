@@ -36,7 +36,7 @@ repos:
     hooks:
       - id: codespell
         # Generated Cargo logs include dependency names such as `inout`.
-        exclude: "Cargo\\.(toml|lock)$|^validation/load-results/(ec2-python-latency-20260926|ec2-result-reuse-20260926)/rust-(test|clippy|build)\\.txt$"
+        exclude: "Cargo\\.(toml|lock)$|^validation/load-results/(ec2-python-latency-20260926|ec2-result-reuse-20260926)/rust-(test|clippy|build)\\.txt$|^validation/load-results/ec2-accept-readiness-20260926/.*\\.txt$"
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c
@@ -49,7 +49,7 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
         # Preserve original JUnit, profiler and diagnostic-log payloads byte-for-byte.
-        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/(ec2-python-latency-20260926|ec2-matched-synthetic-20260926|ec2-transport-comparison-20260926|ec2-result-reuse-20260926|ec2-supported-hosting-20260926)/.*\.txt)$
+        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/(ec2-python-latency-20260926|ec2-matched-synthetic-20260926|ec2-transport-comparison-20260926|ec2-result-reuse-20260926|ec2-supported-hosting-20260926|ec2-accept-readiness-20260926)/.*\.txt)$
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: trailing-whitespace
