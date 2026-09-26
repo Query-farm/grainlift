@@ -1,0 +1,12 @@
+{
+  "transport": "mtls",
+  "worker": "direct",
+  "active_connections": 0,
+  "connections_opened": 2,
+  "connections_closed": 2,
+  "listener_stopped_early": false,
+  "remaining_sessions": 0,
+  "max_connections": 8,
+  "max_read_bytes": 2097152,
+  "max_connection_input_bytes": 67108864
+}

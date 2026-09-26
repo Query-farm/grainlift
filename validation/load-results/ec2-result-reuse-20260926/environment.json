@@ -1,0 +1,47 @@
+{
+  "python": "3.14.7",
+  "gil_enabled": true,
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "logical_cpus": 48,
+  "memory_bytes": 99422273536,
+  "openssl": "OpenSSL 3.5.8 25 Aug 2026",
+  "rust": "1.97.1",
+  "rust_example_revision": "b47f27c",
+  "grainlift_server_revision": "1a1044f0c3152c1a8350b9c010101a8ad380ef91",
+  "sdk_revision": "9ca8f3621320bd19c93afe243fbf3f523872c763",
+  "packages": {
+    "vgi-rpc": "0.47.1",
+    "granian": "2.8.3",
+    "pyarrow": "25.0.1",
+    "adbc-driver-manager": "1.12.0",
+    "cryptography": "50.0.1"
+  },
+  "sha256": {
+    "grainlift-rust-hello-world/Cargo.toml": "40cf85489402ca9be8a56451b95bfbaa2a7fff9e07859d8f9e103f288dbc1ea6",
+    "grainlift-rust-hello-world/Cargo.lock": "5da6c14de23d7c94e064f2a68e9cf245572c0bac9e786b08984c604445b762c1",
+    "grainlift-rust-hello-world/src/lib.rs": "dd44800b86c8ada853228878d15ace1ba0bce9f4561bfe505c46a48a691c291c",
+    "grainlift-rust-hello-world/src/main.rs": "e9f6eeaf52f1c3e2609c4d0fffccb5f8aee5538830c615f724d830ae9d87977e",
+    "grainlift/target/release/grainlift-rust-hello-world": "dc38872a2cc34f5988b82acf53647378279d36da72515ae684d4b72dff8da2e3",
+    "grainlift/target/release/libadbc_driver_grainlift.so": "cf16e484e65c07350144272acd21c79fd38d4a10282d6436090121ae9d2f9cad",
+    "grainlift/validation/regression/soak/matched.py": "239399cd1e31a694c3eb4c23df187136fa328fc91498cc39b951f933b16ab7a6",
+    "grainlift/validation/regression/soak/tcp_host.py": "293d2b018327e360af06442fe99d154c1c38596264fdeda57bc17b4a1d059902",
+    "grainlift/validation/regression/soak/rust_host.py": "317dbcd59e5e7e12e78479159121febd95690ec0208dafa477debdf7d65f251f",
+    "grainlift/validation/regression/soak/diagnose.py": "0988ade095a94a1ad2294d69f7c62c03b8c8ad8fa356148b91938ec117843d7b",
+    "grainlift/validation/regression/soak/granian_host.py": "cf1dbcf2cb5dc40d31a9f53b220a15d98d8a269d1da7d4897217e4d3d7b034d3",
+    "grainlift/validation/regression/soak/worker.py": "6daf7662f485368bc4ef37d02bb61e8fd9037401fc74035febbd9132d1d5af89",
+    "grainlift/validation/regression/tests/test_tcp_matched.py": "aa789dc04e8d00ec0a43f0fb312a90ae85d1cc3aa93d81482d5600ff7458d785",
+    "grainlift/validation/diagnostics/run_transports.sh": "6111343a183872b32da60ce67ed0ebc69e14d10db2eb0a0ccc986e5596eca387",
+    "grainlift/validation/diagnostics/make_test_tls.sh": "679fdcea9b17784bc03a1443fe9db14f6d86da471f24705e209abb07d5ad3b7a",
+    "reuse-investigation/native-before.so": "f441c8545ec3c43c13d25f026984c4f67c684e5f62a311b833f8cc90fbedbc2b"
+  },
+  "rust_vgi_tcp_source_sha256": "d8697369cfea07ecde275770a5be472bf568475860142f70556cc7eb85a7be06",
+  "rust_vgi_tcp_accept_excerpt": [
+    "            }",
+    "            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {",
+    "                thread::sleep(Duration::from_millis(50));",
+    "            }",
+    "            Err(_) => break,"
+  ],
+  "source_note": "Current client includes bounded TCP/mTLS result reuse; exact Rust source hashes are in local-source-hashes.json and were verified identical on EC2. Server binary and Python SDK are unchanged from the prior comparison. Remote checkout HEAD is older; copied source hashes identify the build. Private certificates and binaries are excluded.",
+  "client_source_base": "5b4452493d34ceb38383cb4e2c41e70191a84ca7"
+}

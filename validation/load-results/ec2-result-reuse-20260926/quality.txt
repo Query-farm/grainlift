@@ -1,0 +1,6 @@
+All checks passed!
+1 file already formatted
+Success: no issues found in 1 source file
+Skipping files that match this pattern: \.git|\.tox
+tests/test_tcp_matched.py
+🎉 No violations 🎉

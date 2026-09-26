@@ -46,6 +46,9 @@ use vgi_rpc::tcp::{
 };
 use vgi_rpc_iroh::{CancellationToken, IrohServer, IrohServerOptions, VGI_IROH_ALPN};
 
+#[path = "support/result_reuse.rs"]
+mod result_reuse;
+
 #[derive(Default)]
 struct FakeBackend;
 
@@ -211,7 +214,8 @@ impl BackendStatement for FakeStatement {
     }
 
     fn execute(&mut self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
-        assert_eq!(self.sql.as_deref(), Some("select value from test"));
+        let stream_error = self.sql.as_deref() == Some("stream error");
+        assert!(stream_error || self.sql.as_deref() == Some("select value from test"));
         let schema = Arc::new(Schema::new(vec![Field::new(
             "value",
             DataType::Int64,
@@ -222,10 +226,14 @@ impl BackendStatement for FakeStatement {
                 schema.clone(),
                 vec![Arc::new(Int64Array::from(vec![1, 2]))],
             )?),
-            Ok(RecordBatch::try_new(
-                schema.clone(),
-                vec![Arc::new(Int64Array::from(vec![3, 4]))],
-            )?),
+            if stream_error {
+                Err(ArrowError::ComputeError("Synthetic stream failure".into()))
+            } else {
+                Ok(RecordBatch::try_new(
+                    schema.clone(),
+                    vec![Arc::new(Int64Array::from(vec![3, 4]))],
+                )?)
+            },
         ];
         Ok(Box::new(RecordBatchIterator::new(
             batches.into_iter(),

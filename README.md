@@ -323,6 +323,16 @@ For Iroh, persist the server secret-key file so the service endpoint ID remains
 stable, and map allowed client endpoint IDs to principals in
 `iroh.principals`.
 
+TCP and mTLS clients retain at most one idle result connection per ADBC
+connection, separately from the persistent control connection. Fully consumed
+streams are closed at the protocol boundary before their socket is cached.
+Concurrent readers own separate sockets; excess idle sockets, partial reads,
+errors and timeouts are discarded. Before reusing an idle socket, the driver
+checks it with a read-only VGI transport handshake and replaces it if stale.
+It never re-executes an ADBC operation to recover a pooled connection. Closing
+the owning ADBC connection and its readers releases the pool. HTTP connection
+pooling and Iroh endpoint sharing retain their existing behavior.
+
 See [grainlift.example.toml](grainlift.example.toml) for the complete server,
 TCP, Iroh, authentication, target, and resource-limit configuration.
 
@@ -443,6 +453,10 @@ The [HTTP/TCP comparison](validation/load-results/ec2-transport-comparison-20260
 then measured Python at 17.60 ms over HTTP and 18.72 ms over TCP/mTLS. TCP
 fetches batches faster, but per-result connection setup offsets that saving.
 Rust TCP exposes a separate, traced 50 ms accept-loop polling delay.
+The [result connection reuse follow-up](validation/load-results/ec2-result-reuse-20260926/README.md)
+reduces mean TCP/mTLS latency to 3.82 ms for Rust and 8.79 ms for Python with
+the same servers. The native driver now retains one clean idle result socket
+per ADBC connection. All 16,000 measured queries passed with full cleanup.
 
 ## Repository layout
 

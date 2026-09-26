@@ -1,0 +1,12 @@
+   Compiling grainlift-server v0.4.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/crates/grainlift-server)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.64s
+     Running tests/http_proxy.rs (target/debug/deps/http_proxy-b90eff07fd67bf63)
+
+running 4 tests
+test result_reuse::stream_errors_discard_the_connection_and_preserve_control_operations ... ok
+test result_reuse::overlapping_results_bound_idle_pool_and_partial_results_are_discarded ... ok
+test result_reuse::completed_results_reuse_one_socket_and_stale_idle_is_replaced ... ok
+test result_reuse::timeout_and_invalid_output_never_enter_the_idle_pool ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.05s
+

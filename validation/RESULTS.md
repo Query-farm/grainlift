@@ -23,6 +23,20 @@ original provenance and are not rewritten as current measurements.
 
 ## Protocol 0.4 EC2 rerun — 2026-09-26
 
+The latest [bounded result connection reuse run](load-results/ec2-result-reuse-20260926/README.md)
+uses the same servers with a rebuilt native driver retaining at most one clean
+idle TCP/mTLS result socket per ADBC connection. Three repetitions average
+3.82 ms/query for Rust TCP/mTLS (256.74 queries/s) and 8.79 ms for Python
+TCP/mTLS (109.28/s), versus the previous 49.99 and 18.72 ms. Fresh HTTP controls
+average 10.09 and 19.29 ms, with roughly 8–10% variation from the prior run.
+All sixteen cases passed 16,000 measured queries, 160 warmups and 1,600 expected
+errors with zero unexpected errors, complete samples and exact descriptor
+recovery. Python TCP reports only two sockets per case, both closed at shutdown.
+Seventy Rust tests and thirty Python tests passed, including new pool capacity,
+stale socket, partial-result, failure and authenticated reuse regressions.
+The report records stage times, tails, CPU, RSS, source hashes and limitations;
+the Python TCP host remains diagnostic and the upstream accept sleep remains.
+
 The subsequent [four-way transport comparison](load-results/ec2-transport-comparison-20260926/README.md)
 ran the same synthetic worker with one client and in-process backends over
 HTTP and authenticated TCP/mTLS. Three repetitions averaged 9.37 ms/query

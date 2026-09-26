@@ -1,0 +1,140 @@
+   Compiling grainlift-protocol v0.4.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/crates/grainlift-protocol)
+   Compiling adbc-driver-grainlift v0.4.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/crates/adbc-driver-grainlift)
+   Compiling grainlift-server v0.4.0 (/home/ec2-user/Development/grainlift-benchmark-20260926-v04/grainlift/crates/grainlift-server)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.87s
+     Running unittests src/lib.rs (target/debug/deps/adbc_driver_grainlift-7421b6191017b769)
+
+running 13 tests
+test iroh_pool::tests::failed_initialization_does_not_permanently_poison_a_key ... ok
+test iroh_pool::tests::distinct_keys_are_isolated_and_dead_slots_are_swept ... ok
+test tests::database_requires_endpoint_and_target ... ok
+test tests::explicit_grainlift_uri_preserves_downstream_uri ... ok
+test tests::grainlift_get_info_identifies_the_client_driver ... ok
+test tests::grainlift_get_info_matches_a_sparse_downstream_union ... ok
+test tests::grainlift_options_are_not_forwarded ... ok
+test tests::grainlift_uri_aliases_select_the_expected_transport ... ok
+test tests::max_bind_bytes_is_positive_and_supports_the_full_adbc_integer_range ... ok
+test tests::standard_uri_endpoint_is_not_forwarded ... ok
+test tests::structured_errors_accept_only_the_stock_python_prefix ... ok
+test iroh_pool::tests::connection_key_includes_identity_route_and_timeout ... ok
+test iroh_pool::tests::same_key_reuses_one_resource_without_a_stampede ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/debug/deps/grainlift_protocol-fb9149e16a5f9c0a)
+
+running 4 tests
+test tests::adbc_error_sqlstate_round_trips_across_c_char_signedness ... ok
+test tests::configured_options_round_trip ... ok
+test tests::malformed_remote_error_fields_are_rejected_without_silent_changes ... ok
+test tests::schema_round_trip ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/typed_requests.rs (target/debug/deps/typed_requests-fe776a169219bb79)
+
+running 5 tests
+test request_decoder_rejects_null_list_items_and_incorrect_record_schema ... ok
+test request_envelope_size_is_checked_below_at_and_above_boundary ... ok
+test nonfinite_request_options_preserve_their_bits ... ok
+test semantic_validation_precedes_request_use ... ok
+test named_request_round_trips_preserve_filters_and_typed_options ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/typed_responses.rs (target/debug/deps/typed_responses-1ce5c51b263d0a98)
+
+running 9 tests
+test response_schema_preserves_python_nested_field_names_and_nullability ... ok
+test typed_option_discriminator_requires_exactly_one_value ... ok
+test bind_frames_reject_malformed_finish_and_nested_payloads ... ok
+test response_limits_apply_below_at_and_above_exact_ipc_size ... ok
+test response_decoder_rejects_wrong_type_rows_and_truncated_or_trailing_ipc ... ok
+test invalid_affected_counts_are_rejected_without_normalization ... ok
+test fixed_bind_frames_preserve_empty_zero_column_and_dictionary_batches ... ok
+test typed_float_options_preserve_ieee754_bits ... ok
+test all_eight_typed_responses_round_trip ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/grainlift_server-c96bf5887dcabf36)
+
+running 18 tests
+test backend::tests::merges_allowed_client_options_and_server_options ... ok
+test backend::tests::rejects_disallowed_and_server_controlled_options ... ok
+test config::tests::default_http_turn_budget_includes_vgi_message_headroom ... ok
+test config::tests::rejects_unknown_fields_and_missing_authentication ... ok
+test bind_upload::tests::rejects_a_staged_stream_over_its_cumulative_limit ... ok
+test config::tests::accepts_bounded_static_and_jwt_configurations ... ok
+test config::tests::validates_permissions_and_remote_plaintext ... ok
+test config::tests::validates_independent_stream_and_http_turn_limits ... ok
+test config::tests::validates_client_option_allowlists ... ok
+test bind_upload::tests::stages_multiple_batches_into_an_owned_reader ... ok
+test session::tests::validates_limit_relationships ... ok
+test session::tests::enforces_target_authorization_and_principal_isolation ... ok
+test config::tests::validates_persistent_transport_authentication ... ok
+test session::tests::enforces_session_statement_and_result_quotas ... ok
+test service::response_tests::session_and_statement_encoding_failures_reclaim_only_failed_handles ... ok
+test partitions::tests::partition_bounds_and_authenticated_claim_validation ... ok
+test partitions::tests::signed_partitions_are_scoped_expiring_and_process_local ... ok
+test session::tests::reaps_expired_sessions_and_closes_everything ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/main.rs (target/debug/deps/grainlift_server-d3888ea8954cc679)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fault_injection.rs (target/debug/deps/fault_injection-ce55ed28a6b3ae92)
+
+running 12 tests
+test shutdown_detaches_live_handles_and_drops_them_after_in_flight_users_finish ... ok
+test shutdown_detaches_a_timed_out_driver_without_joining_its_worker ... ok
+test downstream_execute_error_keeps_all_adbc_error_fields ... ok
+test oversized_typed_result_response_reclaims_query_and_metadata_cursors ... ok
+test adbc_cancellation_is_separate_authorized_and_preserves_unsupported_errors ... ok
+test malformed_and_replayed_reads_are_stable_and_service_remains_healthy ... ok
+test actor_deadline_is_a_structured_adbc_timeout_not_a_transport_timeout ... ok
+test incompatible_or_missing_versions_cannot_allocate_sessions ... ok
+test client_request_timeout_does_not_implicitly_cancel_adbc_or_poison_the_session ... ok
+test session_actor_deadline_and_cancellation_are_independent ... ok
+test idle_reaper_does_not_expire_an_in_flight_database_operation ... ok
+test stream_cancel_reclaims_only_the_result_and_abandonment_uses_lease_cleanup ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.26s
+
+     Running tests/http_proxy.rs (target/debug/deps/http_proxy-b90eff07fd67bf63)
+
+running 9 tests
+test authentication_is_required ... ok
+test result_reuse::stream_errors_discard_the_connection_and_preserve_control_operations ... ok
+test result_reuse::overlapping_results_bound_idle_pool_and_partial_results_are_discarded ... ok
+test result_reuse::completed_results_reuse_one_socket_and_stale_idle_is_replaced ... ok
+test ordinary_adbc_client_reads_multiple_batches_over_tcp ... ok
+test ordinary_adbc_client_reads_multiple_batches_over_mtls_tcp ... ok
+test ordinary_adbc_client_reads_multiple_remote_batches ... ok
+test result_reuse::timeout_and_invalid_output_never_enter_the_idle_pool ... ok
+test ordinary_adbc_client_reads_multiple_batches_over_raw_iroh ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.18s
+
+   Doc-tests adbc_driver_grainlift
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests grainlift_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests grainlift_server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

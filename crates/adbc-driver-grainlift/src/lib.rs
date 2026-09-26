@@ -827,9 +827,48 @@ struct ByteConnector {
     endpoint: String,
     request_timeout: Duration,
     options: TransportOptions,
+    // Per ADBC connection: never shared across principals, targets or credentials.
+    // Checked-out readers own their clients; at most one idle socket is retained.
+    idle_result: Arc<Mutex<Option<RpcClient>>>,
 }
 
 impl ByteConnector {
+    fn reuses_results(&self) -> bool {
+        self.endpoint.starts_with("tcp://") || self.endpoint.starts_with("tls+tcp://")
+    }
+
+    fn connect_result(&self) -> Result<(RpcClient, Option<iroh_pool::Lease>)> {
+        if self.reuses_results() {
+            let idle = self
+                .idle_result
+                .lock()
+                .map_err(|_| internal("result connection pool is poisoned"))?
+                .take();
+            // No pool lock spans I/O. Probe only a read-only framework operation:
+            // stale sockets can be replaced without replaying an ADBC operation.
+            if let Some(mut client) = idle
+                && client.is_reusable()
+                && client.transport_options().is_ok()
+                && client.is_reusable()
+            {
+                return Ok((client, None));
+            }
+        }
+        self.connect()
+    }
+
+    fn recycle_result(&self, client: RpcClient) {
+        if !self.reuses_results() || !client.is_reusable() {
+            return;
+        }
+        if let Ok(mut idle) = self.idle_result.lock()
+            && idle.is_none()
+        {
+            *idle = Some(client);
+        }
+        // An excess or unusable connection closes here rather than growing the pool.
+    }
+
     fn connect(&self) -> Result<(RpcClient, Option<iroh_pool::Lease>)> {
         let client = if self.endpoint.starts_with("tcp://") {
             let (host, port) = host_and_port(&self.endpoint, "tcp")?;
@@ -927,6 +966,7 @@ impl RemoteTransport {
             endpoint,
             request_timeout,
             options,
+            idle_result: Arc::new(Mutex::new(None)),
         };
         let (client, lease) = connector.connect()?;
         Ok(Self::Byte(Box::new(ByteTransport {
@@ -1247,7 +1287,7 @@ impl ByteReader {
         thread::Builder::new()
             .name("grainlift-result-stream".to_string())
             .spawn(move || {
-                let (mut client, lease) = match connector.connect() {
+                let (mut client, lease) = match connector.connect_result() {
                     Ok(value) => value,
                     Err(error) => {
                         let _ = ready_tx.send(Err(error));
@@ -1276,9 +1316,23 @@ impl ByteReader {
                                 .tick()
                                 .map(|value| value.map(|(batch, _)| batch))
                                 .map_err(rpc_error);
+                            if matches!(value, Ok(None)) && connector.reuses_results() {
+                                // Output EOS alone is insufficient: send input EOS
+                                // and release the stream's transport borrows first.
+                                let closed = stream.close();
+                                drop(stream);
+                                if closed.is_ok() {
+                                    // VGI marks failed/expired transport I/O as
+                                    // non-reusable, including errors during close.
+                                    connector.recycle_result(client);
+                                }
+                                // Publish EOF only after returning the connection,
+                                // so an immediately following query can reuse it.
+                                let _ = reply.send(Ok(None));
+                                return;
+                            }
                             let finished = matches!(value, Ok(None)) || value.is_err();
-                            let _ = reply.send(value);
-                            if finished {
+                            if reply.send(value).is_err() || finished {
                                 break;
                             }
                         }
@@ -1329,7 +1383,15 @@ impl RemoteReader {
             let RemoteTransport::Byte(byte) = &remote.transport else {
                 unreachable!();
             };
-            let reader = ByteReader::open(byte.connector.clone(), request)?;
+            let reader = match ByteReader::open(byte.connector.clone(), request) {
+                Ok(reader) => reader,
+                Err(error) => {
+                    if let Ok(close) = result_request(&remote.session_id, &result_id) {
+                        let _ = remote.call(protocol::method::CLOSE_RESULT, &close);
+                    }
+                    return Err(error);
+                }
+            };
             return Ok(Self {
                 remote,
                 result_id,

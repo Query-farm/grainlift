@@ -41,6 +41,10 @@ validation/load-results/ec2-transport-comparison-20260926/*.txt
 validation/load-results/ec2-transport-comparison-20260926/*.tsv
 validation/load-results/ec2-transport-comparison-20260926/*.log
 validation/load-results/ec2-transport-comparison-20260926/SHA256SUMS
+validation/load-results/ec2-result-reuse-20260926/*.txt
+validation/load-results/ec2-result-reuse-20260926/*.tsv
+validation/load-results/ec2-result-reuse-20260926/*.log
+validation/load-results/ec2-result-reuse-20260926/SHA256SUMS
 validation/regression/uv.lock
 validation/hardening/grainlift-python.patch
 validation/hardening/manifest.json

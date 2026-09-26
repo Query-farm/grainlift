@@ -190,8 +190,8 @@ The workaround still needs production lifecycle/backpressure validation; the
 native HTTP client's repeated capability discovery also remains to be optimized.
 The [subsequent latency breakdown](../validation/load-results/ec2-python-latency-20260926/README.md)
 shows that client reuse alone does not resolve the loaded throughput ceiling;
-batch RPC count and contention matter substantially. The native reuse patches
-remain diagnostic despite passing the existing Rust workspace checks.
+batch RPC count and contention matter substantially. The earlier HTTP reuse
+patches remain diagnostic despite passing the existing Rust workspace checks.
 The [Granian hosting experiment](../validation/load-results/ec2-granian-20260926/README.md)
 improves throughput over both ordinary Waitress and the diagnostic output-lock
 workaround with the same workload. It also exposes a WSGI compatibility issue:
@@ -208,11 +208,18 @@ This replaces comparisons of different Rust database and Python synthetic
 workloads for assessing this particular single-client gap.
 The [HTTP/TCP follow-up](../validation/load-results/ec2-transport-comparison-20260926/README.md)
 uses an experimental authenticated Python TCP host, not a supported SDK listener.
-TCP lowers batch-consumption cost but does not improve total Python latency
-with the current per-result connection creation. Rust TCP has an independently
-traced 50 ms accept-loop delay. Connection reuse and event-driven acceptance
-remain unimplemented performance opportunities; the results do not isolate
-TLS encryption cost or qualify production TCP hosting in the Python SDK.
+TCP lowered batch-consumption cost but did not improve total Python latency
+with the per-result connection creation used in that run. Rust TCP has an
+independently traced 50 ms accept-loop delay. The native driver now retains
+one clean idle TCP/mTLS result connection per ADBC connection, avoiding repeated
+connection setup for sequential queries. Event-driven acceptance remains an
+upstream opportunity. These measurements do not isolate TLS encryption cost
+or qualify production TCP hosting in the Python SDK.
+The [bounded result reuse follow-up](../validation/load-results/ec2-result-reuse-20260926/README.md)
+measures 3.82 ms/query for Rust TCP/mTLS and 8.79 ms for Python TCP/mTLS,
+with two transport connections across 1,010 successful queries per Python case.
+All 16,000 measured queries passed. Native reuse has lifecycle and failure
+regressions; the Python TCP hosting API remains diagnostic.
 Multi-minute loopback runs are useful regression evidence;
 they are not hours-long stability tests or capacity planning for a real database
 worker. Separate GC diagnostics found roughly stable tracked-object counts and

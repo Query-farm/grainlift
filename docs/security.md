@@ -45,6 +45,16 @@ X.509-SVID URI SAN, then binds the SPIFFE identity to every call on that
 connection. Client certificate, key, CA, and verified server name are explicit
 driver options; there is no certificate-verification bypass.
 
+The native driver may retain one idle TCP/mTLS result socket per ADBC
+connection. This pool is private to that connection, never shared across
+targets, principals, credentials or other ADBC connections. Only complete,
+clean streams with a reusable transport enter the pool; partial reads and
+failed or timed-out streams close their sockets. Checkout verifies the idle
+connection through a read-only framework handshake. A failed probe opens a
+fresh authenticated socket without replaying a query. Existing verified TLS
+connections retain their negotiated identity; apply new credentials or trust
+settings by opening a new ADBC connection and closing the old handles.
+
 VGI namespaces a verified SPIFFE workload into a collision-resistant
 application principal. For example, `spiffe://prod.example.org/worker` in the
 `prod.example.org` trust domain becomes

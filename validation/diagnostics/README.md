@@ -38,9 +38,11 @@ runs four one-batch controls. It retains the matched harness's one client,
 ten warmups, 1,000 measured queries, 100 expected errors, exact result checking
 and post-load recovery per case. All backends are in-process. No compilers,
 profilers or other measured cases may overlap. TCP uses mTLS; HTTP uses bearer
-authentication without TLS. Each TCP result opens a separate stream connection,
-so per-query TLS handshakes and connection acceptance are included. This is
-a comparison of complete deployed paths, not an isolated HTTP framing cost.
+authentication without TLS. Use one unchanged driver binary across each full
+comparison. Older drivers open a separate TCP connection for every result;
+the current driver reuses a clean result socket after warmup. Initial session
+setup is excluded, while any result reconnection is included in query timing.
+This compares complete deployed paths, not isolated HTTP framing or TLS cost.
 
 The Python diagnostic bounds concurrent connections at eight, individual Arrow
 reads at 2 MiB before reading, total connection input at 64 MiB, TLS handshakes
@@ -61,6 +63,9 @@ keys, and must remain outside committed evidence. Integration tests in
 `GRAINLIFT_MATCHED_DRIVER`, and `GRAINLIFT_MATCHED_TLS_DIR`. They verify missing
 client certificates, unauthorized identities, incorrect server names, malformed
 IPC/disconnect recovery, partial result cleanup, structured errors and shutdown.
+With the current driver they also assert result-socket reuse across completed
+queries. The [native Rust tests](../../crates/grainlift-server/tests/support/result_reuse.rs) cover idle capacity,
+simultaneous readers, stale sockets, timeout, malformed output and stream errors.
 
 ## Matched Rust/Python synthetic worker
 

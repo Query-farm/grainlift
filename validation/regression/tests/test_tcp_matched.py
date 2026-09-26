@@ -125,12 +125,17 @@ def test_tcp_native_authentication_errors_disconnect_and_cleanup(
             with cursor.fetch_record_batch() as reader:
                 assert reader.read_next_batch().num_rows == 512
             _query(cursor, 513, 512, 64)
+            for _ in range(3):
+                _query(cursor, 513, 512, 64)
     report = json.loads(output.read_text())
     if host == "rust":
         assert not any(report["before_shutdown"].values())
         assert not any(report["after_shutdown"].values())
         assert report["connections_opened"] == report["connections_closed"] == 1
-        assert report["generated_batches"] == 3
+        assert report["generated_batches"] == 9
     else:
         assert report["active_connections"] == report["remaining_sessions"] == 0
         assert report["connections_opened"] == report["connections_closed"]
+        # One malformed authenticated connection, one control connection,
+        # one discarded partial-result connection, and one reused result socket.
+        assert report["connections_opened"] == 4

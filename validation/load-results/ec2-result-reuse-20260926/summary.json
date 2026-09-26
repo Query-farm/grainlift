@@ -1,0 +1,152 @@
+{
+  "rust-http": {
+    "mean_ms": 10.088405990991305,
+    "qps": 97.7144053813035,
+    "p99_ms_range": [
+      10.759730115410697,
+      16.180473423923253
+    ],
+    "stage_ms": {
+      "client.execute_success": 1.860602533663041,
+      "client.fetch_reader": 0.024475769628528116,
+      "client.pull_batch": 5.829259713369538,
+      "client.verify_batch": 0.8952369486893682,
+      "client.pull_end": 0.642772333677082,
+      "client.close_reader": 0.6741092246581198
+    },
+    "server_cpu_ms_per_success": 4.293333333333333,
+    "peak_rss_mib_range": [
+      13.3046875,
+      14.921875
+    ],
+    "retained_rss_mib_range": [
+      3.33984375,
+      4.92578125
+    ],
+    "previous_mean_ms": 9.37379538766254,
+    "mean_latency_speedup": 0.9291651620715012
+  },
+  "python-http": {
+    "mean_ms": 19.293322111355035,
+    "qps": 50.56043510895039,
+    "p99_ms_range": [
+      21.3794346661339,
+      28.248775192720977
+    ],
+    "stage_ms": {
+      "client.execute_success": 3.8557670773334394,
+      "client.fetch_reader": 0.028328490675145684,
+      "client.pull_batch": 11.524241938273917,
+      "client.verify_batch": 0.9495762810014033,
+      "client.pull_end": 1.2612033186669578,
+      "client.close_reader": 1.4956563306077442
+    },
+    "server_cpu_ms_per_success": 13.676666666666666,
+    "peak_rss_mib_range": [
+      115.96875,
+      116.2265625
+    ],
+    "retained_rss_mib_range": [
+      1.84375,
+      1.87890625
+    ],
+    "previous_mean_ms": 17.603172129329323,
+    "mean_latency_speedup": 0.9123971510831212
+  },
+  "rust-mtls": {
+    "mean_ms": 3.815025476288914,
+    "qps": 256.7442547653733,
+    "p99_ms_range": [
+      4.180299050858942,
+      5.255574535395261
+    ],
+    "stage_ms": {
+      "client.execute_success": 0.7272185513065779,
+      "client.fetch_reader": 0.021868949975517655,
+      "client.pull_batch": 1.795566587696764,
+      "client.verify_batch": 0.7476070673280143,
+      "client.pull_end": 0.12958138232352212,
+      "client.close_reader": 0.2707944440311015
+    },
+    "server_cpu_ms_per_success": 1.7966666666666666,
+    "peak_rss_mib_range": [
+      9.21484375,
+      9.30078125
+    ],
+    "retained_rss_mib_range": [
+      0.09765625,
+      0.109375
+    ],
+    "previous_mean_ms": 49.99471159967894,
+    "mean_latency_speedup": 13.10468617061807
+  },
+  "python-mtls": {
+    "mean_ms": 8.791628296963609,
+    "qps": 109.27569057094475,
+    "p99_ms_range": [
+      10.339850133193996,
+      12.245714636905072
+    ],
+    "stage_ms": {
+      "client.execute_success": 1.7932873326656893,
+      "client.fetch_reader": 0.02335864438403708,
+      "client.pull_batch": 4.929605452217705,
+      "client.verify_batch": 0.762808296445049,
+      "client.pull_end": 0.24619748968689237,
+      "client.close_reader": 0.9130656123318962
+    },
+    "server_cpu_ms_per_success": 7.806666666666667,
+    "peak_rss_mib_range": [
+      106.16015625,
+      106.20703125
+    ],
+    "retained_rss_mib_range": [
+      0.84375,
+      0.91015625
+    ],
+    "previous_mean_ms": 18.721657626655844,
+    "mean_latency_speedup": 2.1294869385142
+  },
+  "one_batch": {
+    "rust-http": {
+      "latency_ms": {
+        "mean": 4.140925791987684,
+        "p50": 4.017146202280102,
+        "p95": 5.308140280749208,
+        "p99": 5.414854000392275,
+        "maximum": 5.739297997934045
+      },
+      "queries_per_second": 229.88492070283743
+    },
+    "python-http": {
+      "latency_ms": {
+        "mean": 8.067427734022203,
+        "p50": 7.747834840250848,
+        "p95": 11.08579099863776,
+        "p99": 11.421731852687486,
+        "maximum": 14.805178001552122
+      },
+      "queries_per_second": 115.9966158093963
+    },
+    "rust-mtls": {
+      "latency_ms": {
+        "mean": 2.373265075038944,
+        "p50": 2.3468565052452166,
+        "p95": 2.80738263202358,
+        "p99": 2.8638311229272557,
+        "maximum": 3.053486998396693
+      },
+      "queries_per_second": 406.82206097780715
+    },
+    "python-mtls": {
+      "latency_ms": {
+        "mean": 5.431771487976221,
+        "p50": 5.255574535395261,
+        "p95": 7.371750469430405,
+        "p99": 7.445477974124701,
+        "maximum": 7.581080000818474
+      },
+      "queries_per_second": 172.4329944390408
+    }
+  }
+}
