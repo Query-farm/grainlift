@@ -23,6 +23,16 @@ original provenance and are not rewritten as current measurements.
 
 ## Protocol 0.4 EC2 rerun — 2026-09-26
 
+The latest [supported Python hosting qualification](load-results/ec2-supported-hosting-20260926/README.md)
+uses the public SDK TCP/mTLS and Granian APIs. Each ran for 180 seconds with one
+native ADBC client, 4,096 rows in eight batches, connection turnover, expected
+errors, and abandoned partial results. mTLS completed 16,150 verified queries
+(89.72/s, p99 19.74 ms); Granian completed 9,458 (52.54/s, p99 21.38 ms).
+Both had zero unexpected errors, exact descriptor recovery, and all 1,026
+backend connections closed. Peak serving RSS was 106.89 and 119.04 MiB.
+The installed SDK wheel passed 512 tests. This lifecycle workload differs from
+the warm-reuse benchmark below and does not establish hours-long stability.
+
 The latest [bounded result connection reuse run](load-results/ec2-result-reuse-20260926/README.md)
 uses the same servers with a rebuilt native driver retaining at most one clean
 idle TCP/mTLS result socket per ADBC connection. Three repetitions average
@@ -35,7 +45,7 @@ recovery. Python TCP reports only two sockets per case, both closed at shutdown.
 Seventy Rust tests and thirty Python tests passed, including new pool capacity,
 stale socket, partial-result, failure and authenticated reuse regressions.
 The report records stage times, tails, CPU, RSS, source hashes and limitations;
-the Python TCP host remains diagnostic and the upstream accept sleep remains.
+the Python TCP host was diagnostic in that run and the upstream accept sleep remains.
 
 The subsequent [four-way transport comparison](load-results/ec2-transport-comparison-20260926/README.md)
 ran the same synthetic worker with one client and in-process backends over

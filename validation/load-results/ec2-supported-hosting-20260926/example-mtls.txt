@@ -1,0 +1,4 @@
+{'message': ['Hello, world!']}
+numbers(2500): [1024, 1024, 452] rows per Arrow batch
+Empty result: 0 rows, schema: number: int64
+Verified mTLS CLI and native client passed; server exited cleanly.

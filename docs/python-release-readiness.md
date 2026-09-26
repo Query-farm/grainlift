@@ -219,7 +219,17 @@ The [bounded result reuse follow-up](../validation/load-results/ec2-result-reuse
 measures 3.82 ms/query for Rust TCP/mTLS and 8.79 ms for Python TCP/mTLS,
 with two transport connections across 1,010 successful queries per Python case.
 All 16,000 measured queries passed. Native reuse has lifecycle and failure
-regressions; the Python TCP hosting API remains diagnostic.
+regressions; the Python TCP hosting API was diagnostic in that run.
+
+The subsequent [supported-host qualification](../validation/load-results/ec2-supported-hosting-20260926/README.md)
+promotes TCP/mTLS and supervised Granian into the SDK's public API. Installed-wheel
+validation passed 512 tests on EC2, including verified identities, admission and
+I/O bounds, cancellation, restart, slow clients, partial results, and active
+shutdown. Two 180-second single-client runs completed 25,608 verified queries,
+3,073 expected errors, and 1,024 abandoned partial results with zero unexpected
+errors, exact descriptor recovery, and every backend connection closed. These
+are supported hosting entry points with explicit limits; they do not establish
+long-term memory stability or multi-client fairness. Waitress remains the default.
 Multi-minute loopback runs are useful regression evidence;
 they are not hours-long stability tests or capacity planning for a real database
 worker. Separate GC diagnostics found roughly stable tracked-object counts and

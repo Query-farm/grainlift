@@ -1,0 +1,22 @@
+{
+  "sdk_commit": "05e84a5b75cde760cd0f6554fe4c372671bd80df",
+  "example_commit": "b59c71d8553860065560ab9da3675fa5c19681d3",
+  "source_sha256": {
+    "validation/regression/soak/hosting.py": "88809734b68aa611c9ec3724dea4e09ae44801f5b51e7a1b93a3fe1943bc4e68",
+    "../grainlift-python/src/grainlift/__init__.py": "de06819e78dd398981e33e7c15a7a91e2872f9eadcee504617ce56041801da0c",
+    "../grainlift-python/src/grainlift/_wsgi.py": "0df7ef04daaa248c11558553e2d24c3a5dc91503d2e0336ca98e0bc5df811589",
+    "../grainlift-python/src/grainlift/api.py": "771f8239f1d042ee3d015fe0c76b119a1799a91f2e669cffced5fddeb08e37d7",
+    "../grainlift-python/src/grainlift/binding.py": "4039670d9395a6e931a3ff62a386b3f7fcc870ca171dcbc06ef37c1c1fd95e0a",
+    "../grainlift-python/src/grainlift/credentials.py": "560f19e9a41d57d7fd28f7f1234db15f73e7f2df58ce21eb36bcc6fb1a53464e",
+    "../grainlift-python/src/grainlift/hosting.py": "88964134f222f8321e18c4caa3581d458931257fcb9d3264a8d8a2b6facac7f2",
+    "../grainlift-python/src/grainlift/isolation.py": "01c67a462239f4ae4415df090cc3e6e0fdfea8f2f652b27608d527c3c5b928b6",
+    "../grainlift-python/src/grainlift/options.py": "c3bc6551151987723e898f3911b0c29a5d0f9f0930e8a2bbd46a44e2962d7251",
+    "../grainlift-python/src/grainlift/protocol.py": "566b567826b77c92489c137ca82c34afb44c9cb297f54ce2e0268f241a76866e",
+    "../grainlift-python/src/grainlift/requests.py": "0cd2d6fda2416075d00170197ff53bb02885259757e3ecfda6c4595122bcbce2",
+    "../grainlift-python/src/grainlift/server.py": "5abb766cd7f2cc40f9fae96e4e30ade6056d6e0c5985e358c05086783ea34630",
+    "../grainlift-python/src/grainlift/tcp.py": "db8d73b856bc2845399c67bbf0203b01f9b638fee2502b8491fe3c861edd5072",
+    "../grainlift-python/src/grainlift/telemetry.py": "1564d148fc9f5910354fed92b4c0bda1b1b01f877494a1e6fdc041da56367578",
+    "../grainlift-python/src/grainlift/tokens.py": "18588e58cb47b412a15708147902c6520f76fac2aa63e2992b40466859e93441",
+    "../grainlift-python/src/grainlift/wire.py": "2cf7dacd30f7dbb70aa387f32f50765e82a41b2d020e111c30cff0dad04fb233"
+  }
+}

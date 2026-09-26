@@ -21,14 +21,16 @@ limitations under the License.
 # Deploying a Python-authored Grainlift service
 
 The Python toolkit exposes the Grainlift ADBC operation surface over authenticated
-HTTP(S): transactions, preparation, batch/stream binding, updates and ingestion,
+HTTP(S) and TCP/mTLS: transactions, preparation, batch/stream binding, updates and ingestion,
 metadata and statistics, partitioned results, typed options, and Substrait plans.
 Use the ordinary Grainlift ADBC driver on clients. Workers implement database
 semantics through connection and statement hooks; unsupported backend capabilities
 return NOT_IMPLEMENTED. Legacy query-only workers still require autocommit.
 See the [worker API contract](https://github.com/Query-farm/grainlift-python/blob/main/docs/API.md).
-Python serving remains HTTP-only, with one owning service process per endpoint;
-TCP/mTLS/Iroh serving is outside this SDK's scope. The native ADBC error vendor-code
+Python serving uses one owning service process per endpoint. The SDK supports
+Waitress, optional supervised Granian, and bounded TCP/mTLS listeners; Iroh
+serving is not implemented. See the SDK's [hosting contract](https://github.com/Query-farm/grainlift-python/blob/main/docs/HOSTING.md)
+for admission, I/O, identity mapping, and shutdown limits. The native ADBC error vendor-code
 sentinel limitation remains; status, SQLSTATE and binary details have separate
 regression coverage.
 
@@ -40,11 +42,19 @@ is outside the validated release scope.
 
 ## Process and network layout
 
-Use a TLS edge proxy in front of a loopback-only Waitress listener. The
+For HTTP, use a TLS edge proxy in front of a loopback-only Waitress or Granian listener. The
 `Service` instance, its token-signing key, sessions, statements and cursors all
 belong to one host process. A single endpoint must continue routing every RPC
 and continuation to that same process. Multiple Waitress threads are supported;
 multiple application processes behind round-robin routing are not transparent.
+Alternatively, `TcpServer` accepts verified client certificates and maps exactly
+one authorized URI SAN to a configured principal. Plain TCP is loopback-only.
+This is certificate-chain verification plus exact URI authorization, not a full
+SPIFFE federation or revocation service. Granian uses one serving child and a
+supervisor with a forced-shutdown deadline. TCP callbacks remain cooperative;
+use `IsolatedWorker` and an external process supervisor when hard termination is
+required. Isolated backends watch their owner's process sentinel and terminate
+when that owner dies.
 Server restart invalidates every handle, and clients must open fresh connections.
 
 The measured layout is:

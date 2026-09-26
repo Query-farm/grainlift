@@ -72,9 +72,11 @@ jobs:
           uv run --no-project --python 3.13 --with pytest==9.1.1
           python -m pytest -o addopts= validation/release_tests -q
       - name: Shell syntax
-        run: bash -n validation/run_regression.sh
+        run: |
+          bash -n validation/run_regression.sh
+          bash -n ci/scripts/pre-build.sh
       - name: Shellcheck
-        run: shellcheck validation/run_regression.sh
+        run: shellcheck validation/run_regression.sh ci/scripts/pre-build.sh
 
   # A reviewed archive hash identifies the exact validated wheels and tests,
   # independently of subsequent source-repository commits. Configure both
