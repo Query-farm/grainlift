@@ -94,6 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut iroh_task = if let Some(iroh) = config.iroh.clone() {
         match start_iroh_listener(
             Arc::clone(&server),
+            Arc::clone(&manager),
             iroh,
             config.server.require_authentication,
             shutdown.child_token(),
@@ -273,6 +274,7 @@ async fn start_tcp_listener(
 
 async fn start_iroh_listener(
     server: Arc<vgi_rpc::RpcServer>,
+    manager: Arc<SessionManager>,
     config: IrohConfig,
     require_authentication: bool,
     shutdown: CancellationToken,
@@ -306,6 +308,9 @@ async fn start_iroh_listener(
         IrohServerOptions::default()
             .with_issuer(config.issuer)
             .with_policy(policy)
+            .with_lifecycle(Arc::new(
+                grainlift_server::iroh_lifecycle::IrohSessionLifecycle::new(manager),
+            ))
             .with_max_active_streams(config.max_active_streams)
             .with_max_active_streams_per_connection(config.max_active_streams_per_connection),
     );

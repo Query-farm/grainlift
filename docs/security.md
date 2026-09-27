@@ -69,6 +69,24 @@ endpoint IDs to principals in `iroh.principals`. Endpoint-key possession is
 not, by itself, organizational membership. The optional endpoint information
 file contains only public discovery information.
 
+The Iroh listener assigns a server-generated connection identifier after
+authentication and admission. Sessions opened on that physical QUIC connection
+are revoked when it disconnects or the listener shuts down, including sessions
+opened concurrently with disconnect. The identifier is kept in server-owned
+authentication context, never accepted from request metadata. Cleanup is
+connection-specific: another connection with the same authenticated endpoint
+or principal remains valid. Individual logical-stream closure does not trigger
+connection-wide cleanup. The connection registry is bounded by Iroh admission;
+closed connection identifiers are removed without retaining tombstones.
+
+Revocation is immediate once the transport detects loss, but native cleanup
+runs outside the listener and registry locks. Downstream cancellation is best
+effort, and a stalled native operation can retain resources until it returns
+or its worker process is terminated. A silent network failure still takes time
+for QUIC to detect. The configurable idle lease remains a fallback; it is not
+an additional delay after detected Iroh disconnection. HTTP, TCP, and mTLS
+session expiry and explicit-close behavior are unchanged.
+
 `auth.target_permissions` is a principal-to-target allowlist. If the map is
 empty, every authenticated principal can use every configured target. Once it
 contains an entry, unlisted principals are denied all targets. A literal `*`

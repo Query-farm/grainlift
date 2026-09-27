@@ -62,3 +62,13 @@ tokio-util = { version = "0.7", features = ["rt"] }
 vgi-rpc = { version = "0.27.3", features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
 vgi-rpc-client = { version = "0.27.3", features = ["http", "tcp-tls"] }
 vgi-rpc-iroh = "0.27.3"
+
+# Pending a crates.io transport release: physical Iroh disconnect callbacks.
+# Pin the shared transport graph together to preserve Rust type identity.
+# https://github.com/Query-farm/vgi-rpc-rust/commit/93cc4b8974494b32da460df1e66f64afdbbf119f
+[patch.crates-io]
+vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
+vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
+vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
+vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
+vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }

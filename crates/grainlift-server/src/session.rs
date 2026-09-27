@@ -115,12 +115,16 @@ pub struct SessionManager {
 #[derive(Default)]
 struct SessionRegistry {
     sessions: HashMap<String, Arc<Session>>,
+    // Active transport IDs are server-generated and bounded by listener
+    // connection admission. Closed IDs are removed, never kept as tombstones.
+    transports: HashMap<String, String>,
     opening_total: usize,
     opening_by_principal: HashMap<String, usize>,
 }
 
 pub struct Session {
     principal: String,
+    transport_id: Option<String>,
     target: String,
     last_used: Mutex<Instant>,
     resources: Arc<SessionResources>,
@@ -330,6 +334,23 @@ impl SessionManager {
         database_options: Vec<(String, adbc_core::options::OptionValue)>,
         connection_options: Vec<(String, adbc_core::options::OptionValue)>,
     ) -> Result<String, AdbcError> {
+        self.open_on_transport(
+            principal,
+            target_name,
+            database_options,
+            connection_options,
+            None,
+        )
+    }
+
+    pub fn open_on_transport(
+        &self,
+        principal: String,
+        target_name: &str,
+        database_options: Vec<(String, adbc_core::options::OptionValue)>,
+        connection_options: Vec<(String, adbc_core::options::OptionValue)>,
+        transport_id: Option<&str>,
+    ) -> Result<String, AdbcError> {
         if !self.authorizer.allows(&principal, target_name) {
             return Err(AdbcError::with_message_and_status(
                 "principal is not authorized for the requested target",
@@ -341,7 +362,7 @@ impl SessionManager {
         })?;
         let connection_option_policy = target.connection_option_policy();
 
-        self.reserve_open(&principal)?;
+        self.reserve_open(&principal, transport_id)?;
         let (reply_tx, reply_rx) = mpsc::sync_channel(1);
         let backend = Arc::clone(&self.backend);
         let spawn = thread::Builder::new()
@@ -390,6 +411,7 @@ impl SessionManager {
         };
         let session = Arc::new(Session {
             principal: principal.clone(),
+            transport_id: transport_id.map(str::to_owned),
             target: target_name.to_string(),
             last_used: Mutex::new(Instant::now()),
             resources,
@@ -409,8 +431,75 @@ impl SessionManager {
             drop(session);
             return Err(busy("proxy is shutting down"));
         }
+        if let Err(error) = Self::validate_transport(&registry, transport_id, &principal) {
+            drop(registry);
+            drop(session);
+            return Err(error);
+        }
         registry.sessions.insert(id.clone(), session);
         Ok(id)
+    }
+
+    fn validate_transport(
+        registry: &SessionRegistry,
+        transport_id: Option<&str>,
+        principal: &str,
+    ) -> Result<(), AdbcError> {
+        if let Some(id) = transport_id
+            && registry.transports.get(id).map(String::as_str) != Some(principal)
+        {
+            return Err(not_found("closed or unavailable transport connection"));
+        }
+        Ok(())
+    }
+
+    /// Register a physical transport after authentication and admission.
+    pub fn open_transport(&self, principal: String) -> Result<String, AdbcError> {
+        let mut registry = self
+            .registry
+            .lock()
+            .map_err(|_| internal("session registry is poisoned"))?;
+        if self.closing.load(Ordering::Acquire) {
+            return Err(busy("proxy is shutting down"));
+        }
+        let id = Uuid::new_v4().to_string();
+        registry.transports.insert(id.clone(), principal);
+        Ok(id)
+    }
+
+    /// Revoke this connection's sessions without affecting other connections
+    /// owned by the same principal. Slow opens cannot register after removal.
+    pub fn close_transport(&self, id: &str) -> Result<usize, AdbcError> {
+        let mut registry = self
+            .registry
+            .lock()
+            .map_err(|_| internal("session registry is poisoned"))?;
+        registry.transports.remove(id);
+        let ids = registry
+            .sessions
+            .iter()
+            .filter(|(_, session)| session.transport_id.as_deref() == Some(id))
+            .map(|(id, _)| id.clone())
+            .collect::<Vec<_>>();
+        let removed = ids
+            .iter()
+            .filter_map(|id| registry.sessions.remove(id))
+            .collect::<Vec<_>>();
+        drop(registry);
+        for session in removed {
+            // Native cancellation can block. Revocation is immediate; driver
+            // cleanup remains off the listener and registry threads.
+            if Arc::strong_count(&session) > 1 {
+                let cancel = Arc::clone(&session.connection_cancel);
+                let _ = thread::Builder::new()
+                    .name("grainlift-disconnect-cancel".into())
+                    .spawn(move || {
+                        let _ = cancel.try_cancel();
+                    });
+            }
+            drop(session);
+        }
+        Ok(ids.len())
     }
 
     fn release_open_reservation(&self, principal: &str) -> Result<(), AdbcError> {
@@ -432,7 +521,7 @@ impl SessionManager {
         }
     }
 
-    fn reserve_open(&self, principal: &str) -> Result<(), AdbcError> {
+    fn reserve_open(&self, principal: &str, transport_id: Option<&str>) -> Result<(), AdbcError> {
         if self.closing.load(Ordering::Acquire) {
             return Err(busy("proxy is shutting down"));
         }
@@ -446,6 +535,7 @@ impl SessionManager {
         if self.closing.load(Ordering::Acquire) {
             return Err(busy("proxy is shutting down"));
         }
+        Self::validate_transport(&registry, transport_id, principal)?;
         let total = registry.sessions.len() + registry.opening_total;
         if total >= self.limits.max_sessions {
             return Err(quota("global session"));
@@ -570,6 +660,7 @@ impl SessionManager {
             .lock()
             .map_err(|_| internal("session registry is poisoned"))?;
         let sessions = std::mem::take(&mut registry.sessions);
+        registry.transports.clear();
         let count = sessions.len();
         drop(registry);
         drop(sessions);
@@ -1081,7 +1172,8 @@ fn not_found(kind: &str) -> AdbcError {
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, HashSet};
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex, mpsc};
+    use std::thread;
     use std::time::Duration;
 
     use adbc_core::error::{Error, Result, Status};
@@ -1435,5 +1527,105 @@ mod tests {
             max_results_per_session: 1,
         };
         assert!(invalid.validate().is_err());
+    }
+
+    #[test]
+    fn transport_disconnect_only_revokes_its_own_sessions() {
+        let manager = manager(
+            SessionLimits::default(),
+            TargetAuthorizer::default(),
+            Duration::from_secs(3600),
+        );
+        let principal = "iroh\0alice";
+        let first = manager.open_transport(principal.into()).unwrap();
+        let second = manager.open_transport(principal.into()).unwrap();
+        let first_session = manager
+            .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&first))
+            .unwrap();
+        let another = manager
+            .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&first))
+            .unwrap();
+        let surviving = manager
+            .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&second))
+            .unwrap();
+        let unbound = manager
+            .open(principal.into(), "sqlite", vec![], vec![])
+            .unwrap();
+        assert!(
+            manager
+                .open_on_transport("iroh\0bob".into(), "sqlite", vec![], vec![], Some(&second))
+                .is_err()
+        );
+        assert_eq!(manager.close_transport(&first).unwrap(), 2);
+        assert_eq!(manager.close_transport(&first).unwrap(), 0);
+        assert!(manager.get(&first_session, principal).is_err());
+        assert!(manager.get(&another, principal).is_err());
+        assert!(manager.get(&surviving, principal).is_ok());
+        assert!(manager.get(&unbound, principal).is_ok());
+        assert!(
+            manager
+                .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&first))
+                .is_err()
+        );
+        assert_eq!(manager.close_transport(&second).unwrap(), 1);
+        assert_eq!(manager.session_count(), 1);
+        manager.close_all().unwrap();
+        assert!(manager.registry.lock().unwrap().transports.is_empty());
+    }
+
+    #[test]
+    fn disconnect_during_open_cannot_leave_a_session_or_reservation() {
+        struct DelayedBackend {
+            started: mpsc::SyncSender<()>,
+            finish: Mutex<mpsc::Receiver<()>>,
+        }
+        impl Backend for DelayedBackend {
+            fn open(
+                &self,
+                target: &TargetConfig,
+                database_options: Vec<(String, OptionValue)>,
+                connection_options: Vec<(String, OptionValue)>,
+            ) -> Result<Box<dyn BackendConnection>> {
+                self.started.send(()).unwrap();
+                self.finish.lock().unwrap().recv().unwrap();
+                DummyBackend.open(target, database_options, connection_options)
+            }
+        }
+        let (started_tx, started_rx) = mpsc::sync_channel(1);
+        let (finish_tx, finish_rx) = mpsc::sync_channel(1);
+        let manager = Arc::new(SessionManager::with_limits_and_authorizer(
+            Arc::new(DelayedBackend {
+                started: started_tx,
+                finish: Mutex::new(finish_rx),
+            }),
+            HashMap::from([("sqlite".into(), target())]),
+            Duration::from_secs(3600),
+            true,
+            SessionLimits::default(),
+            TargetAuthorizer::default(),
+        ));
+        let transport = manager.open_transport("iroh\0alice".into()).unwrap();
+        let opener = {
+            let manager = Arc::clone(&manager);
+            let transport = transport.clone();
+            thread::spawn(move || {
+                manager.open_on_transport(
+                    "iroh\0alice".into(),
+                    "sqlite",
+                    vec![],
+                    vec![],
+                    Some(&transport),
+                )
+            })
+        };
+        started_rx.recv_timeout(Duration::from_secs(3)).unwrap();
+        assert_eq!(manager.close_transport(&transport).unwrap(), 0);
+        finish_tx.send(()).unwrap();
+        assert_eq!(opener.join().unwrap().unwrap_err().status, Status::NotFound);
+        let registry = manager.registry.lock().unwrap();
+        assert!(registry.sessions.is_empty());
+        assert!(registry.transports.is_empty());
+        assert_eq!(registry.opening_total, 0);
+        assert!(registry.opening_by_principal.is_empty());
     }
 }

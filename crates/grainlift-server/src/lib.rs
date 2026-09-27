@@ -17,6 +17,7 @@ pub mod backend;
 mod bind_upload;
 pub mod cli;
 pub mod config;
+pub mod iroh_lifecycle;
 mod partitions;
 pub mod service;
 pub mod session;

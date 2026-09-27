@@ -182,11 +182,12 @@ fn register_open_connection(server: &mut RpcServer, manager: Arc<SessionManager>
                 let connection_options = protocol::named_options_into_adbc(args.connection_options)
                     .map_err(protocol_rpc_error)?;
                 let session_id = manager
-                    .open(
+                    .open_on_transport(
                         principal.clone(),
                         &args.target,
                         database_options,
                         connection_options,
+                        crate::iroh_lifecycle::transport_id(ctx),
                     )
                     .map_err(adbc_rpc_error)?;
                 Ok(Some(handle_response(

@@ -497,6 +497,144 @@ fn session_request(session_id: &str) -> RecordBatch {
     protocol::one_string(protocol::session_schema(), session_id).unwrap()
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn iroh_disconnect_cleans_handles_without_expiring_other_same_identity_connections() {
+    use grainlift_server::iroh_lifecycle::IrohSessionLifecycle;
+    use iroh::{Endpoint, RelayMode, SecretKey, endpoint::presets};
+    use vgi_rpc_client::RpcClient;
+    use vgi_rpc_iroh::{
+        CancellationToken, IrohClientOptions, IrohConnection, IrohServer, IrohServerOptions,
+        VGI_IROH_ALPN,
+    };
+
+    async fn endpoint(key: u8) -> Endpoint {
+        Endpoint::builder(presets::N0)
+            .secret_key(SecretKey::from_bytes(&[key; 32]))
+            .relay_mode(RelayMode::Disabled)
+            .alpns(vec![VGI_IROH_ALPN.to_vec()])
+            .bind()
+            .await
+            .unwrap()
+    }
+    async fn call(
+        connection: &IrohConnection,
+        method: &'static str,
+        request: RecordBatch,
+    ) -> RecordBatch {
+        let transport = connection.open_transport().await.unwrap();
+        tokio::task::spawn_blocking(move || {
+            let mut client = RpcClient::from_transport(Box::new(transport))
+                .protocol(protocol::PROTOCOL_NAME)
+                .protocol_version(protocol::PROTOCOL_VERSION);
+            client.call_unary(method, &request, None).unwrap().0
+        })
+        .await
+        .unwrap()
+    }
+    async fn open(connection: &IrohConnection) -> String {
+        let request = protocol::encode_request(
+            protocol::OpenConnectionRequest {
+                target: "fault".into(),
+                database_options: vec![],
+                connection_options: vec![],
+            },
+            protocol::MAX_CONTROL_BYTES,
+        )
+        .unwrap();
+        let response = call(connection, protocol::method::OPEN_CONNECTION, request).await;
+        protocol::decode_response::<protocol::SessionResponse>(
+            &response,
+            protocol::MAX_CONTROL_BYTES,
+        )
+        .unwrap()
+        .session_id
+    }
+
+    let state = Arc::new(FaultState::default());
+    let manager = manager(state.clone(), Duration::from_secs(3600), true);
+    let server_endpoint = endpoint(41).await;
+    let first_endpoint = endpoint(42).await;
+    let second_endpoint = endpoint(42).await;
+    let server = IrohServer::with_options(
+        Arc::new(build_server(manager.clone(), "disconnect-test".into())),
+        IrohServerOptions::default()
+            .with_policy(Arc::new(|evidence, _| {
+                evidence.unique_verified_subject("iroh")?;
+                Ok(AuthContext::for_principal("iroh", "alice"))
+            }))
+            .with_lifecycle(Arc::new(IrohSessionLifecycle::new(manager.clone()))),
+    );
+    let shutdown = CancellationToken::new();
+    let task = {
+        let endpoint = server_endpoint.clone();
+        let shutdown = shutdown.clone();
+        tokio::spawn(async move {
+            server.serve(endpoint, shutdown).await.unwrap();
+        })
+    };
+    let first = IrohConnection::connect_addr(
+        first_endpoint.clone(),
+        server_endpoint.addr(),
+        IrohClientOptions::default(),
+    )
+    .await
+    .unwrap();
+    let second = IrohConnection::connect_addr(
+        second_endpoint.clone(),
+        server_endpoint.addr(),
+        IrohClientOptions::default(),
+    )
+    .await
+    .unwrap();
+    let first_session = open(&first).await;
+    let second_session = open(&second).await;
+    {
+        let session = manager.get(&first_session, "iroh\0alice").unwrap();
+        session.new_statement().unwrap();
+        session
+            .insert_result(Box::new(FaultReader::batches(state.clone(), [1, 2])))
+            .unwrap();
+    }
+    assert_eq!(manager.resource_counts().unwrap().sessions, 2);
+    first.close();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while state.connection_drops.load(Ordering::SeqCst) != 1
+            || state.statement_drops.load(Ordering::SeqCst) != 1
+            || state.reader_drops.load(Ordering::SeqCst) != 1
+        {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(manager.get(&first_session, "iroh\0alice").is_err());
+    assert_eq!(
+        manager.resource_counts().unwrap(),
+        ResourceCounts {
+            sessions: 1,
+            statements: 0,
+            results: 0,
+            ..ResourceCounts::default()
+        }
+    );
+    call(
+        &second,
+        protocol::method::COMMIT,
+        session_request(&second_session),
+    )
+    .await;
+    assert!(manager.get(&second_session, "iroh\0alice").is_ok());
+    shutdown.cancel();
+    task.await.unwrap();
+    assert_eq!(
+        manager.resource_counts().unwrap(),
+        ResourceCounts::default()
+    );
+    first_endpoint.close().await;
+    second_endpoint.close().await;
+    server_endpoint.close().await;
+}
+
 fn statement_request(session_id: &str, statement_id: &str) -> RecordBatch {
     RecordBatch::try_new(
         protocol::statement_schema(),

@@ -328,6 +328,19 @@ For Iroh, persist the server secret-key file so the service endpoint ID remains
 stable, and map allowed client endpoint IDs to principals in
 `iroh.principals`.
 
+Iroh sessions are also associated with the physical QUIC connection that
+opened them. Once Iroh detects that connection's loss, the server revokes its
+sessions and releases their statements, results, and downstream connections;
+other connections using the same identity remain valid. Closing an individual
+result stream does not close the connection's sessions. Reconnecting creates
+new sessions; it does not resume the old transaction or replay operations.
+An idle-session timeout remains a fallback (`server.session_ttl_seconds`,
+default 3600; `server.session_reap_interval_seconds`, default 30). Those
+settings also expire legitimate idle sessions. Native driver cancellation is
+best effort; see [process isolation](docs/process-isolation.md) for hard limits.
+The [disconnect regression](docs/iroh-disconnect-validation.md) exercises crash
+recovery and documents the temporary upstream transport revision pin.
+
 TCP and mTLS clients retain at most one idle result connection per ADBC
 connection, separately from the persistent control connection. Fully consumed
 streams are closed at the protocol boundary before their socket is cached.
