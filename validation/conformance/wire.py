@@ -1,3 +1,4 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
 # Copyright (c) 2026 Query Farm LLC
 # SPDX-License-Identifier: Apache-2.0
 """Encode requests from the Rust protocol artifact without importing a worker SDK."""

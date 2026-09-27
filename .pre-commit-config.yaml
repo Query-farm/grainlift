@@ -19,16 +19,16 @@ repos:
     hooks:
       - id: ruff-check
         args: ["--extend-select", "I", "--fix"]
-        exclude: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/)
+        exclude: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/|conformance/)
       - id: ruff-format
-        exclude: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/)
+        exclude: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/|conformance/)
       - id: ruff-check
-        name: Ruff release validation
-        files: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/)
+        name: Ruff release and conformance validation
+        files: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/|conformance/)
         args: ["--config", "validation/regression/pyproject.toml"]
       - id: ruff-format
-        name: Ruff format release validation
-        files: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/)
+        name: Ruff format release and conformance validation
+        files: ^validation/(release_bundle\.py|profile_python_memory\.py|release_tests/|conformance/)
         args: ["--check", "--config", "validation/regression/pyproject.toml"]
 
   - repo: https://github.com/codespell-project/codespell
@@ -49,12 +49,12 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
         # Preserve original JUnit, profiler and diagnostic-log payloads byte-for-byte.
-        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/(ec2-python-latency-20260926|ec2-matched-synthetic-20260926|ec2-transport-comparison-20260926|ec2-result-reuse-20260926|ec2-supported-hosting-20260926|ec2-accept-readiness-20260926)/.*\.txt)$
+        exclude: ^validation/(release-results/candidate-[^/]+/.*\.xml|conformance/results/[^/]+/.*\.xml|load-results/[^/]+/.*\.speedscope\.json|load-results/(ec2-python-latency-20260926|ec2-matched-synthetic-20260926|ec2-transport-comparison-20260926|ec2-result-reuse-20260926|ec2-supported-hosting-20260926|ec2-accept-readiness-20260926)/.*\.txt)$
       - id: mixed-line-ending
         args: ["--fix=lf"]
       - id: trailing-whitespace
         # Preserve unified-diff context and generated JUnit failure text.
-        exclude: ^validation/(hardening/grainlift-python\.patch|diagnostics/.*\.patch|load-results/[^/]+/.*\.patch\.txt|release-results/candidate-[^/]+/.*\.xml)$
+        exclude: ^validation/(hardening/grainlift-python\.patch|diagnostics/.*\.patch|load-results/[^/]+/.*\.patch\.txt|release-results/candidate-[^/]+/.*\.xml|conformance/results/[^/]+/.*\.xml)$
 
   - repo: https://github.com/adbc-drivers/dev
     rev: ffdbb1a1237b89cafb15a7420667f54838986681

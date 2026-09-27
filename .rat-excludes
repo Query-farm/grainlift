@@ -52,6 +52,11 @@ validation/load-results/ec2-accept-readiness-20260926/*.tsv
 validation/load-results/ec2-accept-readiness-20260926/*.log
 validation/load-results/ec2-accept-readiness-20260926/SHA256SUMS
 validation/regression/uv.lock
+# Machine-generated protocol export and immutable conformance evidence.
+validation/conformance/contract.json
+validation/conformance/results/*/*.json
+validation/conformance/results/*/*.xml
+validation/conformance/results/*/*.log
 validation/hardening/grainlift-python.patch
 validation/hardening/manifest.json
 # Immutable generated release evidence; preserve recorded hashes and payloads.
