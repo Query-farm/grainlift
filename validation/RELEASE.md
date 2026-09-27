@@ -91,8 +91,14 @@ build. Output directories must be new to prevent stale artifacts from passing.
 
 ```sh
 cargo build --locked -p adbc-driver-grainlift
+cargo build --locked --manifest-path ../grainlift-rust-hello-world/Cargo.toml
 python3.13 validation/release_bundle.py build \
   --output target/python-candidate --python 3.13
+
+# Use OpenSSL 3 (including on macOS); never upload the private test keys.
+bash validation/diagnostics/make_test_tls.sh target/python-candidate-tls
+export GRAINLIFT_SYNTHETIC_RUST_SERVER="$(cd ../grainlift-rust-hello-world && pwd)/target/debug/grainlift-rust-hello-world"
+export GRAINLIFT_MATCHED_TLS_DIR="$PWD/target/python-candidate-tls"
 
 # On Linux, use libadbc_driver_grainlift.so instead.
 python3.13 validation/release_bundle.py check \
@@ -109,7 +115,7 @@ python3.13 validation/release_bundle.py check \
 wheel, lockfile, test file, package source hash, and available Git HEAD. A dirty
 or unborn repository is explicitly recorded; a HEAD hash alone does not
 identify these local changes. Validation evidence includes per-suite JUnit
-XML, installed versions, the driver hash, and the manifest hash. Full logs and
+XML, installed versions, the driver and synthetic server hashes, and the manifest hash. Full logs and
 archives stay under ignored `target/`; durable summary evidence belongs in
 `validation/release-results/`.
 
@@ -138,7 +144,11 @@ for `candidate_url` and `candidate_sha256`. Setting repository variables
 the same runtime matrix on every push/PR against that pinned candidate. Source
 changes in the sibling projects require building and configuring a new
 candidate. The workflow rebuilds the native driver from the current Grainlift
-checkout and uploads runtime evidence even if validation fails.
+checkout and uploads runtime evidence even if validation fails. It also builds
+the synthetic Rust example from an explicit Git revision and generates private
+test certificates outside the evidence directory. All three native test suites
+receive the same compiled driver. Missing optional hosting dependencies or
+native comparison inputs must not silently reduce coverage: skips fail the gate.
 
 Without those variables, normal push/PR runs execute quality checks while
 runtime jobs are skipped. Successful local runs are not evidence that the
@@ -147,14 +157,14 @@ run it, and require its checks in branch protection. The public SDK repositories
 can build future candidates from immutable commits and supply the resulting
 reviewed artifact.
 
-After the exact candidate v6 archive and `SHA256SUMS` have been uploaded to the
-`python-candidate-v6` prerelease in `Query-farm/grainlift`, enable automatic runs
+After the exact candidate v7 archive and `SHA256SUMS` have been uploaded to the
+`python-candidate-v7` prerelease in `Query-farm/grainlift`, enable automatic runs
 and explicitly dispatch the workflow (the initial source push may have occurred
 before the variables were configured):
 
 ```sh
-candidate_url=https://github.com/Query-farm/grainlift/releases/download/python-candidate-v6/grainlift-python-candidate.tar.gz
-candidate_sha256=63692d5a6fb81208fdf468dd9e225e04646b33bf2dd5fee4978ccac3da8c3f3e
+candidate_url=https://github.com/Query-farm/grainlift/releases/download/python-candidate-v7/grainlift-python-candidate.tar.gz
+candidate_sha256=1a2fc4e154f4549b5027290fe9555afd23f207b23d27e52d0731b381cae106ab
 gh variable set GRAINLIFT_PYTHON_CANDIDATE_URL --repo Query-farm/grainlift --body "$candidate_url"
 gh variable set GRAINLIFT_PYTHON_CANDIDATE_SHA256 --repo Query-farm/grainlift --body "$candidate_sha256"
 gh workflow run python-regression.yml --repo Query-farm/grainlift --ref main \

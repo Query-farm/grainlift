@@ -21,7 +21,7 @@ limitations under the License.
 # Python service release readiness
 
 This record separates locally completed engineering gates from publication,
-remote CI, and deployment decisions. The scope is an authenticated HTTP service
+remote CI, and deployment decisions. The scope is authenticated HTTP and TCP/mTLS services
 with bounded pull-based Arrow results and optional process-isolated callbacks.
 The SDK exposes every Grainlift protocol 0.4.0 operation; each backend implements
 the capabilities it supports. This does not imply transparent multi-replica use.
@@ -238,8 +238,8 @@ reduces Rust fresh mTLS connection/query/close cycles from 93.33 to 21.58 ms wit
 the same native driver. Warm queries remain approximately 3.75 ms. All twelve
 comparison cases passed, with exact descriptor recovery. This removes an
 artificial connection-creation delay; it does not reduce the remaining warm
-Python/Rust gap. Grainlift's normal build still needs a published VGI release
-and dependency update to consume the upstream change.
+Python/Rust gap. Grainlift's normal build now consumes the published VGI-RPC
+0.27.3 crates, including this upstream change, without local path replacements.
 
 The subsequent [supported-host qualification](../validation/load-results/ec2-supported-hosting-20260926/README.md)
 promotes TCP/mTLS and supervised Granian into the SDK's public API. Installed-wheel

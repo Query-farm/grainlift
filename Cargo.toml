@@ -59,6 +59,6 @@ uuid = { version = "1", features = ["v4", "serde"] }
 url = "2"
 iroh = { version = "=1.1.0", default-features = false, features = ["tls-ring"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-vgi-rpc = { version = "0.27.1", features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
-vgi-rpc-client = { version = "0.27.1", features = ["http", "tcp-tls"] }
-vgi-rpc-iroh = "0.27.1"
+vgi-rpc = { version = "0.27.3", features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
+vgi-rpc-client = { version = "0.27.3", features = ["http", "tcp-tls"] }
+vgi-rpc-iroh = "0.27.3"

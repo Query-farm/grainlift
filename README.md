@@ -390,7 +390,7 @@ protocol coverage from capabilities each backend must implement.
 
 The [Python worker toolkit](https://github.com/Query-farm/grainlift-python) exposes
 transactions, prepared statements, parameter batches/streams, ingestion, metadata,
-statistics, partitions, typed options and Substrait hooks over HTTP. Backends supply
+statistics, partitions, typed options and Substrait hooks over HTTP and TCP/mTLS. Backends supply
 database semantics. The regression suite exercises those hooks with direct and
 isolated workers, including real SQLite transactions and ingestion; see the
 [API contract](https://github.com/Query-farm/grainlift-python/blob/main/docs/API.md).
@@ -403,6 +403,10 @@ credential rotation, TLS routing, and operational limits, and the
 [wheel release gate](validation/RELEASE.md) for reproducible candidate validation.
 The [readiness record](docs/python-release-readiness.md) separates completed local
 checks from publication, remote CI, and deployment gates still outstanding.
+
+Native builds consume published VGI-RPC 0.27.3, including readiness-based
+TCP/mTLS acceptance. The listener wakes when a connection arrives; its legacy
+atomic shutdown flag is still checked at most every 50 ms.
 
 Run the Rust quality gates with:
 
