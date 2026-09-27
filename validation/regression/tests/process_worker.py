@@ -72,6 +72,8 @@ class FailureWorker(Worker):
         record(self._directory, "opening")
         if self._mode == "startup_hang":
             time.sleep(30)
+        if self._mode == "startup_slow":
+            time.sleep(1.25)
         return FailureConnection(self._directory, self._mode)
 
 
@@ -135,7 +137,7 @@ def run_host(directory: Path) -> None:
         "tests.process_worker:FailureWorker",
         target="regression",
         timeout_seconds=config["timeout"],
-        startup_timeout_seconds=2,
+        startup_timeout_seconds=config["startup"],
         worker_options={"directory": str(directory), "mode": config["mode"]},
     )
     service = Service(worker, limits=Limits(idle_seconds=config["idle"], shutdown_seconds=3))

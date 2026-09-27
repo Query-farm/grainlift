@@ -20,6 +20,9 @@ lang = "script"
 toolchain = "rust"
 
 [additional-runtime-dependencies]
+# Iroh's Windows network discovery uses netwatch/netdev and WMI/COM.
+# These are Windows system libraries, not separately bundled runtimes.
+windows = ["COMBASE.DLL", "IPHLPAPI.DLL", "OLE32.DLL", "OLEAUT32.DLL"]
 macos = [
     "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
     "/usr/lib/libobjc.A.dylib",

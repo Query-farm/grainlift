@@ -94,13 +94,14 @@ class ProcessHarness:
             time.sleep(0.01)
         pytest.fail(f"Worker event was not observed: {event}")
 
-    def assert_reaped(self, pids: set[int]) -> None:
+    def assert_reaped(self, pids: set[int], *, timeout: float = 5) -> None:
         """Verify the host reaped each worker instead of merely abandoning it.
 
         Args:
             pids: Process identifiers obtained from lifecycle observations.
+            timeout: Maximum observation time in seconds.
         """
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + timeout
         pending = set(pids)
         while pending and time.monotonic() < deadline:
             for pid in pending.copy():
@@ -131,7 +132,7 @@ def isolated_host(tmp_path: Path, driver_path: Path, request: pytest.FixtureRequ
     Yields:
         Independent host and ordinary native ADBC connection factory.
     """
-    config = {"timeout": 1.0, "idle": 30.0, "mode": "normal"}
+    config = {"timeout": 1.0, "startup": 5.0, "idle": 30.0, "mode": "normal"}
     config.update(getattr(request, "param", {}))
     (tmp_path / "config.json").write_text(json.dumps(config))
     root = Path(__file__).resolve().parents[1]
@@ -190,7 +191,7 @@ def test_native_worker_timeout_and_crash(isolated_host: ProcessHarness, query: s
         assert cursor.fetch_arrow_table().num_rows == 2
 
 
-@pytest.mark.parametrize("isolated_host", [{"mode": "startup_hang"}], indirect=True)
+@pytest.mark.parametrize("isolated_host", [{"mode": "startup_hang", "startup": 2.0}], indirect=True)
 def test_native_startup_deadline(isolated_host: ProcessHarness) -> None:
     """Bound connection initialization and reap a worker blocked during startup."""
     started = time.monotonic()
@@ -267,7 +268,7 @@ def test_native_abandoned_client_is_reaped(isolated_host: ProcessHarness) -> Non
     isolated_host.assert_reaped(isolated_host.wait_event("connection_closed"))
 
 
-@pytest.mark.parametrize("isolated_host", [{"timeout": 3.0, "idle": 0.5}], indirect=True)
+@pytest.mark.parametrize("isolated_host", [{"timeout": 3.0}], indirect=True)
 def test_native_inflight_client_disconnect(isolated_host: ProcessHarness) -> None:
     """Kill an application during execution and reap its worker at the hard deadline."""
     root = Path(__file__).resolve().parents[1]
@@ -313,18 +314,21 @@ def test_native_shutdown_cancels_active_worker(isolated_host: ProcessHarness) ->
         isolated_host.assert_reaped(pids)
 
 
-@pytest.mark.parametrize("isolated_host", [{"timeout": 3.0, "idle": 0.5}], indirect=True)
+@pytest.mark.parametrize("isolated_host", [{"timeout": 16.0, "mode": "startup_slow"}], indirect=True)
 def test_native_http_timeout_does_not_claim_worker_cancellation(isolated_host: ProcessHarness) -> None:
     """Separate HTTP request timeout from the later hard worker execution deadline."""
-    with isolated_host.connect(request_timeout_ms=1000) as connection, connection.cursor() as cursor:
-        # Startup has its own worker deadline and still fits the client timeout.
+    # The HTTP timeout also covers opening a spawned worker. Deliberately take
+    # more than the old one-second budget to prove startup is separate from the
+    # blocked execution being tested. Session expiry has its own dedicated test.
+    with isolated_host.connect(request_timeout_ms=8000) as connection, connection.cursor() as cursor:
         started = time.monotonic()
-        with pytest.raises(manager.Error):
+        with pytest.raises(manager.Error) as error:
             cursor.execute("execute_hang")
-        assert time.monotonic() - started < 2
+        assert error.value.status_code == manager.AdbcStatusCode.IO
+        assert time.monotonic() - started < 12
         pids = isolated_host.wait_event("execute_blocked")
         # A disconnected HTTP request cannot interrupt a Python callback. Each
         # worker must still be alive until its independent process deadline.
         for pid in pids:
             os.kill(pid, 0)
-    isolated_host.assert_reaped(isolated_host.wait_event("execute_blocked"))
+    isolated_host.assert_reaped(isolated_host.wait_event("execute_blocked"), timeout=15)

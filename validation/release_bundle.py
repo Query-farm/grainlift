@@ -202,6 +202,8 @@ def build(output: Path, python: str) -> None:
             "ruff==0.16.9",
             "mypy==2.3.1",
             "pyarrow-stubs==20.0.0.20260819",
+            "cryptography==50.0.1",
+            "granian==2.8.3",
         )
     )
     (bundle / "requirements.in").write_text("\n".join(requirements) + "\n")

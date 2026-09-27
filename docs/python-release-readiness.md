@@ -83,6 +83,18 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 ## Defects fixed during the gates
 
+- The native isolation fixture applied a one-second HTTP deadline to spawned
+  worker startup and a half-second idle lifetime to unrelated disconnect tests.
+  The execution-timeout test now deliberately delays startup, budgets startup
+  separately, verifies the HTTP `IO` error while the worker is still alive,
+  and verifies later process reaping. The dedicated idle-expiry and startup
+  deadline tests retain their explicit limits.
+- Windows packaging now declares the four system DLLs used by Iroh network
+  discovery and WMI/COM: `COMBASE.DLL`, `IPHLPAPI.DLL`, `OLE32.DLL` and
+  `OLEAUT32.DLL`. Other unexpected runtime dependencies remain rejected.
+- New candidate bundles install Granian and cryptography so the supported
+  HTTP hosting and certificate tests run against installed SDK wheels without
+  optional-dependency skips.
 - JSON control payloads and positional partition claims concealed typed fields.
   Protocol 0.4 declares named records with exact schema and value validation.
 - Native partition descriptors were not principal-bound. Signed claims now bind
