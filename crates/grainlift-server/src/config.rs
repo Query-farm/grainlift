@@ -255,7 +255,15 @@ impl Config {
     }
 
     pub fn from_toml(contents: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let config: Self = toml::from_str(contents)?;
+        // TOML errors include the input and key path, both of which can contain
+        // credentials. Keep only the location, including for Debug formatting.
+        let config: Self = toml::from_str(contents).map_err(|error: toml::de::Error| {
+            let message = "invalid configuration syntax or field type";
+            match error.span() {
+                Some(span) => format!("{message} at byte {}", span.start),
+                None => message.to_owned(),
+            }
+        })?;
         config.validate()?;
         Ok(config)
     }
@@ -507,6 +515,25 @@ mod tests {
 [targets.sqlite]
 driver = "adbc_driver_sqlite"
 "#;
+
+    #[test]
+    fn configuration_parse_errors_do_not_expose_credentials() {
+        for contents in [
+            "[auth.static_bearer_tokens]\ncredential-canary = 123\n",
+            "[server]\ncredential-canary = 'secret-value-canary'\n",
+            "[auth.static_bearer_tokens]\ncredential-canary = 'secret-value-canary\n",
+        ] {
+            let error = Config::from_toml(contents).unwrap_err();
+            for diagnostic in [error.to_string(), format!("{error:?}")] {
+                assert!(
+                    diagnostic.starts_with("invalid configuration")
+                        || diagnostic.starts_with("\"invalid configuration")
+                );
+                assert!(!diagnostic.contains("credential-canary"));
+                assert!(!diagnostic.contains("secret-value-canary"));
+            }
+        }
+    }
 
     #[test]
     fn default_http_turn_budget_includes_vgi_message_headroom() {

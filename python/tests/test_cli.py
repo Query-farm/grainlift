@@ -45,6 +45,13 @@ def test_help_version_and_configuration(tmp_path: Path) -> None:
     assert "not checked" in result.stdout
     config.write_text("invalid = true")
     assert subprocess.run([command(), "check", "--config", str(config)], capture_output=True, timeout=15).returncode
+    config.write_text("[auth.static_bearer_tokens]\nconfiguration-secret-canary = 123\n")
+    result = subprocess.run(
+        [command(), "check", "--config", str(config)], capture_output=True, text=True, timeout=15, check=False
+    )
+    assert result.returncode != 0
+    assert "invalid configuration" in result.stderr
+    assert "configuration-secret-canary" not in result.stdout + result.stderr
 
 
 def test_missing_database_and_remote_bind_fail(tmp_path: Path) -> None:

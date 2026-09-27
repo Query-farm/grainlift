@@ -70,6 +70,8 @@ grainlift check --config grainlift.toml
 `check` validates configuration and policy; it does not load drivers, connect to
 databases, or start listeners. `GRAINLIFT_CONFIG` and `GRAINLIFT_SERVER_ID` work
 as before. `--config`/`GRAINLIFT_CONFIG` cannot be combined with `serve sqlite`.
+Malformed configuration diagnostics report a byte offset when available and
+omit source text and key names because these can contain credentials.
 For configuration-based targets, use installed driver names or explicit native
 library paths as documented in the main README.
 
