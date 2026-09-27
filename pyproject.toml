@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-rust>=1.11,<2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grainlift"
+dynamic = ["version"]
+description = "Serve SQLite and other ADBC databases through Grainlift"
+readme = "docs/cli.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "Query Farm LLC" }]
+dependencies = ["adbc-driver-sqlite>=1.12.0,<2"]
+
+[project.urls]
+Repository = "https://github.com/Query-farm/grainlift"
+Documentation = "https://github.com/Query-farm/grainlift/blob/main/docs/cli.md"
+
+[project.scripts]
+grainlift = "grainlift_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["grainlift_cli*"]
+
+[[tool.setuptools-rust.bins]]
+target = "grainlift-server"
+path = "crates/grainlift-server/Cargo.toml"
+cargo-manifest-args = ["--locked"]
+strip = "All"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff", "mypy"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-docstring = false
+arg-type-hints-in-signature = true
+check-return-types = false
+check-yield-types = false
+skip-checking-raises = true
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]

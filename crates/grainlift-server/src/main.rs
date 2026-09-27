@@ -14,7 +14,6 @@
 // limitations under the License.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -24,7 +23,8 @@ use axum::http::StatusCode;
 use axum::routing::get;
 use clap::Parser;
 use grainlift_server::backend::DriverManagerBackend;
-use grainlift_server::config::{AuthConfig, Config, IrohConfig, TcpConfig, TcpTlsConfig};
+use grainlift_server::cli::{Args, Launch};
+use grainlift_server::config::{AuthConfig, IrohConfig, TcpConfig, TcpTlsConfig};
 use grainlift_server::service::build_server_with_max_bind;
 use grainlift_server::session::SessionManager;
 use opentelemetry::global;
@@ -48,21 +48,15 @@ use vgi_rpc::tcp::{
 use vgi_rpc::{AuthContext, PeerAuthenticationPolicy, RpcError};
 use vgi_rpc_iroh::{CancellationToken, IrohServer, IrohServerOptions, VGI_IROH_ALPN};
 
-#[derive(Debug, Parser)]
-#[command(version, about)]
-struct Args {
-    #[arg(long, env = "GRAINLIFT_CONFIG", default_value = "grainlift.toml")]
-    config: PathBuf,
-    #[arg(long, env = "GRAINLIFT_SERVER_ID")]
-    server_id: Option<String>,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tracer_provider = init_observability()?;
-
     let args = Args::parse();
-    let config = Config::from_path(&args.config)?;
+    let server_id = args.server_id.clone();
+    let Launch::Serve(config) = args.resolve()? else {
+        println!("Configuration is valid (drivers and database connectivity were not checked).");
+        return Ok(());
+    };
+    let tracer_provider = init_observability()?;
     let manager = Arc::new(SessionManager::with_limits_authorizer_and_timeout(
         Arc::new(DriverManagerBackend),
         config.targets.clone(),
@@ -72,9 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.target_authorizer(),
         Duration::from_secs(config.server.driver_operation_timeout_seconds),
     ));
-    let server_id = args
-        .server_id
-        .unwrap_or_else(|| format!("grainlift-{}", std::process::id()));
+    let server_id = server_id.unwrap_or_else(|| format!("grainlift-{}", std::process::id()));
     let server = Arc::new(build_server_with_max_bind(
         manager.clone(),
         server_id,

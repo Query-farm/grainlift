@@ -47,6 +47,7 @@ tracing.workspace = true
 tracing-opentelemetry.workspace = true
 tracing-subscriber.workspace = true
 uuid.workspace = true
+url.workspace = true
 vgi-rpc.workspace = true
 iroh.workspace = true
 vgi-rpc-iroh.workspace = true

@@ -264,7 +264,7 @@ impl Config {
         TargetAuthorizer::new(self.auth.target_permissions.clone())
     }
 
-    fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
         if self.targets.is_empty() {
             return Err("configuration must define at least one target".into());
         }

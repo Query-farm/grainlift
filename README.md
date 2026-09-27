@@ -126,6 +126,11 @@ pretending an unsupported operation succeeded.
 
 ## Quick start
 
+For the packaged command-line service, see [the CLI guide](docs/cli.md).
+The `grainlift` Python distribution packages the Rust server together with an
+automatic dependency on the SQLite ADBC wheel, enabling `uvx grainlift serve
+sqlite ./database.sqlite` after publication. The source-build workflow follows.
+
 This example serves a local SQLite driver and queries it from Python through
 the exported Grainlift C driver.
 
