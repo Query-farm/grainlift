@@ -31,20 +31,23 @@ from validation import release_bundle
 
 @pytest.mark.parametrize("fails", [False, True])
 def test_native_suite_environment_is_restored(monkeypatch: pytest.MonkeyPatch, fails: bool) -> None:
-    """Both suites receive the candidate driver without leaking it to later work."""
+    """All suites receive the candidate driver without leaking it to later work."""
     monkeypatch.setenv("GRAINLIFT_DRIVER", "original-driver")
     monkeypatch.delenv("GRAINLIFT_NATIVE_DRIVER", raising=False)
+    monkeypatch.setenv("GRAINLIFT_MATCHED_DRIVER", "original-matched-driver")
     driver = Path("/candidate/driver.so")
     try:
         with release_bundle.native_driver_environment(driver):
             assert os.environ["GRAINLIFT_DRIVER"] == str(driver)
             assert os.environ["GRAINLIFT_NATIVE_DRIVER"] == str(driver)
+            assert os.environ["GRAINLIFT_MATCHED_DRIVER"] == str(driver)
             if fails:
                 raise RuntimeError("suite failed")
     except RuntimeError:
         assert fails
     assert os.environ["GRAINLIFT_DRIVER"] == "original-driver"
     assert "GRAINLIFT_NATIVE_DRIVER" not in os.environ
+    assert os.environ["GRAINLIFT_MATCHED_DRIVER"] == "original-matched-driver"
 
 
 def _archive(extra: tarfile.TarInfo | None = None) -> bytes:

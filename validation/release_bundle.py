@@ -277,8 +277,8 @@ def validation_suites(manifest: dict[str, Any]) -> tuple[str, ...]:
 
 @contextmanager
 def native_driver_environment(driver: Path) -> Iterator[None]:
-    """Supply both native-suite driver variables and restore the caller's values."""
-    names = ("GRAINLIFT_DRIVER", "GRAINLIFT_NATIVE_DRIVER")
+    """Supply all native-suite driver variables and restore the caller's values."""
+    names = ("GRAINLIFT_DRIVER", "GRAINLIFT_NATIVE_DRIVER", "GRAINLIFT_MATCHED_DRIVER")
     previous = {name: os.environ.get(name) for name in names}
     try:
         for name in names:
@@ -394,6 +394,11 @@ def check(bundle: Path, python: str, driver: Path, evidence: Path) -> None:
             "python": subprocess.check_output([str(executable), "--version"], text=True).strip(),
             "manifest_sha256": digest(bundle / "manifest.json"),
             "driver_sha256": digest(driver),
+            "synthetic_server_sha256": (
+                digest(Path(os.environ["GRAINLIFT_SYNTHETIC_RUST_SERVER"]))
+                if os.environ.get("GRAINLIFT_SYNTHETIC_RUST_SERVER")
+                else None
+            ),
             "suites": suites,
             "source_imports": False,
             "toolkit_quality": ["ruff", "ruff-format", "strict-mypy", "isolated-pydoclint"],

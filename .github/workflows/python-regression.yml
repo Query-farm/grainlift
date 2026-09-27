@@ -115,6 +115,22 @@ jobs:
           uv run --no-project --python '${{ matrix.python }}' python validation/release_bundle.py fetch
           --url "$CANDIDATE_URL" --sha256 "$CANDIDATE_SHA256" --output target/python-candidate
       - run: cargo build --locked -p adbc-driver-grainlift
+      - name: Check out the pinned synthetic Rust worker
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Query-farm/grainlift-rust-hello-world
+          ref: b47f27cfb883bd88ef038624e7a3c7e67e571b7a
+          path: target/rust-example
+          persist-credentials: false
+      - name: Build the synthetic worker for cross-host lifecycle tests
+        run: cargo build --locked --manifest-path target/rust-example/Cargo.toml --target-dir target
+      - name: Generate private test certificates
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            export PATH="$(brew --prefix openssl@3)/bin:$PATH"
+          fi
+          bash validation/diagnostics/make_test_tls.sh "$RUNNER_TEMP/grainlift-candidate-tls"
       - name: Validate isolated wheel installation and native ADBC runtime
         shell: bash
         run: |
@@ -123,6 +139,8 @@ jobs:
             Linux) driver="$PWD/target/debug/libadbc_driver_grainlift.so" ;;
             *) exit 1 ;;
           esac
+          export GRAINLIFT_SYNTHETIC_RUST_SERVER="$PWD/target/debug/grainlift-rust-hello-world"
+          export GRAINLIFT_MATCHED_TLS_DIR="$RUNNER_TEMP/grainlift-candidate-tls"
           uv run --no-project --python '${{ matrix.python }}' python validation/release_bundle.py check \
             --bundle target/python-candidate/bundle --python '${{ matrix.python }}' \
             --driver "$driver" --evidence target/python-wheel-evidence
