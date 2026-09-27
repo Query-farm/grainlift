@@ -119,7 +119,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Query-farm/grainlift-rust-hello-world
-          ref: b47f27cfb883bd88ef038624e7a3c7e67e571b7a
+          ref: 4aca4a0c6b7ee98fd616303c568f13af5c2cd0a0
           path: target/rust-example
           persist-credentials: false
       - name: Build the synthetic worker for cross-host lifecycle tests

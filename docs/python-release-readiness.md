@@ -20,7 +20,7 @@ limitations under the License.
 
 # Python service release readiness
 
-This record separates locally completed engineering gates from publication,
+This record separates completed engineering gates from publication,
 remote CI, and deployment decisions. The scope is authenticated HTTP and TCP/mTLS services
 with bounded pull-based Arrow results and optional process-isolated callbacks.
 The SDK exposes every Grainlift protocol 0.4.0 operation; each backend implements
@@ -29,7 +29,10 @@ the capabilities it supports. This does not imply transparent multi-replica use.
 The [typed protocol migration](typed-protocol.md) changes the wire contract and
 restores compatibility with published VGI-RPC 0.47.1. Historical candidate v4
 results describe protocol 0.2 and do not validate the current protocol. Candidate
-v6 pairs the 0.4 SDK with the matching native driver.
+v6 paired the initial 0.4 SDK with its native driver. Candidate v7 adds the
+supported hosting APIs, corrected lifecycle test deadlines, and matched native
+Rust/Python HTTP and mTLS regression checks. Native builds now resolve published
+VGI-RPC 0.27.3; the Python transport remains unmodified VGI-RPC 0.47.1.
 
 Historical protocol 0.3 source validation: 344 SDK tests, 138 native Python
 regression tests and 13 hello-world tests pass using registry VGI-RPC 0.47.1.
@@ -68,17 +71,17 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 | Gate | Current evidence | Status |
 |---|---|---|
-| SDK code quality | Ruff, format, strict mypy and isolated pydoclint across SDK source/tests; `py.typed` included | Passed locally |
-| ADBC operation surface | All 31 wire methods routed; 446 SDK tests and 150 native regression tests; direct/isolated transaction, binding, ingestion and metadata coverage | Passed locally; SDK wheel CI passed all four platform/interpreter jobs |
-| Native failure behavior | Deadlines, crashes, statement/connection cancellation, raw release, client death, shutdown and recovery in independent processes | Passed locally |
-| Credential rotation | Atomic replacement, overlap/revocation, principal ownership and signed continuations | Passed locally |
-| Reproducible packaging | Exact hashed wheels and dependency closure; both local wheels rebuild byte-for-byte from sdists; stock registry VGI-RPC; forbidden payload checks | Passed locally |
-| Fresh installation | Candidate v6: 609 tests without failures or skips on each of Python 3.13.12 and 3.14.7, with installed-package imports verified | Passed locally on macOS arm64 |
-| Load and cleanup | Protocol 0.4 EC2 baselines: 4.24/2.30 queries/s; follow-up HTTP polling counterfactual: 43.13 queries/s, p99 215 ms, zero errors and clean shutdown | Supported HTTP-host fix and memory/long-duration gates remain open |
+| SDK code quality | Ruff, format, strict mypy and isolated pydoclint against installed SDK contents; `py.typed` included | Passed on EC2 |
+| ADBC operation surface | All 31 wire methods routed; candidate v7 includes 512 SDK tests, 172 native regression tests, and 14 Python example tests | Passed on EC2; backend limitations remain explicit |
+| Native failure behavior | Deadlines, crashes, statement/connection cancellation, raw release, client death, shutdown and recovery in independent processes | Passed on EC2 |
+| Credential rotation | Atomic replacement, overlap/revocation, principal ownership and signed continuations | Covered by the SDK and native regression suites |
+| Reproducible packaging | Exact hashed wheels and dependency closure; both wheels rebuild byte-for-byte from sdists; stock registry VGI-RPC; forbidden payload checks | Candidate v7 passed on EC2 |
+| Fresh installation | Candidate v7: 698 tests without failures or skips, with installed-package imports verified | See the [candidate evidence](../validation/release-results/candidate-v7/README.md) for interpreter and native binary identities |
+| Load and cleanup | Supported mTLS and Granian hosts completed 25,608 measured queries with zero unexpected errors and exact descriptor recovery | Short single-client qualification passed; hours-long memory/fairness gates remain open |
 | TLS edge | Real Caddy/Waitress HTTPS, certificate/hostname failures, verified Python RPC, authentication, limits, logs and draining | Passed locally; native HTTPS success remains unverified |
-| Runtime CI | SDK, hello-world and combined candidate v6 matrices passed Linux/macOS × Python 3.13/3.14 | Passed remotely |
-| Publication | Matching public source revisions and candidate v6 prerelease published; package-index releases remain separate | PyPI release versions/dependency floors pending |
-| Native ARM64 packaging | Separate Custom Test image pull returned registry `denied`; fallback Docker driver rejected a multi-platform build before compilation | Packaging infrastructure gate remains open |
+| Runtime CI | Candidate v7 requires all SDK, example and native suites, including a pinned Rust synthetic worker and private test certificates | [Required Linux/macOS × Python 3.13/3.14 matrix](https://github.com/Query-farm/grainlift/actions/workflows/python-regression.yml) |
+| Publication | VGI-RPC 0.27.3 and candidate v7 prerelease published; public source revisions pinned | SDK/example PyPI release versions and dependency floors remain pending |
+| Native packaging | Linux fallback now builds one architecture with Rust 1.97.1; Windows explicitly declares the Iroh network-discovery system DLLs | [Required Custom Test gate](https://github.com/Query-farm/grainlift/actions/workflows/script_test.yaml) covers Linux AMD64/ARM64, macOS ARM64 and Windows AMD64 |
 | Target operations | Resource quotas, affinity, credential rotation and supervisor/shutdown contract documented | Real deployment/cgroup, certificate renewal and signal checks pending |
 
 ## Defects fixed during the gates
@@ -126,12 +129,20 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 ## Reviewable release artifact
 
-[Candidate v6](../validation/release-results/candidate-v6/README.md) validates
-the current protocol 0.4 in fresh environments: 609 tests per interpreter, no
+[Candidate v7](../validation/release-results/candidate-v7/README.md) is the
+configured [prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v7).
+It includes the supported Python hosts and current regression tests, with
+archive SHA-256 `1a2fc4e154f4549b5027290fe9555afd23f207b23d27e52d0731b381cae106ab`.
+The workflow pins the Rust example to `4aca4a0c6b7ee98fd616303c568f13af5c2cd0a0`,
+which consumes Grainlift `afe1fd0b774e759830603d4d29ddac87575f108f` and the
+published VGI-RPC 0.27.3 dependencies. No local transport patch is required.
+
+Historical [candidate v6](../validation/release-results/candidate-v6/README.md) validated
+the initial protocol 0.4 in fresh environments: 609 tests per interpreter, no
 failures or skips, with both local wheels reproduced from their sdists. Archive
 SHA-256: `63692d5a6fb81208fdf468dd9e225e04646b33bf2dd5fee4978ccac3da8c3f3e`.
 The [prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v6)
-is published and repository variables select its exact archive. The
+remains available; repository variables now select candidate v7. The
 [combined runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/36246917438)
 passed its quality job and all four runtime jobs. The matching
 [native CI](https://github.com/Query-farm/grainlift/actions/runs/36246917417) and

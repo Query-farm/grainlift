@@ -1,0 +1,38 @@
+{
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "Python 3.14.7",
+  "manifest_sha256": "563cc9c67779cb1420a4ec3b921dfcbe7e87d739c47776698f33cb10df24ee1e",
+  "driver_sha256": "da57c346a300ad6296c14d12f814e37c06d4cf1ce505ffce601c9f9b5c861e29",
+  "synthetic_server_sha256": "fc01f3c00c73ec68697f05a23565a9907580e0888850306e849091322af0eb83",
+  "suites": {
+    "toolkit": {
+      "tests": 512,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "hello": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "regression": {
+      "tests": 172,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "source_imports": false,
+  "toolkit_quality": [
+    "ruff",
+    "ruff-format",
+    "strict-mypy",
+    "isolated-pydoclint"
+  ],
+  "transport": {
+    "requirement": "vgi-rpc[http]==0.47.1",
+    "source": "package-index"
+  }
+}
