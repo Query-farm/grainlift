@@ -27,6 +27,8 @@ import tarfile
 import tempfile
 import time
 import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 from urllib.request import urlopen
@@ -273,6 +275,23 @@ def validation_suites(manifest: dict[str, Any]) -> tuple[str, ...]:
     return tuple(requested)
 
 
+@contextmanager
+def native_driver_environment(driver: Path) -> Iterator[None]:
+    """Supply both native-suite driver variables and restore the caller's values."""
+    names = ("GRAINLIFT_DRIVER", "GRAINLIFT_NATIVE_DRIVER")
+    previous = {name: os.environ.get(name) for name in names}
+    try:
+        for name in names:
+            os.environ[name] = str(driver)
+        yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
 def check(bundle: Path, python: str, driver: Path, evidence: Path) -> None:
     """Install hashed wheels into a fresh environment and run native tests."""
     verify(bundle)
@@ -350,10 +369,8 @@ def check(bundle: Path, python: str, driver: Path, evidence: Path) -> None:
             toolkit,
             log,
         )
-        previous = os.environ.get("GRAINLIFT_DRIVER")
-        os.environ["GRAINLIFT_DRIVER"] = str(driver)
         suites = {}
-        try:
+        with native_driver_environment(driver):
             # Older immutable candidates include a locally built transport and
             # its tests. New candidates exercise the published dependency through
             # the SDK and native suites instead of rebuilding upstream VGI-RPC.
@@ -372,11 +389,6 @@ def check(bundle: Path, python: str, driver: Path, evidence: Path) -> None:
                 if counts["skipped"]:
                     raise RuntimeError(f"Release validation must not skip tests: {suite}")
                 suites[suite] = counts
-        finally:
-            if previous is None:
-                os.environ.pop("GRAINLIFT_DRIVER", None)
-            else:
-                os.environ["GRAINLIFT_DRIVER"] = previous
         summary = {
             "platform": platform.platform(),
             "python": subprocess.check_output([str(executable), "--version"], text=True).strip(),
