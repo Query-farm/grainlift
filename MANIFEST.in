@@ -1,3 +1,7 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+# SPDX-License-Identifier: Apache-2.0
+
 include Cargo.toml Cargo.lock LICENSE.txt NOTICE.txt
 include README.md .cargo/config.toml intercept-linux-linker.sh intercept-macos-linker.sh
 include docs/cli.md

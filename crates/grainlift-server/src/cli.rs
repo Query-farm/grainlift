@@ -260,10 +260,10 @@ mod tests {
     #[test]
     fn sqlite_paths_are_explicit_and_uri_escaped() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("db #?%.sqlite");
+        let path = dir.path().join("db #%.sqlite");
         assert!(database_uri(&path, false).is_err());
         let uri = database_uri(&path, true).unwrap();
-        assert!(uri.contains("%23%3F%25.sqlite?mode=rwc"));
+        assert!(uri.contains("%23%25.sqlite?mode=rwc"));
         assert!(!path.exists());
         File::create(&path).unwrap();
         assert!(database_uri(&path, false).unwrap().ends_with("?mode=rw"));

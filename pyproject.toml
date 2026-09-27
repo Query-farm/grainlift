@@ -1,3 +1,7 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+# SPDX-License-Identifier: Apache-2.0
+
 [build-system]
 requires = ["setuptools>=77", "setuptools-rust>=1.11,<2"]
 build-backend = "setuptools.build_meta"
@@ -33,14 +37,12 @@ strip = "All"
 dev = ["pytest>=8", "ruff", "mypy"]
 
 [tool.ruff]
-line-length = 120
-target-version = "py313"
+# Preserve the pre-existing validation scripts' formatter defaults. The CLI
+# has its own vgi-python-style rules in python/ruff.toml.
+target-version = "py310"
 
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "D"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+[tool.ruff.lint.isort]
+extra-standard-library = ["tomllib"]
 
 [tool.mypy]
 python_version = "3.13"

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
 # Copyright (c) 2026 Query Farm LLC
 # SPDX-License-Identifier: Apache-2.0
 """Use the Rust workspace version for the Python distribution."""
@@ -23,4 +24,7 @@ class BinaryWheel(bdist_wheel):
 
 
 workspace = tomllib.loads(Path("Cargo.toml").read_text(encoding="utf-8"))
-setup(version=workspace["workspace"]["package"]["version"], cmdclass={"bdist_wheel": BinaryWheel})
+setup(
+    version=workspace["workspace"]["package"]["version"],
+    cmdclass={"bdist_wheel": BinaryWheel},
+)
