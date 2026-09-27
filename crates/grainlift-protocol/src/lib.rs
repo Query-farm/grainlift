@@ -33,6 +33,7 @@ mod responses;
 pub use responses::*;
 mod requests;
 pub use requests::*;
+pub mod contract;
 
 pub const PROTOCOL_NAME: &str = "org.queryfarm.Grainlift.v1";
 pub const PROTOCOL_VERSION: &str = "0.4.0";

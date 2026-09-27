@@ -1,0 +1,16 @@
+{"Time":"2026-09-27T01:54:43.937381925Z","Action":"start","Package":"github.com/Query-farm/grainlift-hello-world-go"}
+{"Time":"2026-09-27T01:54:43.9580384Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries"}
+{"Time":"2026-09-27T01:54:43.958094466Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Output":"=== RUN   TestSyntheticBatchBoundaries\n"}
+{"Time":"2026-09-27T01:54:43.968808511Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Output":"--- PASS: TestSyntheticBatchBoundaries (0.01s)\n"}
+{"Time":"2026-09-27T01:54:43.968839568Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Elapsed":0.01}
+{"Time":"2026-09-27T01:54:43.968864027Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery"}
+{"Time":"2026-09-27T01:54:43.968867974Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Output":"=== RUN   TestSyntheticFailureRecovery\n"}
+{"Time":"2026-09-27T01:54:43.968967255Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Output":"--- PASS: TestSyntheticFailureRecovery (0.00s)\n"}
+{"Time":"2026-09-27T01:54:43.968984322Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Elapsed":0}
+{"Time":"2026-09-27T01:54:43.969007542Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits"}
+{"Time":"2026-09-27T01:54:43.969011514Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Output":"=== RUN   TestWorkloadLimits\n"}
+{"Time":"2026-09-27T01:54:43.969071025Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Output":"--- PASS: TestWorkloadLimits (0.00s)\n"}
+{"Time":"2026-09-27T01:54:43.969080904Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Elapsed":0}
+{"Time":"2026-09-27T01:54:43.969115637Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Output":"PASS\n"}
+{"Time":"2026-09-27T01:54:44.973197846Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Output":"ok  \tgithub.com/Query-farm/grainlift-hello-world-go\t1.036s\n"}
+{"Time":"2026-09-27T01:54:44.973232242Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Elapsed":1.036}

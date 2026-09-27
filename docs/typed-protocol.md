@@ -23,6 +23,14 @@ control requests and responses. The Python service uses
 typed structs. Semantic fields have declared Arrow shapes. Applications
 continue to use the ordinary ADBC driver and its existing API.
 
+The checked [machine-readable contract](../validation/conformance/contract.json)
+exports every method and named record directly from the Rust schema builders.
+It preserves field order, nullability, nested list/struct fields, and metadata;
+dynamic result schemas are marked separately. Native tests check both the
+artifact and live server registration. Other language SDKs should consume or
+compare against this artifact, and run the
+[shared worker conformance suite](../validation/conformance/README.md).
+
 This is a breaking wire change from protocols 0.2.0 and 0.3.0. Upgrade the native driver,
 Rust server and Python SDK together. The protocol name remains
 `org.queryfarm.Grainlift.v1`; Grainlift checks the protocol version before handle

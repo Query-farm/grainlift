@@ -292,10 +292,10 @@ Pass Grainlift options as ADBC database options:
 | `grainlift.request_timeout_ms` | Timeout for each RPC | `30000` |
 | `grainlift.max_response_bytes` | Maximum accepted HTTP response size | `268435456` |
 | `grainlift.max_bind_bytes` | Cumulative parameter-bind budget | `67108864` |
-| `grainlift.tls.ca` | CA bundle for `tls+tcp://` | required for mTLS |
+| `grainlift.tls.ca` | PEM CA bundle for HTTPS or `tls+tcp://`; HTTPS adds these roots to its default trust store | optional for HTTPS; required for mTLS |
 | `grainlift.tls.cert` | Client certificate chain for `tls+tcp://` | required for mTLS |
 | `grainlift.tls.key` | Client private key for `tls+tcp://` | required for mTLS |
-| `grainlift.tls.server_name` | TLS server name | endpoint host |
+| `grainlift.tls.server_name` | TLS server name for `tls+tcp://`; HTTPS verifies the URI hostname | endpoint host |
 | `grainlift.iroh.secret_key` | Stable Iroh client secret key | generated per process |
 | `grainlift.iroh.direct_address` | Direct Iroh `host:port` discovery hint | relay/discovery |
 
@@ -380,6 +380,16 @@ The [toolkit-backed regression suite](validation/regression/README.md) exercises
 the native ADBC client against a deterministic Python worker. Run
 `./validation/run_regression.sh` for its Python quality gates and HTTP integration
 tests. It requires the sibling development toolkit and published VGI-RPC.
+
+The [shared worker conformance suite](validation/conformance/README.md) runs the
+same native ADBC and independently encoded wire checks against an external worker
+in any language. Its machine-readable contract is generated from the Rust wire
+types and checked against the native server's registrations. This is the common
+compatibility gate for the Go and TypeScript worker SDKs and their separate
+hello-world examples. It exercises HTTP, direct HTTPS, loopback TCP, verified
+mTLS TCP and raw Iroh QUIC. The [coverage matrix](validation/conformance/COVERAGE.md)
+maps shared requirements to SDK tests and records transport-specific gaps;
+equal test counts alone do not establish equal coverage.
 
 Protocol 0.4.0 uses [typed request and response records](docs/typed-protocol.md)
 with standard VGI-RPC envelopes, typed options and explicit metadata filters.

@@ -1,0 +1,30 @@
+{"Time":"2026-09-27T02:29:13.828110931Z","Action":"start","Package":"github.com/Query-farm/grainlift-hello-world-go"}
+{"Time":"2026-09-27T02:29:13.849463457Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeStartupFailureCleanup"}
+{"Time":"2026-09-27T02:29:13.84952424Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeStartupFailureCleanup","Output":"=== RUN   TestBridgeStartupFailureCleanup\n"}
+{"Time":"2026-09-27T02:29:13.849560195Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeStartupFailureCleanup","Output":"    hosting_test.go:54: requires upstream network safety patch\n"}
+{"Time":"2026-09-27T02:29:13.849615957Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeStartupFailureCleanup","Output":"--- SKIP: TestBridgeStartupFailureCleanup (0.00s)\n"}
+{"Time":"2026-09-27T02:29:13.849639505Z","Action":"skip","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeStartupFailureCleanup","Elapsed":0}
+{"Time":"2026-09-27T02:29:13.849660428Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeUnexpectedExitAndIdempotentCleanup"}
+{"Time":"2026-09-27T02:29:13.849664646Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeUnexpectedExitAndIdempotentCleanup","Output":"=== RUN   TestBridgeUnexpectedExitAndIdempotentCleanup\n"}
+{"Time":"2026-09-27T02:29:13.849744703Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeUnexpectedExitAndIdempotentCleanup","Output":"    hosting_test.go:63: requires upstream network safety patch\n"}
+{"Time":"2026-09-27T02:29:13.849776128Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeUnexpectedExitAndIdempotentCleanup","Output":"--- SKIP: TestBridgeUnexpectedExitAndIdempotentCleanup (0.00s)\n"}
+{"Time":"2026-09-27T02:29:13.849800063Z","Action":"skip","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestBridgeUnexpectedExitAndIdempotentCleanup","Elapsed":0}
+{"Time":"2026-09-27T02:29:13.849820231Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestClientPrincipalExactIdentity"}
+{"Time":"2026-09-27T02:29:13.849824161Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestClientPrincipalExactIdentity","Output":"=== RUN   TestClientPrincipalExactIdentity\n"}
+{"Time":"2026-09-27T02:29:13.849913309Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestClientPrincipalExactIdentity","Output":"--- PASS: TestClientPrincipalExactIdentity (0.00s)\n"}
+{"Time":"2026-09-27T02:29:13.849936948Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestClientPrincipalExactIdentity","Elapsed":0}
+{"Time":"2026-09-27T02:29:13.849953277Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries"}
+{"Time":"2026-09-27T02:29:13.849957149Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Output":"=== RUN   TestSyntheticBatchBoundaries\n"}
+{"Time":"2026-09-27T02:29:13.861070941Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Output":"--- PASS: TestSyntheticBatchBoundaries (0.01s)\n"}
+{"Time":"2026-09-27T02:29:13.861104016Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticBatchBoundaries","Elapsed":0.01}
+{"Time":"2026-09-27T02:29:13.861128951Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery"}
+{"Time":"2026-09-27T02:29:13.86113275Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Output":"=== RUN   TestSyntheticFailureRecovery\n"}
+{"Time":"2026-09-27T02:29:13.861275346Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Output":"--- PASS: TestSyntheticFailureRecovery (0.00s)\n"}
+{"Time":"2026-09-27T02:29:13.861289787Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestSyntheticFailureRecovery","Elapsed":0}
+{"Time":"2026-09-27T02:29:13.861308749Z","Action":"run","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits"}
+{"Time":"2026-09-27T02:29:13.86131286Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Output":"=== RUN   TestWorkloadLimits\n"}
+{"Time":"2026-09-27T02:29:13.86138495Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Output":"--- PASS: TestWorkloadLimits (0.00s)\n"}
+{"Time":"2026-09-27T02:29:13.861394427Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Test":"TestWorkloadLimits","Elapsed":0}
+{"Time":"2026-09-27T02:29:13.861425721Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Output":"PASS\n"}
+{"Time":"2026-09-27T02:29:14.865901619Z","Action":"output","Package":"github.com/Query-farm/grainlift-hello-world-go","Output":"ok  \tgithub.com/Query-farm/grainlift-hello-world-go\t1.037s\n"}
+{"Time":"2026-09-27T02:29:14.865943202Z","Action":"pass","Package":"github.com/Query-farm/grainlift-hello-world-go","Elapsed":1.038}

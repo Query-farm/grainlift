@@ -935,9 +935,19 @@ impl RemoteTransport {
     ) -> Result<Self> {
         let endpoint = normalize_endpoint(endpoint);
         if endpoint.starts_with("http://") || endpoint.starts_with("https://") {
-            let http = reqwest::blocking::Client::builder()
+            let mut builder = reqwest::blocking::Client::builder()
                 // VGI's timeout builder setting does not reconfigure a supplied client.
-                .timeout(request_timeout)
+                .timeout(request_timeout);
+            if endpoint.starts_with("https://")
+                && let Some(path) = options.tls_ca.as_deref()
+            {
+                for certificate in read_certificates(path)? {
+                    let certificate = reqwest::Certificate::from_der(certificate.as_ref())
+                        .map_err(|_| invalid("invalid HTTPS CA certificate"))?;
+                    builder = builder.add_root_certificate(certificate);
+                }
+            }
+            let http = builder
                 .build()
                 .map_err(|error| Error::with_message_and_status(error.to_string(), Status::IO))?;
             return Ok(Self::Http(HttpTransport {
@@ -1854,6 +1864,126 @@ adbc_ffi::export_driver!(AdbcDriverGrainliftInit, GrainliftDriver);
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn https_custom_ca_adds_trust_without_disabling_hostname_or_chain_checks() {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+
+        let certificate = rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();
+        let unrelated =
+            rcgen::generate_simple_self_signed(vec!["unrelated.invalid".into()]).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let trusted = directory.path().join("trusted.pem");
+        let unknown = directory.path().join("unknown.pem");
+        let bundle = directory.path().join("bundle.pem");
+        std::fs::write(&trusted, certificate.cert.pem()).unwrap();
+        std::fs::write(&unknown, unrelated.cert.pem()).unwrap();
+        std::fs::write(
+            &bundle,
+            format!("{}{}", unrelated.cert.pem(), certificate.cert.pem()),
+        )
+        .unwrap();
+        let config = rustls::ServerConfig::builder_with_provider(Arc::new(
+            rustls::crypto::ring::default_provider(),
+        ))
+        .with_safe_default_protocol_versions()
+        .unwrap()
+        .with_no_client_auth()
+        .with_single_cert(
+            vec![certificate.cert.der().clone()],
+            rustls::pki_types::PrivatePkcs8KeyDer::from(certificate.signing_key.serialize_der())
+                .into(),
+        )
+        .unwrap();
+        let config = Arc::new(config);
+
+        for (ca, host, succeeds) in [
+            (None, "localhost", false),
+            (Some(&unknown), "localhost", false),
+            (Some(&trusted), "localhost", true),
+            (Some(&bundle), "localhost", true),
+            (Some(&trusted), "127.0.0.1", false),
+        ] {
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let port = listener.local_addr().unwrap().port();
+            let config = config.clone();
+            let server = std::thread::spawn(move || {
+                let (socket, _) = listener.accept().unwrap();
+                socket
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                socket
+                    .set_write_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut stream = rustls::StreamOwned::new(
+                    rustls::ServerConnection::new(config).unwrap(),
+                    socket,
+                );
+                let mut request = [0; 4096];
+                if stream.read(&mut request).is_ok() {
+                    let _ = stream.write_all(
+                        b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK",
+                    );
+                    let _ = stream.flush();
+                }
+            });
+            let endpoint = format!("https://{host}:{port}/");
+            let transport = RemoteTransport::connect(
+                endpoint.clone(),
+                None,
+                Duration::from_secs(5),
+                1024,
+                TransportOptions {
+                    tls_ca: ca.map(|path| path.to_string_lossy().into_owned()),
+                    ..TransportOptions::default()
+                },
+            )
+            .unwrap();
+            let RemoteTransport::Http(http) = transport else {
+                panic!("expected HTTP transport")
+            };
+            let response = http.http.get(endpoint).send();
+            assert_eq!(
+                response.is_ok(),
+                succeeds,
+                "custom CA/hostname case for {host}"
+            );
+            if succeeds {
+                assert_eq!(response.unwrap().text().unwrap(), "OK");
+            }
+            server.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn https_rejects_unreadable_empty_and_malformed_ca_bundles() {
+        let directory = tempfile::tempdir().unwrap();
+        let missing = directory.path().join("missing.pem");
+        let empty = directory.path().join("empty.pem");
+        let malformed = directory.path().join("malformed.pem");
+        std::fs::write(&empty, "").unwrap();
+        std::fs::write(
+            &malformed,
+            "-----BEGIN CERTIFICATE-----\ninvalid\n-----END CERTIFICATE-----",
+        )
+        .unwrap();
+        for path in [missing, empty, malformed] {
+            assert!(
+                RemoteTransport::connect(
+                    "https://localhost:443".into(),
+                    None,
+                    Duration::from_secs(1),
+                    1024,
+                    TransportOptions {
+                        tls_ca: Some(path.to_string_lossy().into_owned()),
+                        ..TransportOptions::default()
+                    },
+                )
+                .is_err()
+            );
+        }
+    }
 
     #[test]
     fn structured_errors_accept_only_the_stock_python_prefix() {

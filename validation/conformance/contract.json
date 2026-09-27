@@ -1,0 +1,1753 @@
+{
+  "encoding": {
+    "bind_batch_ipc": "one uncompressed Arrow IPC stream with one batch matching bind schema_ipc",
+    "bind_finish": "finish=true requires empty batch_ipc; finish=false requires one IPC batch",
+    "named_records": "one uncompressed Arrow IPC stream, one batch, one row, explicit EOS",
+    "partitions": "opaque principal-bound server descriptors, passed unchanged to read_partition",
+    "read_result": "dynamic Arrow schema from ExecuteResponse.schema_ipc; sequence is a nonnegative batch index",
+    "schema_ipc": "unframed Arrow FlatBuffer Message containing a Schema"
+  },
+  "format_version": 1,
+  "methods": [
+    {
+      "input": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "batch_ipc",
+            "nullable": false,
+            "type": "binary"
+          },
+          {
+            "metadata": {},
+            "name": "finish",
+            "nullable": false,
+            "type": "bool"
+          }
+        ],
+        "metadata": {}
+      },
+      "kind": "exchange",
+      "name": "bind",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "schema_ipc",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "ok",
+            "nullable": false,
+            "type": "bool"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": null
+    },
+    {
+      "input": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "batch_ipc",
+            "nullable": false,
+            "type": "binary"
+          },
+          {
+            "metadata": {},
+            "name": "finish",
+            "nullable": false,
+            "type": "bool"
+          }
+        ],
+        "metadata": {}
+      },
+      "kind": "exchange",
+      "name": "bind_stream",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "schema_ipc",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "ok",
+            "nullable": false,
+            "type": "bool"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": null
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "cancel_connection",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "cancel_statement",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "close_connection",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "close_result",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "result_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "close_statement",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "commit",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "execute",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "execute_partitions",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "PartitionsResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "execute_schema",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "SchemaResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "execute_update",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "UpdateResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_connection_option",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "key",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "value_type",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ValueResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_info",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "GetInfoRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_objects",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "GetObjectsRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_parameter_schema",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "SchemaResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_statement_option",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "key",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "value_type",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ValueResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_statistic_names",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_statistics",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "GetStatisticsRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_table_schema",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "GetTableSchemaRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "SchemaResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "get_table_types",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "new_statement",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "StatementResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "open_connection",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "OpenConnectionRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "SessionResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "prepare",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "read_partition",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "payload",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "ExecuteResponse"
+    },
+    {
+      "input": null,
+      "kind": "producer",
+      "name": "read_result",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "result_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "sequence",
+            "nullable": false,
+            "type": "int64"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": null,
+      "response_record": null
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "rollback",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "set_connection_option",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "SetConnectionOptionRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "set_sql_query",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "sql",
+            "nullable": false,
+            "type": "string"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "set_statement_option",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "request",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": "SetStatementOptionRequest",
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    },
+    {
+      "input": null,
+      "kind": "unary",
+      "name": "set_substrait_plan",
+      "request": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "session_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "statement_id",
+            "nullable": false,
+            "type": "string"
+          },
+          {
+            "metadata": {},
+            "name": "payload",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "request_record": null,
+      "response": {
+        "fields": [
+          {
+            "metadata": {},
+            "name": "result",
+            "nullable": false,
+            "type": "binary"
+          }
+        ],
+        "metadata": {}
+      },
+      "response_record": "OkResponse"
+    }
+  ],
+  "protocol_name": "org.queryfarm.Grainlift.v1",
+  "protocol_version": "0.4.0",
+  "records": {
+    "ExecuteResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "result_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "rows_affected",
+          "nullable": true,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "schema_ipc",
+          "nullable": false,
+          "type": "binary"
+        }
+      ],
+      "metadata": {}
+    },
+    "GetInfoRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "codes",
+          "nullable": true,
+          "type": {
+            "list": {
+              "metadata": {},
+              "name": "item",
+              "nullable": true,
+              "type": "int64"
+            }
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "GetObjectsRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "depth",
+          "nullable": false,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "catalog",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "db_schema",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "table_name",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "table_types",
+          "nullable": true,
+          "type": {
+            "list": {
+              "metadata": {},
+              "name": "item",
+              "nullable": true,
+              "type": "string"
+            }
+          }
+        },
+        {
+          "metadata": {},
+          "name": "column_name",
+          "nullable": true,
+          "type": "string"
+        }
+      ],
+      "metadata": {}
+    },
+    "GetStatisticsRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "catalog",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "db_schema",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "table_name",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "approximate",
+          "nullable": false,
+          "type": "bool"
+        }
+      ],
+      "metadata": {}
+    },
+    "GetTableSchemaRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "catalog",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "db_schema",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "table_name",
+          "nullable": false,
+          "type": "string"
+        }
+      ],
+      "metadata": {}
+    },
+    "NamedOption": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "key",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "value",
+          "nullable": false,
+          "type": {
+            "struct": [
+              {
+                "metadata": {},
+                "name": "kind",
+                "nullable": false,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "string_value",
+                "nullable": true,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "bytes_value",
+                "nullable": true,
+                "type": "binary"
+              },
+              {
+                "metadata": {},
+                "name": "int_value",
+                "nullable": true,
+                "type": "int64"
+              },
+              {
+                "metadata": {},
+                "name": "double_value",
+                "nullable": true,
+                "type": "float64"
+              }
+            ]
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "OkResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "ok",
+          "nullable": false,
+          "type": "bool"
+        }
+      ],
+      "metadata": {}
+    },
+    "OpenConnectionRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "target",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "database_options",
+          "nullable": false,
+          "type": {
+            "list": {
+              "metadata": {},
+              "name": "item",
+              "nullable": true,
+              "type": {
+                "struct": [
+                  {
+                    "metadata": {},
+                    "name": "key",
+                    "nullable": false,
+                    "type": "string"
+                  },
+                  {
+                    "metadata": {},
+                    "name": "value",
+                    "nullable": false,
+                    "type": {
+                      "struct": [
+                        {
+                          "metadata": {},
+                          "name": "kind",
+                          "nullable": false,
+                          "type": "string"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "string_value",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "bytes_value",
+                          "nullable": true,
+                          "type": "binary"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "int_value",
+                          "nullable": true,
+                          "type": "int64"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "double_value",
+                          "nullable": true,
+                          "type": "float64"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "metadata": {},
+          "name": "connection_options",
+          "nullable": false,
+          "type": {
+            "list": {
+              "metadata": {},
+              "name": "item",
+              "nullable": true,
+              "type": {
+                "struct": [
+                  {
+                    "metadata": {},
+                    "name": "key",
+                    "nullable": false,
+                    "type": "string"
+                  },
+                  {
+                    "metadata": {},
+                    "name": "value",
+                    "nullable": false,
+                    "type": {
+                      "struct": [
+                        {
+                          "metadata": {},
+                          "name": "kind",
+                          "nullable": false,
+                          "type": "string"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "string_value",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "bytes_value",
+                          "nullable": true,
+                          "type": "binary"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "int_value",
+                          "nullable": true,
+                          "type": "int64"
+                        },
+                        {
+                          "metadata": {},
+                          "name": "double_value",
+                          "nullable": true,
+                          "type": "float64"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "PartitionClaims": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "version",
+          "nullable": false,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "expires_at_ms",
+          "nullable": false,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "owner",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "descriptor",
+          "nullable": false,
+          "type": "binary"
+        }
+      ],
+      "metadata": {}
+    },
+    "PartitionsResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "rows_affected",
+          "nullable": false,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "schema_ipc",
+          "nullable": false,
+          "type": "binary"
+        },
+        {
+          "metadata": {},
+          "name": "partitions",
+          "nullable": false,
+          "type": {
+            "list": {
+              "metadata": {},
+              "name": "item",
+              "nullable": true,
+              "type": "binary"
+            }
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "SchemaResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "schema_ipc",
+          "nullable": false,
+          "type": "binary"
+        }
+      ],
+      "metadata": {}
+    },
+    "SessionResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        }
+      ],
+      "metadata": {}
+    },
+    "SetConnectionOptionRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "key",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "value",
+          "nullable": false,
+          "type": {
+            "struct": [
+              {
+                "metadata": {},
+                "name": "kind",
+                "nullable": false,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "string_value",
+                "nullable": true,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "bytes_value",
+                "nullable": true,
+                "type": "binary"
+              },
+              {
+                "metadata": {},
+                "name": "int_value",
+                "nullable": true,
+                "type": "int64"
+              },
+              {
+                "metadata": {},
+                "name": "double_value",
+                "nullable": true,
+                "type": "float64"
+              }
+            ]
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "SetStatementOptionRequest": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "statement_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "key",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "value",
+          "nullable": false,
+          "type": {
+            "struct": [
+              {
+                "metadata": {},
+                "name": "kind",
+                "nullable": false,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "string_value",
+                "nullable": true,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "bytes_value",
+                "nullable": true,
+                "type": "binary"
+              },
+              {
+                "metadata": {},
+                "name": "int_value",
+                "nullable": true,
+                "type": "int64"
+              },
+              {
+                "metadata": {},
+                "name": "double_value",
+                "nullable": true,
+                "type": "float64"
+              }
+            ]
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "StatementResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "session_id",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "statement_id",
+          "nullable": false,
+          "type": "string"
+        }
+      ],
+      "metadata": {}
+    },
+    "UpdateResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "rows_affected",
+          "nullable": true,
+          "type": "int64"
+        }
+      ],
+      "metadata": {}
+    },
+    "ValueResponse": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "value",
+          "nullable": false,
+          "type": {
+            "struct": [
+              {
+                "metadata": {},
+                "name": "kind",
+                "nullable": false,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "string_value",
+                "nullable": true,
+                "type": "string"
+              },
+              {
+                "metadata": {},
+                "name": "bytes_value",
+                "nullable": true,
+                "type": "binary"
+              },
+              {
+                "metadata": {},
+                "name": "int_value",
+                "nullable": true,
+                "type": "int64"
+              },
+              {
+                "metadata": {},
+                "name": "double_value",
+                "nullable": true,
+                "type": "float64"
+              }
+            ]
+          }
+        }
+      ],
+      "metadata": {}
+    },
+    "WireOptionValue": {
+      "fields": [
+        {
+          "metadata": {},
+          "name": "kind",
+          "nullable": false,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "string_value",
+          "nullable": true,
+          "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "bytes_value",
+          "nullable": true,
+          "type": "binary"
+        },
+        {
+          "metadata": {},
+          "name": "int_value",
+          "nullable": true,
+          "type": "int64"
+        },
+        {
+          "metadata": {},
+          "name": "double_value",
+          "nullable": true,
+          "type": "float64"
+        }
+      ],
+      "metadata": {}
+    }
+  }
+}

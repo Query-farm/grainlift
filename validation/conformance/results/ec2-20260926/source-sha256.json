@@ -1,0 +1,85 @@
+{
+  "format_version": 1,
+  "algorithm": "SHA256 of sorted relative-path + NUL + file SHA256 + newline",
+  "repositories": {
+    "grainlift-go": {
+      "source_sha256": "0a3f7da6af133a4e51c971a5bbec61dec519c36be6f0780cef07719191f449d3",
+      "files": {
+        ".github/workflows/ci.yml": "c6d37038b5acf55e81f21c98d7df5b1fc75b02bb61c0351e8a499a078bf6a2e0",
+        ".gitignore": "4b2a2d9c874d39726756cc43fb28fd0295e8bdbdaa38308ce2e0e4a698f8ce55",
+        "LICENSE": "434789b19284e8f4ff2c887a57aec4048601658680fcb85beb0a7928589d28ce",
+        "README.md": "e5a309900fc40e8070072ccfb4b65c4de495f716a43f964f107696d37fde5017",
+        "VALIDATION.md": "9b4690da99d92b7f6b845c5b4c5bf6b48dffdac6762a229cfbc0f0b498a8aa63",
+        "backend.go": "a31108fc981da3d4c8fc95b50cefed5462bac15aed1f41b77a8860a385d14720",
+        "binding.go": "93c1391c09a19f8058832a886719406bfb68906700b54926aa87ff93c9fbfe51",
+        "codec.go": "4c08a50abae9191e5283fbc51d4fb0369e7c8e71dcbf1e95f0e01380ddf94a5e",
+        "contract_test.go": "67455c89dae94a65db49c0b80aebc822404d850f633042b4a3607961c255d55d",
+        "doc.go": "1348d30c8a6b8e20b2d3f4d1d21a1a80a50d81039cea7b45ef6792219c238c3e",
+        "go.mod": "6575d97cec4cde565c38f60da8afdf83cc9125137c1a19111aa24d49a4d94a47",
+        "go.sum": "ef2d1af3c952195256ab9e769c8b7d1d1ce8a477df2361264c40d7a86e45ac4d",
+        "lifecycle_test.go": "86011bb7206069e138d0cd5f2ee2ac166db5b7b9c8dc111613c76ce06554cc77",
+        "register.go": "0fc1964baa1b43ac0c2caccef1b48102f7874c25bebf5e52b660b12107cdc80e",
+        "service.go": "5b613567e3c60fb5a42043c965cfe5e29b7a160c6d00bfbf650d8c1ee8327857",
+        "service_test.go": "9df4c6c6991da1e88c2f6cfdc5c43f93086e6979355dc9a5359e328e174a3cf6",
+        "testdata/contract.json": "eca7329f682183a90d4fdef5ab46082cff9ceb3cc9c0707a4e461f0e9e871c38",
+        "types.go": "e1da919549ef64e211a6c3f52cb7507db5cde5b469fc71b5bde20b96ebbf258b"
+      }
+    },
+    "grainlift-hello-world-go": {
+      "source_sha256": "a96edca6f7d9eb3038b0385282b49d5f551602cfd27216677ed9d707365f40d7",
+      "files": {
+        ".github/workflows/ci.yml": "37f83af997d456681df20fe84ff529cdc3c435ff594bfa782c3dba9d1bac63bb",
+        ".gitignore": "62f83f714e8665ce4b4b48ad04814c51e83ea636804f3f91a33d02828dce816b",
+        "LICENSE": "434789b19284e8f4ff2c887a57aec4048601658680fcb85beb0a7928589d28ce",
+        "README.md": "9711ffe1725af5926531dc0d268cc8c51bb887b133d68ff201e7f982546add5e",
+        "go.mod": "13e9fb1606357c8fc259e0e95761ff38055927f208401f803e6b57bf1aa8939f",
+        "go.sum": "2bdae879daffa4747554ecd308db75d13367c20ef9045ce8e87e0bda2e558d58",
+        "main.go": "892b6cd2b22934257c55a7751c685b74a68d1cd5866c327fb1bd61c926244cef",
+        "main_test.go": "ad67d55a1a7d0183a1e601ba9631c675a8718e43d415cb023f34208cf6f67df3"
+      }
+    },
+    "grainlift-typescript": {
+      "source_sha256": "da6267c8100044c2cfab422cbd77b1a11cc12e16e0a905aa4751d588f06caf2e",
+      "files": {
+        ".github/workflows/ci.yml": "ce25ff4fb7bb0f0ff18d4b7d24f544431db67e2c629f96871039caf6cb56bc98",
+        ".gitignore": "cb751141a3a31756a130323a1e83aeebd5b8ea1f1c25e9cbdfa954d01584b154",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "README.md": "fc8db3ff9782d624c62ca1513492709fc66c55436e06d031d4df0cf462241dbf",
+        "biome.json": "6019aada261b663e3228d960490c469cd2bcbf6a45167169cfe34be4f5b62c2d",
+        "package-lock.json": "a1da858ce17864bd4f7c680b3ed42941eddda6aa593a4adbc92e4080ccfb8931",
+        "package.json": "1d1b83661af42a3ae04c8e7e00e9c982454c416f960c75d1cc828f7073467861",
+        "scripts/check-package.mjs": "4bf1ea530d037afdd52045f1a32e33a5d93ff1f6237acb8c5cf613a0c096acfe",
+        "scripts/consumer.ts": "1035113b653db0b5f7695b6a00e584ec9183b0735e0243dae8a2562654d54be1",
+        "src/api.ts": "a4152436752db57caacc32175d3fd232aee85179ff733ce1d41727b25dd3cffa",
+        "src/arrow.ts": "1951262dfdea6bc912c2d6f010714dbddda84968a4145be86beca746e29c50b7",
+        "src/auth.ts": "5717163ad3f06e1f6dff10b229a97a5f73ebfc646d4ce02be47ec500f007160d",
+        "src/check-contract.ts": "f4cb3e5ca9f4f5e33c258f700303fb51ad13a0d6aaf6190153e3878bc32481cd",
+        "src/contract.json": "eca7329f682183a90d4fdef5ab46082cff9ceb3cc9c0707a4e461f0e9e871c38",
+        "src/hosting.ts": "a7f76b90716188794a6d67b57f554ae61a18ddb4e163d51469a8a942d71d90cb",
+        "src/index.ts": "e90571cfd932f9dd72492e442fb80571f6642b882fafe288172f890b1d611ff9",
+        "src/service.ts": "dde432e39c9d23c1a7754694e541c63839869c19cd4374d7b213cc9bd66f583a",
+        "src/tests/arrow.test.ts": "9f53ce8632b6183cb064c063bc1f251e6853aa969b01db2e0f4849cfb34de718",
+        "src/tests/hosting.test.ts": "30caac55210a3b3417f3c7353dc2907394eaae663f9986818d8b3efec8987b05",
+        "src/tests/service.test.ts": "a7616d77c45028caa5574a71fbcf4d7a36d965bb373f7bccc311a4cc73627941",
+        "src/wire.ts": "654cf05e0472daaa4b43b6bf98921dc6355cdd2150210edc5ae7dac1cacdd41b",
+        "tsconfig.json": "ef8cee7d1a0c60ae4fec3c1e5ce1ffae3102a398edbeae276a7fca29532ccae9"
+      }
+    },
+    "grainlift-hello-world-typescript": {
+      "source_sha256": "45267f44619f834625fb955bff350ec2283250511b38a0aded791329ec9297e8",
+      "files": {
+        ".github/workflows/ci.yml": "999ea5b7ff115932579d6f9a9d87b50ff34a80cc0a3b6fc1e1b4027f1418af26",
+        ".gitignore": "39250444a429a7a736cd01641676b2017faf638db4d2bc03930d315275ccb8e5",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "README.md": "2a35400a8c9f09bf4f4661c460613a21af8325c7e78158f2620c07df9e857bf6",
+        "biome.json": "6019aada261b663e3228d960490c469cd2bcbf6a45167169cfe34be4f5b62c2d",
+        "package-lock.json": "270e64ae98694183996bd86c4d955ed08845e2151bd762c8990e0280dae36fe9",
+        "package.json": "7f98f063da22814bc12df8e75c8eb90a587de2ded0f4e8cab8479c057f298a9a",
+        "src/backend.ts": "ea43f2c6863bcfa3543835317ca31b2f58bb8f9f1e2f3b4ba82a4ed40d8a770b",
+        "src/main.ts": "475f9fc14b598c15003f4cfc3f65b952ac52906908ea9de97501510e0f5318fc",
+        "src/tests/backend.test.ts": "bd0460f1236736190fc00fb9ee3c6366b28c3a427545f14f412513ed5a4c277d",
+        "tsconfig.json": "686035a3597d218271c4e2c0369dd4d7a29f5c7ef45bb6fecb00d7f36c7aca73"
+      }
+    }
+  }
+}

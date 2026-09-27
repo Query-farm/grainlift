@@ -46,10 +46,12 @@ jobs:
         run: >-
           uvx --from ruff==0.16.2 ruff check --config validation/regression/pyproject.toml
           validation/regression validation/release_bundle.py validation/release_tests validation/profile_python_memory.py
+          validation/conformance
       - name: Ruff format
         run: >-
           uvx --from ruff==0.16.2 ruff format --check --config validation/regression/pyproject.toml
           validation/regression validation/release_bundle.py validation/release_tests validation/profile_python_memory.py
+          validation/conformance
       - name: Strict mypy
         env:
           MYPYPATH: validation/regression
@@ -57,16 +59,19 @@ jobs:
           uv run --no-project --python 3.13
           --with mypy==2.3.0 --with pytest==9.1.1 --with adbc-driver-manager==1.12.0 --with falcon==4.3.1
           --with psutil==7.2.2 --with types-psutil==7.2.2.20260518
+          --with cryptography==50.0.1
           --with 'vgi-rpc[http]==0.47.1'
           mypy --explicit-package-bases --config-file validation/regression/pyproject.toml
           validation/regression/tests validation/regression/soak validation/regression/deployment
           validation/release_bundle.py validation/release_tests validation/profile_python_memory.py
+          validation/conformance
       - name: Isolated pydoclint
         run: >-
           uvx --python 3.13 --from pydoclint==0.9.1 pydoclint
           --config validation/regression/pyproject.toml
           validation/regression/tests validation/regression/soak validation/regression/deployment
           validation/release_bundle.py validation/release_tests validation/profile_python_memory.py
+          validation/conformance
       - name: Release artifact integrity tests
         run: >-
           uv run --no-project --python 3.13 --with pytest==9.1.1

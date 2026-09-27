@@ -1,0 +1,10 @@
+?   	github.com/Query-farm/vgi-rpc-go/benchmark	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/benchmark/cmd/vgi-rpc-benchmark-go	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/conformance	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/conformance/cmd/vgi-rpc-conformance-client-driver	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/conformance/cmd/vgi-rpc-conformance-go	[no test files]
+ok  	github.com/Query-farm/vgi-rpc-go/conformance/cmd/vgi-rpc-tailnet-go	(cached)
+?   	github.com/Query-farm/vgi-rpc-go/examples/hello_world	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/examples/math_service	[no test files]
+?   	github.com/Query-farm/vgi-rpc-go/tools/docverify	[no test files]
+ok  	github.com/Query-farm/vgi-rpc-go/vgirpc	13.062s

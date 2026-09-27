@@ -1,0 +1,246 @@
+
+> @query-farm/grainlift@0.1.0 test
+> npm run build && node --test dist/tests/*.test.js
+
+
+> @query-farm/grainlift@0.1.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: one complete batch round-trips at the encoded size boundary
+ok 1 - one complete batch round-trips at the encoded size boundary
+  ---
+  duration_ms: 14.015648
+  type: 'test'
+  ...
+# Subtest: legacy Arrow stream framing remains accepted
+ok 2 - legacy Arrow stream framing remains accepted
+  ---
+  duration_ms: 2.33157
+  type: 'test'
+  ...
+# Subtest: truncation, multiple batches and concatenated streams are rejected
+ok 3 - truncation, multiple batches and concatenated streams are rejected
+  ---
+  duration_ms: 7.37741
+  type: 'test'
+  ...
+# Subtest: dictionary batches remain supported
+ok 4 - dictionary batches remain supported
+  ---
+  duration_ms: 5.012061
+  type: 'test'
+  ...
+# Subtest: compressed record and dictionary messages are rejected before codec decode
+ok 5 - compressed record and dictionary messages are rejected before codec decode
+  ---
+  duration_ms: 3.36149
+  type: 'test'
+  ...
+# Subtest: retained bytes account for full backing buffers of sliced batches
+ok 6 - retained bytes account for full backing buffers of sliced batches
+  ---
+  duration_ms: 5.739812
+  type: 'test'
+  ...
+# Subtest: schema IPC uses Arrow Message APIs and preserves metadata
+ok 7 - schema IPC uses Arrow Message APIs and preserves metadata
+  ---
+  duration_ms: 2.076481
+  type: 'test'
+  ...
+# Subtest: hosting shutdown cancels active backend work before waiting for drain
+ok 8 - hosting shutdown cancels active backend work before waiting for drain
+  ---
+  duration_ms: 27.889773
+  type: 'test'
+  ...
+# Subtest: hosting rejects excess concurrent request bodies before buffering
+ok 9 - hosting rejects excess concurrent request bodies before buffering
+  ---
+  duration_ms: 59.759267
+  type: 'test'
+  ...
+# Subtest: hosting forces stuck sockets closed by the shutdown deadline
+ok 10 - hosting forces stuck sockets closed by the shutdown deadline
+  ---
+  duration_ms: 57.77972
+  type: 'test'
+  ...
+# Subtest: registers every authoritative method and preserves exact typed records
+ok 11 - registers every authoritative method and preserves exact typed records
+  ---
+  duration_ms: 25.29757
+  type: 'test'
+  ...
+# Subtest: dispatches preparation, schema, update, Substrait, transactions and cancellation
+ok 12 - dispatches preparation, schema, update, Substrait, transactions and cancellation
+  ---
+  duration_ms: 5.487111
+  type: 'test'
+  ...
+# Subtest: option APIs preserve string, binary, bigint, and double values
+ok 13 - option APIs preserve string, binary, bigint, and double values
+  ---
+  duration_ms: 5.086005
+  type: 'test'
+  ...
+# Subtest: binding stages bounded batches, acknowledges replay, finishes once, then executes
+ok 14 - binding stages bounded batches, acknowledges replay, finishes once, then executes
+  ---
+  duration_ms: 10.842473
+  type: 'test'
+  ...
+# Subtest: bind_stream accepts multiple and empty streams without losing schema
+ok 15 - bind_stream accepts multiple and empty streams without losing schema
+  ---
+  duration_ms: 8.438182
+  type: 'test'
+  ...
+# Subtest: metadata hooks preserve empty versus absent filters and create pull cursors
+ok 16 - metadata hooks preserve empty versus absent filters and create pull cursors
+  ---
+  duration_ms: 8.384267
+  type: 'test'
+  ...
+# Subtest: partition tokens retain descriptors and reject tampering and cross-principal access
+ok 17 - partition tokens retain descriptors and reject tampering and cross-principal access
+  ---
+  duration_ms: 6.144676
+  type: 'test'
+  ...
+# Subtest: pull results replay one batch and release exactly once on exhaustion
+ok 18 - pull results replay one batch and release exactly once on exhaustion
+  ---
+  duration_ms: 4.14118
+  type: 'test'
+  ...
+# Subtest: cross-principal and cross-domain handles never reach the backend
+ok 19 - cross-principal and cross-domain handles never reach the backend
+  ---
+  duration_ms: 4.378766
+  type: 'test'
+  ...
+# Subtest: session, statement and result quotas are enforced at boundary
+ok 20 - session, statement and result quotas are enforced at boundary
+  ---
+  duration_ms: 4.133959
+  type: 'test'
+  ...
+# Subtest: binding rejects immediately above byte and batch boundaries and cleans upload
+ok 21 - binding rejects immediately above byte and batch boundaries and cleans upload
+  ---
+  duration_ms: 8.63791
+  type: 'test'
+  ...
+# Subtest: authoritative options reject collisions and copy mutable configured bytes
+ok 22 - authoritative options reject collisions and copy mutable configured bytes
+  ---
+  duration_ms: 2.031156
+  type: 'test'
+  ...
+# Subtest: ADBC errors preserve repeated binary details and arbitrary exceptions are sanitized
+ok 23 - ADBC errors preserve repeated binary details and arbitrary exceptions are sanitized
+  ---
+  duration_ms: 1.934557
+  type: 'test'
+  ...
+# Subtest: busy shutdown cleans idle sessions and eventually cleans a completing callback
+ok 24 - busy shutdown cleans idle sessions and eventually cleans a completing callback
+  ---
+  duration_ms: 19.960226
+  type: 'test'
+  ...
+# Subtest: negative affected rows and oversized result registration close backend results
+ok 25 - negative affected rows and oversized result registration close backend results
+  ---
+  duration_ms: 2.538174
+  type: 'test'
+  ...
+# Subtest: idle reaping closes abandoned statements and results
+ok 26 - idle reaping closes abandoned statements and results
+  ---
+  duration_ms: 83.727282
+  type: 'test'
+  ...
+# Subtest: plain TCP rejects routable binds and anonymous configured identities
+ok 27 - plain TCP rejects routable binds and anonymous configured identities
+  ---
+  duration_ms: 4.345519
+  type: 'test'
+  ...
+# Subtest: TCP socket admission rejects excess peers and recovers after disconnect
+ok 28 - TCP socket admission rejects excess peers and recovers after disconnect
+  ---
+  duration_ms: 25.949301
+  type: 'test'
+  ...
+# Subtest: idle sockets expire without leaving Arrow readers blocking shutdown
+ok 29 - idle sockets expire without leaving Arrow readers blocking shutdown
+  ---
+  duration_ms: 36.368752
+  type: 'test'
+  ...
+# Subtest: connection byte budget is enforced below, at and above its exact boundary
+ok 30 - connection byte budget is enforced below, at and above its exact boundary
+  ---
+  duration_ms: 50.233007
+  type: 'test'
+  ...
+# Subtest: incomplete TLS handshakes time out and are also included in bounded shutdown
+ok 31 - incomplete TLS handshakes time out and are also included in bounded shutdown
+  ---
+  duration_ms: 446.329114
+  type: 'test'
+  ...
+# Subtest: stock VGI client reuses TCP and preserves exact nested response records
+ok 32 - stock VGI client reuses TCP and preserves exact nested response records
+  ---
+  duration_ms: 114.526305
+  type: 'test'
+  ...
+# Subtest: abrupt TCP producer disconnect releases its live result iterator
+ok 33 - abrupt TCP producer disconnect releases its live result iterator
+  ---
+  duration_ms: 89.417322
+  type: 'test'
+  ...
+# Subtest: Iroh requires explicit executable and exactly one service key policy
+ok 34 - Iroh requires explicit executable and exactly one service key policy
+  ---
+  duration_ms: 1.09337
+  type: 'test'
+  ...
+# Subtest: producer disconnect defers cleanup until another statement's callback leaves the session gate
+ok 35 - producer disconnect defers cleanup until another statement's callback leaves the session gate
+  ---
+  duration_ms: 82.197991
+  type: 'test'
+  ...
+# Subtest: Iroh bridge failure before readiness closes the service and reaps the child
+ok 36 - Iroh bridge failure before readiness closes the service and reaps the child
+  ---
+  duration_ms: 41.595802
+  type: 'test'
+  ...
+# Subtest: Iroh upstream requires its private preamble and bridge exit fails closed
+ok 37 - Iroh upstream requires its private preamble and bridge exit fails closed
+  ---
+  duration_ms: 93.990253
+  type: 'test'
+  ...
+# Subtest: raw cancellation cleanup cannot leak downstream messages through VGI hook logging
+ok 38 - raw cancellation cleanup cannot leak downstream messages through VGI hook logging
+  ---
+  duration_ms: 52.439227
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1264.902192

@@ -1,0 +1,172 @@
+{"Time":"2026-09-27T02:31:20.385324717Z","Action":"start","Package":"github.com/Query-farm/grainlift-go"}
+{"Time":"2026-09-27T02:31:20.406410879Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeRecordSchemas"}
+{"Time":"2026-09-27T02:31:20.406464426Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeRecordSchemas","Output":"=== RUN   TestAuthoritativeRecordSchemas\n"}
+{"Time":"2026-09-27T02:31:20.421889677Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeRecordSchemas","Output":"--- PASS: TestAuthoritativeRecordSchemas (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.421936093Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeRecordSchemas","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.421987268Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRegisteredMethodSchemas"}
+{"Time":"2026-09-27T02:31:20.421991592Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRegisteredMethodSchemas","Output":"=== RUN   TestRegisteredMethodSchemas\n"}
+{"Time":"2026-09-27T02:31:20.467521558Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRegisteredMethodSchemas","Output":"    contract_test.go:166: Known vgi-rpc-go v0.28.0 release gate: dynamic no-header producer advertises has_header=true\n"}
+{"Time":"2026-09-27T02:31:20.468147525Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRegisteredMethodSchemas","Output":"--- PASS: TestRegisteredMethodSchemas (0.05s)\n"}
+{"Time":"2026-09-27T02:31:20.468171386Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRegisteredMethodSchemas","Elapsed":0.05}
+{"Time":"2026-09-27T02:31:20.468200719Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestCancelBypassesBusySession"}
+{"Time":"2026-09-27T02:31:20.4682046Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestCancelBypassesBusySession","Output":"=== RUN   TestCancelBypassesBusySession\n"}
+{"Time":"2026-09-27T02:31:20.487814665Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestCancelBypassesBusySession","Output":"--- PASS: TestCancelBypassesBusySession (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.487840305Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestCancelBypassesBusySession","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.487863288Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestShutdownReapsLateOpen"}
+{"Time":"2026-09-27T02:31:20.487867103Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestShutdownReapsLateOpen","Output":"=== RUN   TestShutdownReapsLateOpen\n"}
+{"Time":"2026-09-27T02:31:20.498917715Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestShutdownReapsLateOpen","Output":"--- PASS: TestShutdownReapsLateOpen (0.01s)\n"}
+{"Time":"2026-09-27T02:31:20.498940862Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestShutdownReapsLateOpen","Elapsed":0.01}
+{"Time":"2026-09-27T02:31:20.498973682Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestIdleReaping"}
+{"Time":"2026-09-27T02:31:20.498977834Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestIdleReaping","Output":"=== RUN   TestIdleReaping\n"}
+{"Time":"2026-09-27T02:31:20.50623549Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestIdleReaping","Output":"--- PASS: TestIdleReaping (0.01s)\n"}
+{"Time":"2026-09-27T02:31:20.506261919Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestIdleReaping","Elapsed":0.01}
+{"Time":"2026-09-27T02:31:20.506284902Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary"}
+{"Time":"2026-09-27T02:31:20.506288742Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary","Output":"=== RUN   TestSessionQuotaBoundary\n"}
+{"Time":"2026-09-27T02:31:20.506346522Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/1"}
+{"Time":"2026-09-27T02:31:20.506350838Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/1","Output":"=== RUN   TestSessionQuotaBoundary/1\n"}
+{"Time":"2026-09-27T02:31:20.507148866Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/1","Output":"--- PASS: TestSessionQuotaBoundary/1 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.507175664Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/1","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.507198917Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/2"}
+{"Time":"2026-09-27T02:31:20.507202798Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/2","Output":"=== RUN   TestSessionQuotaBoundary/2\n"}
+{"Time":"2026-09-27T02:31:20.508004887Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/2","Output":"--- PASS: TestSessionQuotaBoundary/2 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.508027156Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/2","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.508050409Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/3"}
+{"Time":"2026-09-27T02:31:20.508054159Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/3","Output":"=== RUN   TestSessionQuotaBoundary/3\n"}
+{"Time":"2026-09-27T02:31:20.508850677Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/3","Output":"--- PASS: TestSessionQuotaBoundary/3 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.508871797Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary/3","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.508921044Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary","Output":"--- PASS: TestSessionQuotaBoundary (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.508946505Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestSessionQuotaBoundary","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.508977741Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestResultQuotaAndInvalidRowsReleaseReader"}
+{"Time":"2026-09-27T02:31:20.508981737Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestResultQuotaAndInvalidRowsReleaseReader","Output":"=== RUN   TestResultQuotaAndInvalidRowsReleaseReader\n"}
+{"Time":"2026-09-27T02:31:20.527428368Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestResultQuotaAndInvalidRowsReleaseReader","Output":"--- PASS: TestResultQuotaAndInvalidRowsReleaseReader (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.527447363Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestResultQuotaAndInvalidRowsReleaseReader","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.527475424Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRetainedBufferAccounting"}
+{"Time":"2026-09-27T02:31:20.527479904Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRetainedBufferAccounting","Output":"=== RUN   TestRetainedBufferAccounting\n"}
+{"Time":"2026-09-27T02:31:20.527857995Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRetainedBufferAccounting","Output":"--- PASS: TestRetainedBufferAccounting (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.527878032Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRetainedBufferAccounting","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.527900055Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRequestDefaultsAndMetadataValidation"}
+{"Time":"2026-09-27T02:31:20.527903878Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRequestDefaultsAndMetadataValidation","Output":"=== RUN   TestRequestDefaultsAndMetadataValidation\n"}
+{"Time":"2026-09-27T02:31:20.527971168Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRequestDefaultsAndMetadataValidation","Output":"--- PASS: TestRequestDefaultsAndMetadataValidation (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.527987562Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRequestDefaultsAndMetadataValidation","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.528006672Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestFullOptionalBackendDispatch"}
+{"Time":"2026-09-27T02:31:20.528010627Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestFullOptionalBackendDispatch","Output":"=== RUN   TestFullOptionalBackendDispatch\n"}
+{"Time":"2026-09-27T02:31:20.621850627Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestFullOptionalBackendDispatch","Output":"--- PASS: TestFullOptionalBackendDispatch (0.09s)\n"}
+{"Time":"2026-09-27T02:31:20.621868998Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestFullOptionalBackendDispatch","Elapsed":0.09}
+{"Time":"2026-09-27T02:31:20.621895944Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch"}
+{"Time":"2026-09-27T02:31:20.621901064Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch","Output":"=== RUN   TestBindingAndIngestionDispatch\n"}
+{"Time":"2026-09-27T02:31:20.621942237Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind"}
+{"Time":"2026-09-27T02:31:20.621946323Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind","Output":"=== RUN   TestBindingAndIngestionDispatch/bind\n"}
+{"Time":"2026-09-27T02:31:20.658125487Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind","Output":"--- PASS: TestBindingAndIngestionDispatch/bind (0.04s)\n"}
+{"Time":"2026-09-27T02:31:20.658151825Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind","Elapsed":0.04}
+{"Time":"2026-09-27T02:31:20.65818449Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind_stream"}
+{"Time":"2026-09-27T02:31:20.658188313Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind_stream","Output":"=== RUN   TestBindingAndIngestionDispatch/bind_stream\n"}
+{"Time":"2026-09-27T02:31:20.693709001Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind_stream","Output":"--- PASS: TestBindingAndIngestionDispatch/bind_stream (0.04s)\n"}
+{"Time":"2026-09-27T02:31:20.693737038Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch/bind_stream","Elapsed":0.04}
+{"Time":"2026-09-27T02:31:20.693787623Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch","Output":"--- PASS: TestBindingAndIngestionDispatch (0.07s)\n"}
+{"Time":"2026-09-27T02:31:20.693811426Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestBindingAndIngestionDispatch","Elapsed":0.07}
+{"Time":"2026-09-27T02:31:20.693834761Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestPartitionOwnershipTamperingAndExpiry"}
+{"Time":"2026-09-27T02:31:20.693838691Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestPartitionOwnershipTamperingAndExpiry","Output":"=== RUN   TestPartitionOwnershipTamperingAndExpiry\n"}
+{"Time":"2026-09-27T02:31:20.713424567Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestPartitionOwnershipTamperingAndExpiry","Output":"--- PASS: TestPartitionOwnershipTamperingAndExpiry (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.713451579Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestPartitionOwnershipTamperingAndExpiry","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.71347644Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestOptionValidationAndServerAuthority"}
+{"Time":"2026-09-27T02:31:20.713480231Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestOptionValidationAndServerAuthority","Output":"=== RUN   TestOptionValidationAndServerAuthority\n"}
+{"Time":"2026-09-27T02:31:20.713553322Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestOptionValidationAndServerAuthority","Output":"--- PASS: TestOptionValidationAndServerAuthority (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.713578856Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestOptionValidationAndServerAuthority","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.713599525Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestStrictNamedCodec"}
+{"Time":"2026-09-27T02:31:20.713603348Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestStrictNamedCodec","Output":"=== RUN   TestStrictNamedCodec\n"}
+{"Time":"2026-09-27T02:31:20.715219728Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestStrictNamedCodec","Output":"--- PASS: TestStrictNamedCodec (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.715266218Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestStrictNamedCodec","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.715304512Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestBackendErrorsAreRedacted"}
+{"Time":"2026-09-27T02:31:20.715308754Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBackendErrorsAreRedacted","Output":"=== RUN   TestBackendErrorsAreRedacted\n"}
+{"Time":"2026-09-27T02:31:20.715514964Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestBackendErrorsAreRedacted","Output":"--- PASS: TestBackendErrorsAreRedacted (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.715539456Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestBackendErrorsAreRedacted","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.715564802Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeOptionsRejectAcrossScopes"}
+{"Time":"2026-09-27T02:31:20.715568749Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeOptionsRejectAcrossScopes","Output":"=== RUN   TestAuthoritativeOptionsRejectAcrossScopes\n"}
+{"Time":"2026-09-27T02:31:20.7482716Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeOptionsRejectAcrossScopes","Output":"--- PASS: TestAuthoritativeOptionsRejectAcrossScopes (0.03s)\n"}
+{"Time":"2026-09-27T02:31:20.748293795Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestAuthoritativeOptionsRejectAcrossScopes","Elapsed":0.03}
+{"Time":"2026-09-27T02:31:20.748324015Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestErrorDetailsPreserveDuplicates"}
+{"Time":"2026-09-27T02:31:20.748327887Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestErrorDetailsPreserveDuplicates","Output":"=== RUN   TestErrorDetailsPreserveDuplicates\n"}
+{"Time":"2026-09-27T02:31:20.748496256Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestErrorDetailsPreserveDuplicates","Output":"--- PASS: TestErrorDetailsPreserveDuplicates (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.748514176Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestErrorDetailsPreserveDuplicates","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.748539054Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestArrowAllocatorBoundary"}
+{"Time":"2026-09-27T02:31:20.748542779Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestArrowAllocatorBoundary","Output":"=== RUN   TestArrowAllocatorBoundary\n"}
+{"Time":"2026-09-27T02:31:20.74860828Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestArrowAllocatorBoundary","Output":"--- PASS: TestArrowAllocatorBoundary (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.748625347Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestArrowAllocatorBoundary","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.748642151Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestTCPPersistentUnaryPullAndCancel"}
+{"Time":"2026-09-27T02:31:20.748645983Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestTCPPersistentUnaryPullAndCancel","Output":"=== RUN   TestTCPPersistentUnaryPullAndCancel\n"}
+{"Time":"2026-09-27T02:31:20.748716489Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestTCPPersistentUnaryPullAndCancel","Output":"    transport_test.go:29: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.748743468Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestTCPPersistentUnaryPullAndCancel","Output":"--- SKIP: TestTCPPersistentUnaryPullAndCancel (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.748763652Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestTCPPersistentUnaryPullAndCancel","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.748780661Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawDisconnectClosesActiveCursor"}
+{"Time":"2026-09-27T02:31:20.748784395Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawDisconnectClosesActiveCursor","Output":"=== RUN   TestRawDisconnectClosesActiveCursor\n"}
+{"Time":"2026-09-27T02:31:20.748836489Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawDisconnectClosesActiveCursor","Output":"    transport_test.go:29: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.748865412Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawDisconnectClosesActiveCursor","Output":"--- SKIP: TestRawDisconnectClosesActiveCursor (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.74888709Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawDisconnectClosesActiveCursor","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.748907233Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestStreamTransportAdmissionValidation"}
+{"Time":"2026-09-27T02:31:20.748911122Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestStreamTransportAdmissionValidation","Output":"=== RUN   TestStreamTransportAdmissionValidation\n"}
+{"Time":"2026-09-27T02:31:20.765231065Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestStreamTransportAdmissionValidation","Output":"--- PASS: TestStreamTransportAdmissionValidation (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.765260825Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestStreamTransportAdmissionValidation","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.765288534Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestIrohPrivateSocketAndMissingIdentity"}
+{"Time":"2026-09-27T02:31:20.765292382Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestIrohPrivateSocketAndMissingIdentity","Output":"=== RUN   TestIrohPrivateSocketAndMissingIdentity\n"}
+{"Time":"2026-09-27T02:31:20.765365752Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestIrohPrivateSocketAndMissingIdentity","Output":"    transport_test.go:151: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.765398138Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestIrohPrivateSocketAndMissingIdentity","Output":"--- SKIP: TestIrohPrivateSocketAndMissingIdentity (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.765424755Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestIrohPrivateSocketAndMissingIdentity","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.765461694Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawServerShutdownInterruptsIdlePeer"}
+{"Time":"2026-09-27T02:31:20.765465928Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawServerShutdownInterruptsIdlePeer","Output":"=== RUN   TestRawServerShutdownInterruptsIdlePeer\n"}
+{"Time":"2026-09-27T02:31:20.76551506Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawServerShutdownInterruptsIdlePeer","Output":"    transport_test.go:29: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.765552057Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawServerShutdownInterruptsIdlePeer","Output":"--- SKIP: TestRawServerShutdownInterruptsIdlePeer (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.765569074Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawServerShutdownInterruptsIdlePeer","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.765591663Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawMalformedNamedRecordReturnsStructuredError"}
+{"Time":"2026-09-27T02:31:20.765595569Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawMalformedNamedRecordReturnsStructuredError","Output":"=== RUN   TestRawMalformedNamedRecordReturnsStructuredError\n"}
+{"Time":"2026-09-27T02:31:20.765645808Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawMalformedNamedRecordReturnsStructuredError","Output":"    transport_test.go:29: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.76567547Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawMalformedNamedRecordReturnsStructuredError","Output":"--- SKIP: TestRawMalformedNamedRecordReturnsStructuredError (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.765695138Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawMalformedNamedRecordReturnsStructuredError","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.765715232Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestHTTPMalformedNamedRecordReturnsError"}
+{"Time":"2026-09-27T02:31:20.765718949Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestHTTPMalformedNamedRecordReturnsError","Output":"=== RUN   TestHTTPMalformedNamedRecordReturnsError\n"}
+{"Time":"2026-09-27T02:31:20.783578874Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestHTTPMalformedNamedRecordReturnsError","Output":"2026/09/27 02:31:20 http: superfluous response.WriteHeader call from github.com/Query-farm/grainlift-go.(*Service).HTTPHandler.func1.2 (service.go:523)\n"}
+{"Time":"2026-09-27T02:31:20.786410798Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestHTTPMalformedNamedRecordReturnsError","Output":"--- PASS: TestHTTPMalformedNamedRecordReturnsError (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.786438917Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestHTTPMalformedNamedRecordReturnsError","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.786459561Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestPublishedTransportFailsClosed"}
+{"Time":"2026-09-27T02:31:20.786463984Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestPublishedTransportFailsClosed","Output":"=== RUN   TestPublishedTransportFailsClosed\n"}
+{"Time":"2026-09-27T02:31:20.802686401Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestPublishedTransportFailsClosed","Output":"--- PASS: TestPublishedTransportFailsClosed (0.02s)\n"}
+{"Time":"2026-09-27T02:31:20.802700292Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestPublishedTransportFailsClosed","Elapsed":0.02}
+{"Time":"2026-09-27T02:31:20.80273678Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset"}
+{"Time":"2026-09-27T02:31:20.802745478Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset","Output":"=== RUN   TestRawByteBudgetBoundariesAndReset\n"}
+{"Time":"2026-09-27T02:31:20.802796965Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/3"}
+{"Time":"2026-09-27T02:31:20.802801043Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/3","Output":"=== RUN   TestRawByteBudgetBoundariesAndReset/3\n"}
+{"Time":"2026-09-27T02:31:20.802902113Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/3","Output":"--- PASS: TestRawByteBudgetBoundariesAndReset/3 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.802922216Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/3","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.80294272Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/4"}
+{"Time":"2026-09-27T02:31:20.802946371Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/4","Output":"=== RUN   TestRawByteBudgetBoundariesAndReset/4\n"}
+{"Time":"2026-09-27T02:31:20.803030137Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/4","Output":"--- PASS: TestRawByteBudgetBoundariesAndReset/4 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.803046794Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/4","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.803073633Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/5"}
+{"Time":"2026-09-27T02:31:20.803077432Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/5","Output":"=== RUN   TestRawByteBudgetBoundariesAndReset/5\n"}
+{"Time":"2026-09-27T02:31:20.803161173Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/5","Output":"--- PASS: TestRawByteBudgetBoundariesAndReset/5 (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.803170305Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset/5","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.803262153Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset","Output":"--- PASS: TestRawByteBudgetBoundariesAndReset (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.803279154Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawByteBudgetBoundariesAndReset","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.803300504Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawIdleReadDeadline"}
+{"Time":"2026-09-27T02:31:20.803304286Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawIdleReadDeadline","Output":"=== RUN   TestRawIdleReadDeadline\n"}
+{"Time":"2026-09-27T02:31:20.813533534Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawIdleReadDeadline","Output":"--- PASS: TestRawIdleReadDeadline (0.01s)\n"}
+{"Time":"2026-09-27T02:31:20.813559085Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawIdleReadDeadline","Elapsed":0.01}
+{"Time":"2026-09-27T02:31:20.813590084Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel"}
+{"Time":"2026-09-27T02:31:20.813593867Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel","Output":"=== RUN   TestRawPanicContainmentDoesNotAppendOrMislabel\n"}
+{"Time":"2026-09-27T02:31:20.813640603Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/false"}
+{"Time":"2026-09-27T02:31:20.813647438Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/false","Output":"=== RUN   TestRawPanicContainmentDoesNotAppendOrMislabel/false\n"}
+{"Time":"2026-09-27T02:31:20.813753341Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/false","Output":"--- PASS: TestRawPanicContainmentDoesNotAppendOrMislabel/false (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.813771655Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/false","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.813805271Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/true"}
+{"Time":"2026-09-27T02:31:20.813809209Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/true","Output":"=== RUN   TestRawPanicContainmentDoesNotAppendOrMislabel/true\n"}
+{"Time":"2026-09-27T02:31:20.813929537Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/true","Output":"--- PASS: TestRawPanicContainmentDoesNotAppendOrMislabel/true (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.813953316Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel/true","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.813991732Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel","Output":"--- PASS: TestRawPanicContainmentDoesNotAppendOrMislabel (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.814022041Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawPanicContainmentDoesNotAppendOrMislabel","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.814044294Z","Action":"run","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawSocketAdmissionBoundary"}
+{"Time":"2026-09-27T02:31:20.814048076Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawSocketAdmissionBoundary","Output":"=== RUN   TestRawSocketAdmissionBoundary\n"}
+{"Time":"2026-09-27T02:31:20.814122472Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawSocketAdmissionBoundary","Output":"    transport_test.go:29: published VGI transport has no safe raw entrypoint\n"}
+{"Time":"2026-09-27T02:31:20.814149557Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawSocketAdmissionBoundary","Output":"--- SKIP: TestRawSocketAdmissionBoundary (0.00s)\n"}
+{"Time":"2026-09-27T02:31:20.814170234Z","Action":"skip","Package":"github.com/Query-farm/grainlift-go","Test":"TestRawSocketAdmissionBoundary","Elapsed":0}
+{"Time":"2026-09-27T02:31:20.814211563Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Output":"PASS\n"}
+{"Time":"2026-09-27T02:31:21.822368909Z","Action":"output","Package":"github.com/Query-farm/grainlift-go","Output":"ok  \tgithub.com/Query-farm/grainlift-go\t1.437s\n"}
+{"Time":"2026-09-27T02:31:21.822400236Z","Action":"pass","Package":"github.com/Query-farm/grainlift-go","Elapsed":1.437}

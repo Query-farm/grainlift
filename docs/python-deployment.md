@@ -65,11 +65,16 @@ native ADBC client -> authenticated HTTP -> Waitress host process
 ```
 
 TLS-edge validation is a separate gate. Its evidence must distinguish a verified
-HTTPS Python RPC roundtrip from a native HTTPS roundtrip: the native driver does
-not currently expose a custom-CA setting for HTTP. `grainlift.tls.ca` configures
-the mTLS TCP transport, not HTTP. Do not disable certificate or hostname checks
-or change operating-system trust to make a local test pass. Production HTTP
-certificates must chain to a root the native client's HTTP implementation trusts.
+HTTPS Python RPC roundtrip from a native HTTPS roundtrip. For private HTTPS
+certificate authorities, set the native driver's `grainlift.tls.ca` database
+option to a PEM CA bundle path. These certificates supplement the HTTP client's
+default roots; certificate-chain and URI-hostname verification remain enabled.
+An unreadable, empty, or malformed configured bundle fails connection setup.
+The same option remains required for mTLS TCP. `grainlift.tls.cert`,
+`grainlift.tls.key`, and `grainlift.tls.server_name` apply to mTLS TCP; they do not
+configure HTTP client authentication or override the HTTPS hostname. Do not
+disable certificate or hostname checks or change operating-system trust to make
+a local test pass.
 
 The following Caddy configuration assumes a real DNS name and a single local
 Waitress listener. Preserve authorization headers; do not enable RPC replay or

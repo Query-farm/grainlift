@@ -25,7 +25,7 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -addext "basicConstraints=critical,CA:TRUE" \
   -addext "keyUsage=critical,keyCertSign,cRLSign" \
   -keyout "$directory/ca-key.pem" -out "$directory/ca.pem" >/dev/null 2>&1
-for name in server client other; do
+for name in server client other denied; do
   if [[ $name == server ]]; then
     san="DNS:localhost,IP:127.0.0.1"
     usage="serverAuth"

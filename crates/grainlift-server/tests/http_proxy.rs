@@ -52,6 +52,56 @@ mod result_reuse;
 #[derive(Default)]
 struct FakeBackend;
 
+#[test]
+fn native_registration_matches_exported_contract() {
+    let manager = Arc::new(SessionManager::new(
+        Arc::new(FakeBackend),
+        HashMap::new(),
+        Duration::from_secs(60),
+        true,
+    ));
+    let server = build_server(manager, "contract-check".into());
+    let contracts = grainlift_protocol::contract::methods();
+    assert_eq!(server.methods().len(), contracts.len());
+    for contract in contracts {
+        let registered = &server.methods()[contract.name];
+        assert_eq!(
+            registered.params_schema, contract.request,
+            "{} request",
+            contract.name
+        );
+        let expected_kind = match contract.kind {
+            "unary" => vgi_rpc::MethodType::Unary,
+            "producer" => vgi_rpc::MethodType::Producer,
+            "exchange" => vgi_rpc::MethodType::Exchange,
+            other => panic!("unexpected method kind {other}"),
+        };
+        assert_eq!(
+            registered.method_type, expected_kind,
+            "{} kind",
+            contract.name
+        );
+        if contract.kind == "unary" {
+            assert_eq!(
+                Some(&registered.result_schema),
+                contract.response.as_ref(),
+                "{} response",
+                contract.name
+            );
+        }
+        if let Some(record) = contract.request_record {
+            assert!(
+                registered
+                    .param_types
+                    .iter()
+                    .any(|(name, ty)| name == "request" && ty == record),
+                "{} request record",
+                contract.name
+            );
+        }
+    }
+}
+
 impl Backend for FakeBackend {
     fn open(
         &self,
