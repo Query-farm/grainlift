@@ -102,6 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::clone(&server),
             Arc::clone(&manager),
             iroh,
+            Duration::from_secs(config.server.session_ttl_seconds),
             config.server.require_authentication,
             shutdown.child_token(),
         )
@@ -282,6 +283,7 @@ async fn start_iroh_listener(
     server: Arc<vgi_rpc::RpcServer>,
     manager: Arc<SessionManager>,
     config: IrohConfig,
+    session_ttl: Duration,
     require_authentication: bool,
     shutdown: CancellationToken,
 ) -> Result<tokio::task::JoinHandle<vgi_rpc_iroh::Result<()>>, Box<dyn std::error::Error>> {
@@ -309,17 +311,21 @@ async fn start_iroh_listener(
     }
 
     let policy = iroh_policy(config.principals, require_authentication);
-    let iroh_server = IrohServer::with_options(
-        server,
-        IrohServerOptions::default()
-            .with_issuer(config.issuer)
-            .with_policy(policy)
-            .with_lifecycle(Arc::new(
-                grainlift_server::iroh_lifecycle::IrohSessionLifecycle::new(manager),
-            ))
-            .with_max_active_streams(config.max_active_streams)
-            .with_max_active_streams_per_connection(config.max_active_streams_per_connection),
-    );
+    let mut options = IrohServerOptions::default()
+        .with_issuer(config.issuer)
+        .with_policy(policy)
+        .with_lifecycle(Arc::new(
+            grainlift_server::iroh_lifecycle::IrohSessionLifecycle::new(manager),
+        ))
+        .with_max_active_streams(config.max_active_streams)
+        .with_max_active_streams_per_connection(config.max_active_streams_per_connection);
+    // A session's control stream waits for its client's next call; the
+    // transport default (30s) would close idle ADBC connections.
+    options.connection_io_timeout = config
+        .stream_idle_timeout_seconds
+        .map(Duration::from_secs)
+        .unwrap_or(session_ttl);
+    let iroh_server = IrohServer::with_options(server, options);
     Ok(tokio::spawn(async move {
         iroh_server.serve(endpoint, shutdown).await
     }))

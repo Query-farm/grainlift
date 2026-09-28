@@ -79,6 +79,12 @@ pub struct IrohConfig {
     /// stream while Arrow data is flowing.
     #[serde(default = "default_iroh_max_active_streams_per_connection")]
     pub max_active_streams_per_connection: usize,
+    /// How long a stream may sit idle between requests (or stall mid-I/O)
+    /// before the server closes it. A session's control stream is idle
+    /// whenever its client is not issuing calls, so this defaults to
+    /// `server.session_ttl_seconds`; a shorter value silently breaks idle
+    /// ADBC connections.
+    pub stream_idle_timeout_seconds: Option<u64>,
 }
 
 const fn default_iroh_max_active_streams() -> usize {
@@ -370,6 +376,9 @@ impl Config {
                     "authenticated Iroh requires at least one endpoint-to-principal mapping".into(),
                 );
             }
+            if iroh.stream_idle_timeout_seconds == Some(0) {
+                return Err("iroh.stream_idle_timeout_seconds must be positive".into());
+            }
             if iroh.max_active_streams == 0
                 || iroh.max_active_streams_per_connection == 0
                 || iroh.max_active_streams_per_connection > iroh.max_active_streams
@@ -604,6 +613,31 @@ driver = "adbc_driver_sqlite"
             "[server]\nlisten = \"0.0.0.0:8080\"\nrequire_authentication = false\n{TARGET}"
         );
         assert!(Config::from_toml(&remote).is_err());
+    }
+
+    #[test]
+    fn validates_iroh_stream_idle_timeout() {
+        let iroh = "[server]\nrequire_authentication = false\n\n[iroh]\nissuer = \"example.org\"\nsecret_key_file = \"iroh.key\"\n";
+        let default = format!("{iroh}{TARGET}");
+        assert_eq!(
+            Config::from_toml(&default)
+                .unwrap()
+                .iroh
+                .unwrap()
+                .stream_idle_timeout_seconds,
+            None
+        );
+        let explicit = format!("{iroh}stream_idle_timeout_seconds = 900\n{TARGET}");
+        assert_eq!(
+            Config::from_toml(&explicit)
+                .unwrap()
+                .iroh
+                .unwrap()
+                .stream_idle_timeout_seconds,
+            Some(900)
+        );
+        let zero = format!("{iroh}stream_idle_timeout_seconds = 0\n{TARGET}");
+        assert!(Config::from_toml(&zero).is_err());
     }
 
     #[test]
