@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 use grainlift_protocol::{JsonOptionValue, WireOption};
-use rand::RngCore;
+use rand::TryRng;
 
 use crate::backend::{Backend, DriverManagerBackend};
 use crate::config::{AuthConfig, Config, ServerConfig, TargetConfig};
@@ -195,7 +195,7 @@ fn read_or_create_token(path: &Path) -> Result<String> {
     match options.open(path) {
         Ok(mut file) => {
             let mut bytes = [0_u8; 32];
-            rand::rngs::OsRng.try_fill_bytes(&mut bytes)?;
+            rand::rngs::SysRng.try_fill_bytes(&mut bytes)?;
             let token: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
             writeln!(file, "{token}")?;
             file.sync_all()?;
