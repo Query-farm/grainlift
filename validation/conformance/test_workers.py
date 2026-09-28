@@ -105,15 +105,11 @@ def test_native_interleaved_clients_keep_results_independent(worker: Worker) -> 
         left.execute("QUERY")
         with left.fetch_record_batch() as reader:
             first_batch = reader.read_next_batch()
-            assert first_batch.column(0).to_pylist() == list(
-                range(first_batch.num_rows)
-            )
+            assert first_batch.column(0).to_pylist() == list(range(first_batch.num_rows))
             check_query(right, worker)
             remaining = reader.read_all()
             assert first_batch.num_rows + remaining.num_rows == worker.rows
-            assert remaining.column(0).to_pylist() == list(
-                range(first_batch.num_rows, worker.rows)
-            )
+            assert remaining.column(0).to_pylist() == list(range(first_batch.num_rows, worker.rows))
         check_query(left, worker)
 
 
