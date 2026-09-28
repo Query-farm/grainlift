@@ -38,7 +38,7 @@ arrow-array = "59"
 arrow-buffer = "59"
 arrow-ipc = "59"
 arrow-schema = "59"
-axum = "0.7"
+axum = "0.8"
 base64 = "0.23"
 clap = { version = "4", features = ["derive", "env"] }
 opentelemetry = { version = "0.32", default-features = false, features = ["trace"] }
