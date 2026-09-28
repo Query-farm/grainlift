@@ -48,7 +48,7 @@ tracing-opentelemetry.workspace = true
 tracing-subscriber.workspace = true
 uuid.workspace = true
 url.workspace = true
-vgi-rpc.workspace = true
+vgi-rpc = { workspace = true, features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
 iroh.workspace = true
 vgi-rpc-iroh.workspace = true
 tempfile = "3"
@@ -60,4 +60,4 @@ rand.workspace = true
 adbc-driver-grainlift = { version = "0.4.0", path = "../adbc-driver-grainlift" }
 arrow-array.workspace = true
 rcgen = "0.14"
-vgi-rpc-client.workspace = true
+vgi-rpc-client = { workspace = true, features = ["reqwest", "tcp-tls"] }

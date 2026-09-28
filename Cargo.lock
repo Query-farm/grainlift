@@ -4697,7 +4697,6 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "vgi-iroh-transport"
 version = "0.27.3"
-source = "git+https://github.com/Query-farm/vgi-rpc-rust?rev=93cc4b8974494b32da460df1e66f64afdbbf119f#93cc4b8974494b32da460df1e66f64afdbbf119f"
 dependencies = [
  "bytes",
  "http",
@@ -4713,7 +4712,6 @@ dependencies = [
 [[package]]
 name = "vgi-rpc"
 version = "0.27.3"
-source = "git+https://github.com/Query-farm/vgi-rpc-rust?rev=93cc4b8974494b32da460df1e66f64afdbbf119f#93cc4b8974494b32da460df1e66f64afdbbf119f"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -4755,7 +4753,6 @@ dependencies = [
 [[package]]
 name = "vgi-rpc-client"
 version = "0.27.3"
-source = "git+https://github.com/Query-farm/vgi-rpc-rust?rev=93cc4b8974494b32da460df1e66f64afdbbf119f#93cc4b8974494b32da460df1e66f64afdbbf119f"
 dependencies = [
  "arrow-array",
  "arrow-ipc",
@@ -4763,6 +4760,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "flate2",
+ "http",
  "libc",
  "reqwest 0.12.28",
  "rustls",
@@ -4778,7 +4776,6 @@ dependencies = [
 [[package]]
 name = "vgi-rpc-iroh"
 version = "0.27.3"
-source = "git+https://github.com/Query-farm/vgi-rpc-rust?rev=93cc4b8974494b32da460df1e66f64afdbbf119f#93cc4b8974494b32da460df1e66f64afdbbf119f"
 dependencies = [
  "iroh",
  "thiserror 2.0.20",
@@ -4794,7 +4791,6 @@ dependencies = [
 [[package]]
 name = "vgi-rpc-macros"
 version = "0.27.3"
-source = "git+https://github.com/Query-farm/vgi-rpc-rust?rev=93cc4b8974494b32da460df1e66f64afdbbf119f#93cc4b8974494b32da460df1e66f64afdbbf119f"
 dependencies = [
  "proc-macro2",
  "quote",

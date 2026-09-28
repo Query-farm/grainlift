@@ -73,13 +73,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.server.max_bind_bytes,
     ));
 
-    let state = HttpState::builder()
+    let mut state = HttpState::builder()
         .server(Arc::clone(&server))
         .authenticate(build_authenticator(&config.auth))
         .max_body_size(config.server.max_request_body_bytes)
         .max_request_bytes(config.server.max_request_body_bytes)
-        .request_timeout(Duration::from_secs(config.server.request_timeout_seconds))
-        .build();
+        .request_timeout(Duration::from_secs(config.server.request_timeout_seconds));
+    if let Some(origins) = &config.server.cors_origins {
+        state = state.cors_origins(origins.clone());
+    }
+    if let Some(max_age) = config.server.cors_max_age_seconds {
+        state = state.cors_max_age(max_age);
+    }
+    let state = state.build();
     let app = vgi_rpc::http::build_router(state)
         .route("/healthz", get(liveness))
         .route("/readyz", get(readiness));

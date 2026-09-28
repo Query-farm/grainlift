@@ -26,7 +26,26 @@ description = "ADBC client driver for connecting to the Grainlift service"
 readme = "../../README.md"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+# staticlib: linked into hosts that cannot load drivers dynamically (the
+# grainlift DuckDB extension, including its DuckDB-WASM build).
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[features]
+default = ["reqwest-http", "tls-tcp", "iroh"]
+# HTTP(S) endpoints through reqwest (blocking).
+reqwest-http = ["dep:reqwest", "dep:rustls", "vgi-rpc-client/reqwest"]
+# HTTP(S) endpoints through an executor registered by the host application
+# (see host_http.rs). Used by the DuckDB extension on every platform.
+host-http = []
+# Persistent VGI byte-stream sessions (tcp://; the base for tls+tcp and iroh).
+byte-transports = []
+# tls+tcp:// endpoints (mTLS).
+tls-tcp = ["byte-transports", "dep:rustls", "vgi-rpc-client/tcp-tls"]
+# iroh:// endpoints through a native Iroh endpoint.
+iroh = ["byte-transports", "dep:iroh", "dep:tokio", "dep:vgi-rpc-iroh"]
+# iroh:// endpoints inside Haybarn DuckDB-WASM (COI), through the page's Iroh
+# adapter Worker and SharedArrayBuffer rings (see sab_transport.rs).
+iroh-browser = ["byte-transports"]
 
 [dependencies]
 grainlift-protocol = { version = "0.4.0", path = "../grainlift-protocol" }
@@ -35,14 +54,14 @@ adbc_ffi.workspace = true
 arrow-array.workspace = true
 arrow-buffer.workspace = true
 arrow-schema.workspace = true
-reqwest.workspace = true
-rustls.workspace = true
+reqwest = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
 serde_json.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, optional = true }
 url.workspace = true
-iroh.workspace = true
+iroh = { workspace = true, optional = true }
 vgi-rpc-client.workspace = true
-vgi-rpc-iroh.workspace = true
+vgi-rpc-iroh = { workspace = true, optional = true }
 
 [dev-dependencies]
 rcgen = "0.14"

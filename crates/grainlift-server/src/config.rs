@@ -111,6 +111,13 @@ pub struct ServerConfig {
     pub max_sessions_per_principal: usize,
     pub max_statements_per_session: usize,
     pub max_results_per_session: usize,
+    /// Browser origin allowed to call the HTTP API (CORS), e.g.
+    /// "https://app.example.com". Browser clients such as the grainlift
+    /// DuckDB-WASM extension need this. `"*"` is rejected when authentication
+    /// is required because credentialed CORS cannot use a wildcard.
+    pub cors_origins: Option<String>,
+    /// `Access-Control-Max-Age` for preflight responses.
+    pub cors_max_age_seconds: Option<u32>,
 }
 
 impl Default for ServerConfig {
@@ -134,6 +141,8 @@ impl Default for ServerConfig {
             max_sessions_per_principal: 32,
             max_statements_per_session: 64,
             max_results_per_session: 64,
+            cors_origins: None,
+            cors_max_age_seconds: None,
         }
     }
 }
@@ -308,6 +317,18 @@ impl Config {
             .session_limits()
             .validate()
             .map_err(|message| -> Box<dyn std::error::Error> { message.into() })?;
+
+        if let Some(origins) = &self.server.cors_origins {
+            if origins.trim().is_empty() || origins.contains(',') {
+                return Err("server.cors_origins must name exactly one origin".into());
+            }
+            if origins.trim() == "*" && self.server.require_authentication {
+                return Err(
+                    "server.cors_origins = \"*\" cannot be combined with require_authentication; list the allowed origins explicitly"
+                        .into(),
+                );
+            }
+        }
 
         if !self.server.listen.ip().is_loopback() && !self.server.allow_insecure_remote {
             return Err(format!(
@@ -583,6 +604,26 @@ driver = "adbc_driver_sqlite"
             "[server]\nlisten = \"0.0.0.0:8080\"\nrequire_authentication = false\n{TARGET}"
         );
         assert!(Config::from_toml(&remote).is_err());
+    }
+
+    #[test]
+    fn validates_cors_origins() {
+        let auth = "[auth.static_bearer_tokens]\ntoken = \"alice\"\n\n[auth.target_permissions]\nalice = [\"sqlite\"]\n";
+        let origin =
+            format!("[server]\ncors_origins = \"https://app.example.com\"\n\n{auth}{TARGET}");
+        assert!(Config::from_toml(&origin).is_ok());
+
+        let wildcard_with_auth = format!("[server]\ncors_origins = \"*\"\n\n{auth}{TARGET}");
+        assert!(Config::from_toml(&wildcard_with_auth).is_err());
+
+        let wildcard_without_auth =
+            format!("[server]\nrequire_authentication = false\ncors_origins = \"*\"\n{TARGET}");
+        assert!(Config::from_toml(&wildcard_without_auth).is_ok());
+
+        let several = format!(
+            "[server]\ncors_origins = \"https://a.example, https://b.example\"\n\n{auth}{TARGET}"
+        );
+        assert!(Config::from_toml(&several).is_err());
     }
 
     #[test]

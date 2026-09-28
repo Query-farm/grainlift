@@ -22,6 +22,9 @@ require_authentication = true
 # behind a TLS terminator. Setting this true only acknowledges the risk; it
 # does not enable TLS.
 allow_insecure_remote = false
+# Browser origin allowed to call this service (CORS), e.g. a DuckDB-WASM app
+# using the grainlift extension. One origin; "*" is rejected with authentication.
+# cors_origins = "https://app.example.com"
 request_timeout_seconds = 300
 driver_operation_timeout_seconds = 270
 shutdown_grace_seconds = 30

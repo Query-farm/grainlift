@@ -354,6 +354,42 @@ pooling and Iroh endpoint sharing retain their existing behavior.
 See [grainlift.example.toml](grainlift.example.toml) for the complete server,
 TCP, Iroh, authentication, target, and resource-limit configuration.
 
+### Browser clients
+
+Browsers can reach Grainlift over HTTP(S) and, from a cross-origin-isolated
+page, over Iroh. The grainlift DuckDB extension
+does both from DuckDB-WASM (Haybarn). For HTTP, allow the page's origin with
+`server.cors_origins` (one origin; `"*"` is rejected when authentication is
+required). The server then answers preflights and exposes the `VGI-*`
+response headers the client reads:
+
+```toml
+[server]
+cors_origins = "https://app.example.com"
+```
+
+For Iroh, the page owns one browser Iroh node (relay only) in an adapter Worker
+from `@query-farm/vgi-rpc-iroh-browser`; map that node's endpoint ID to a
+principal in `iroh.principals` like any other client.
+
+### Embedding the driver
+
+The driver crate also builds as a `staticlib` for hosts that cannot load an
+ADBC driver dynamically (for example WebAssembly). Cargo features select the
+transports:
+
+| Feature | Default | Provides |
+| --- | --- | --- |
+| `reqwest-http` | yes | HTTP(S) through a built-in blocking HTTP client |
+| `tls-tcp` | yes | `tcp://` and `tls+tcp://` (implies `byte-transports`) |
+| `iroh` | yes | `iroh://` through a native Iroh endpoint |
+| `host-http` | no | HTTP(S) through an executor the host registers with `grainlift_register_host_http`, selected per database by the `grainlift.internal.host_ctx` option |
+| `iroh-browser` | no | `iroh://` inside Haybarn DuckDB-WASM through the page's Iroh adapter Worker |
+
+`--no-default-features --features host-http,iroh-browser` builds for
+`wasm32-unknown-emscripten`; the C declarations for `host-http` are in
+`crates/adbc-driver-grainlift/src/host_http.rs`.
+
 ## Stateful sessions and deployment
 
 ADBC is stateful. One Grainlift server process owns each downstream database,
