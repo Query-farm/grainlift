@@ -67,9 +67,8 @@ python -m pytest validation/conformance \
 
 Use the Python SDK from the reviewed wheel candidate or a deliberate development
 checkout. `python_host` uses the existing regression synthetic workload. The
-Rust example accepts the same command-line contract but its existing single
-credential configuration needs `-k 'not principal_ownership'`; this is a narrower
-baseline, not a complete pass of the two-principal gate.
+Rust example accepts the same command-line contract for HTTP and mTLS; the
+other transport adapters are provided by the Go and TypeScript examples.
 
 ## Worker process contract
 
@@ -98,13 +97,12 @@ and pass `--worker-tls-dir` pointing there. Certificate lifetimes are one day;
 never check certificates or keys into the repository. The native HTTPS client
 must include the `grainlift.tls.ca` support added with this transport gate.
 
-**Go dependency gate:** published VGI-RPC Go 0.28.0 lacks the safe network
-entrypoint that disables shared-memory attachment before request dispatch.
-The Go SDK deliberately refuses raw TCP/mTLS/Iroh hosting with that dependency.
-Those modes require the prepared upstream patch, selected through an explicit
-development `go.work`, until it is released and adopted. HTTP/HTTPS run with
-the published dependency. Do not remove this guard or silently replace the
-manifest dependency to make a transport gate pass.
+**Go dependency gate:** the Go SDK currently declares VGI-RPC Go 0.28.0, which
+lacks the safe network entrypoint that disables shared-memory attachment before
+request dispatch. The Go SDK deliberately refuses raw TCP/mTLS/Iroh hosting with
+that dependency. The transport fix has merged upstream; the SDK must adopt a
+tag containing it before the raw modes are distributable. Do not remove the
+guard or silently replace the manifest dependency to make a transport gate pass.
 
 For Iroh, install the explicitly pinned `vgi-iroh-bridge` 0.27.3 and pass its
 absolute executable path with `--iroh-bridge`. The suite generates independent
@@ -141,8 +139,10 @@ client configuration, outside diagnostic representations.
 
 The common gate covers native result values and batch boundaries, repeated
 execution, partial reads, error recovery, separate statements and concurrent
-connections, bad credentials and targets, parent/child ownership, typed response
-schemas, all method request shapes, incompatible versions, malformed named
+connections, interleaved live results from independent clients, 64-round
+session churn with a live observer, bad credentials and targets, parent/child
+ownership, typed response schemas, all method request shapes, incompatible
+versions, malformed named
 records, result replay, and shutdown handle cleanup.
 
 This is a shared compatibility gate, not full ADBC certification. SDK tests
@@ -150,6 +150,10 @@ must additionally prove positive backend hooks for preparation, transactions,
 binding/ingestion, metadata, options, partitions, Substrait and cancellation;
 resource boundaries and cleanup under faults; and every transport the SDK
 advertises. Unsupported backend features must return `NOT_IMPLEMENTED`.
+The synthetic `QUERY`/`FAIL` workers do not persist writes. SQLite commit
+visibility, write conflicts, and ingestion durability belong to the separate
+real-downstream suite and require a stateful backend fixture before they can be
+applied to a worker SDK.
 The suite does not establish production soak, RSS stability, hard termination
 of backend callbacks or multi-replica session portability. The coverage matrix
 records the remaining differences in independent wire-fault checks by transport.

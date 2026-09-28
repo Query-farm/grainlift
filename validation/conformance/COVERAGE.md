@@ -53,8 +53,10 @@ distinctions even when implementations need different fixtures or case counts.
 ## Transport selection
 
 All transports run native ADBC checks for exact results, batch boundaries,
-repeated execution, partial reads, error recovery, independent statements and
-concurrent connections, and target authorization. Additional checks depend on
+repeated execution, partial reads, error recovery, independent statements,
+concurrent connections, interleaved live results from two clients, bounded
+session churn with a live observer, and target authorization. Additional checks
+depend on
 the authentication mechanism and framing:
 
 | Checks | HTTP / HTTPS | TCP | mTLS TCP | Iroh |
@@ -75,8 +77,10 @@ Transport-specific deselection is reported explicitly. It is not a skipped
 failure or evidence of full wire-fault parity across transports. In particular,
 an independent raw-Iroh malformed-request client remains a coverage gap.
 
-The Python and Rust reference workers have their own suites. Earlier HTTP
-reference runs are recorded in `RESULTS.md`; rerunning the new Go/TypeScript
-transport matrix does not retroactively validate either reference worker.
+The Python and Rust reference workers have their own suites. The Rust example
+supports two distinct HTTP and mTLS principals for the shared ownership gate.
+Earlier HTTP reference runs are recorded in `RESULTS.md`; rerunning the new
+Go/TypeScript transport matrix does not retroactively validate either reference
+worker.
 None of these unit or conformance counts establish production soak, RSS
 stability, callback hard termination, or cross-process session portability.

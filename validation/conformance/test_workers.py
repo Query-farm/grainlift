@@ -94,6 +94,43 @@ def test_native_independent_clients(worker: Worker) -> None:
             future.result(timeout=20)
 
 
+def test_native_interleaved_clients_keep_results_independent(worker: Worker) -> None:
+    """Keep one client's result open while another finishes and opens a new result."""
+    with (
+        worker.connect() as first,
+        worker.connect() as second,
+        first.cursor() as left,
+        second.cursor() as right,
+    ):
+        left.execute("QUERY")
+        with left.fetch_record_batch() as reader:
+            first_batch = reader.read_next_batch()
+            assert first_batch.column(0).to_pylist() == list(
+                range(first_batch.num_rows)
+            )
+            check_query(right, worker)
+            remaining = reader.read_all()
+            assert first_batch.num_rows + remaining.num_rows == worker.rows
+            assert remaining.column(0).to_pylist() == list(
+                range(first_batch.num_rows, worker.rows)
+            )
+        check_query(left, worker)
+
+
+def test_native_bounded_session_churn(worker: Worker) -> None:
+    """Reuse session capacity after many short clients while one reader stays live."""
+    with worker.connect() as observer, observer.cursor() as watch:
+        watch.execute("QUERY")
+        with watch.fetch_record_batch() as reader:
+            first_batch = reader.read_next_batch()
+            for _ in range(64):
+                with worker.connect() as writer, writer.cursor() as cursor:
+                    check_query(cursor, worker)
+            remaining = reader.read_all()
+            assert first_batch.num_rows + remaining.num_rows == worker.rows
+        check_query(watch, worker)
+
+
 @pytest.mark.transports("http", "https", "tcp", "mtls")
 def test_wire_lifecycle_and_schema(worker: Worker) -> None:
     """Validate actual named replies and reject access after closing their parent."""
@@ -129,7 +166,7 @@ def test_shutdown_closes_live_handles(worker: Worker, partial_result: bool) -> N
 @pytest.mark.parametrize(
     "method", ["new_statement", "close_connection", "execute", "close_statement", "close_result", "read_result"]
 )
-@pytest.mark.transports("http", "https")
+@pytest.mark.transports("http", "https", "mtls")
 def test_wire_principal_ownership(worker: Worker, method: str) -> None:
     """Deny another authenticated principal access to sessions and child handles."""
     wire = worker.wire
@@ -139,7 +176,9 @@ def test_wire_principal_ownership(worker: Worker, method: str) -> None:
     result = wire.call("execute", statement).record("execute")
     values = {**statement, "result_id": result["result_id"], "sequence": 0}
     fields = schema(METHODS[method]["request"]).names
-    reply = Wire(worker.endpoint, worker.other_token, worker.tls_dir).call(method, {key: values[key] for key in fields})
+    reply = Wire(worker.endpoint, worker.other_token, worker.tls_dir, peer="other").call(
+        method, {key: values[key] for key in fields}
+    )
     assert reply.error()["status"] in ("not_found", "unauthorized")
     assert wire.call("close_connection", {"session_id": session}).record("close_connection") == {"ok": True}
 
