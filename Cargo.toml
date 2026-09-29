@@ -59,16 +59,20 @@ uuid = { version = "1", features = ["v4", "serde"] }
 url = "2"
 iroh = { version = "=1.1.0", default-features = false, features = ["tls-ring"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-vgi-rpc = { version = "0.27.3", features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
-vgi-rpc-client = { version = "0.27.3", features = ["http", "tcp-tls"] }
+# Minimal feature sets: the client driver builds for wasm32-unknown-emscripten.
+# The server and the native driver transports opt into more in their manifests.
+vgi-rpc = { version = "0.27.3", default-features = false, features = ["macros"] }
+vgi-rpc-client = { version = "0.27.3", default-features = false, features = ["http"] }
 vgi-rpc-iroh = "0.27.3"
 
-# Pending a crates.io transport release: physical Iroh disconnect callbacks.
-# Pin the shared transport graph together to preserve Rust type identity.
-# https://github.com/Query-farm/vgi-rpc-rust/commit/93cc4b8974494b32da460df1e66f64afdbbf119f
+# Pending a crates.io transport release: the host HTTP executor
+# (vgi-rpc-client HttpExecutor, reqwest feature split) on vgi-rpc-rust branch
+# feat/http-executor. Pin the shared transport graph together to preserve Rust
+# type identity.
+# https://github.com/Query-farm/vgi-rpc-rust/commit/2b3d548692a26e17c6faa52c5e2cce2428da5dc3
 [patch.crates-io]
-vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
-vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
-vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
-vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
-vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "93cc4b8974494b32da460df1e66f64afdbbf119f" }
+vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }

@@ -22,6 +22,9 @@ require_authentication = true
 # behind a TLS terminator. Setting this true only acknowledges the risk; it
 # does not enable TLS.
 allow_insecure_remote = false
+# Browser origin allowed to call this service (CORS), e.g. a DuckDB-WASM app
+# using the grainlift extension. One origin; "*" is rejected with authentication.
+# cors_origins = "https://app.example.com"
 request_timeout_seconds = 300
 driver_operation_timeout_seconds = 270
 shutdown_grace_seconds = 30
@@ -57,6 +60,9 @@ max_results_per_session = 64
 # disable_relays = false
 # A session keeps one control stream and can temporarily use a second stream
 # for Arrow results or bind data. Size these with the session quotas above.
+# How long an idle stream (e.g. a session's control stream between calls) is
+# kept open. Defaults to server.session_ttl_seconds.
+# stream_idle_timeout_seconds = 3600
 # max_active_streams = 1024
 # max_active_streams_per_connection = 64
 #

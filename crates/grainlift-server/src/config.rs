@@ -79,6 +79,12 @@ pub struct IrohConfig {
     /// stream while Arrow data is flowing.
     #[serde(default = "default_iroh_max_active_streams_per_connection")]
     pub max_active_streams_per_connection: usize,
+    /// How long a stream may sit idle between requests (or stall mid-I/O)
+    /// before the server closes it. A session's control stream is idle
+    /// whenever its client is not issuing calls, so this defaults to
+    /// `server.session_ttl_seconds`; a shorter value silently breaks idle
+    /// ADBC connections.
+    pub stream_idle_timeout_seconds: Option<u64>,
 }
 
 const fn default_iroh_max_active_streams() -> usize {
@@ -111,6 +117,13 @@ pub struct ServerConfig {
     pub max_sessions_per_principal: usize,
     pub max_statements_per_session: usize,
     pub max_results_per_session: usize,
+    /// Browser origin allowed to call the HTTP API (CORS), e.g.
+    /// "https://app.example.com". Browser clients such as the grainlift
+    /// DuckDB-WASM extension need this. `"*"` is rejected when authentication
+    /// is required because credentialed CORS cannot use a wildcard.
+    pub cors_origins: Option<String>,
+    /// `Access-Control-Max-Age` for preflight responses.
+    pub cors_max_age_seconds: Option<u32>,
 }
 
 impl Default for ServerConfig {
@@ -134,6 +147,8 @@ impl Default for ServerConfig {
             max_sessions_per_principal: 32,
             max_statements_per_session: 64,
             max_results_per_session: 64,
+            cors_origins: None,
+            cors_max_age_seconds: None,
         }
     }
 }
@@ -309,6 +324,18 @@ impl Config {
             .validate()
             .map_err(|message| -> Box<dyn std::error::Error> { message.into() })?;
 
+        if let Some(origins) = &self.server.cors_origins {
+            if origins.trim().is_empty() || origins.contains(',') {
+                return Err("server.cors_origins must name exactly one origin".into());
+            }
+            if origins.trim() == "*" && self.server.require_authentication {
+                return Err(
+                    "server.cors_origins = \"*\" cannot be combined with require_authentication; list the allowed origins explicitly"
+                        .into(),
+                );
+            }
+        }
+
         if !self.server.listen.ip().is_loopback() && !self.server.allow_insecure_remote {
             return Err(format!(
                 "refusing plaintext HTTP listener {} outside loopback; terminate TLS in front of a loopback listener or set server.allow_insecure_remote=true to acknowledge the risk",
@@ -348,6 +375,9 @@ impl Config {
                 return Err(
                     "authenticated Iroh requires at least one endpoint-to-principal mapping".into(),
                 );
+            }
+            if iroh.stream_idle_timeout_seconds == Some(0) {
+                return Err("iroh.stream_idle_timeout_seconds must be positive".into());
             }
             if iroh.max_active_streams == 0
                 || iroh.max_active_streams_per_connection == 0
@@ -583,6 +613,51 @@ driver = "adbc_driver_sqlite"
             "[server]\nlisten = \"0.0.0.0:8080\"\nrequire_authentication = false\n{TARGET}"
         );
         assert!(Config::from_toml(&remote).is_err());
+    }
+
+    #[test]
+    fn validates_iroh_stream_idle_timeout() {
+        let iroh = "[server]\nrequire_authentication = false\n\n[iroh]\nissuer = \"example.org\"\nsecret_key_file = \"iroh.key\"\n";
+        let default = format!("{iroh}{TARGET}");
+        assert_eq!(
+            Config::from_toml(&default)
+                .unwrap()
+                .iroh
+                .unwrap()
+                .stream_idle_timeout_seconds,
+            None
+        );
+        let explicit = format!("{iroh}stream_idle_timeout_seconds = 900\n{TARGET}");
+        assert_eq!(
+            Config::from_toml(&explicit)
+                .unwrap()
+                .iroh
+                .unwrap()
+                .stream_idle_timeout_seconds,
+            Some(900)
+        );
+        let zero = format!("{iroh}stream_idle_timeout_seconds = 0\n{TARGET}");
+        assert!(Config::from_toml(&zero).is_err());
+    }
+
+    #[test]
+    fn validates_cors_origins() {
+        let auth = "[auth.static_bearer_tokens]\ntoken = \"alice\"\n\n[auth.target_permissions]\nalice = [\"sqlite\"]\n";
+        let origin =
+            format!("[server]\ncors_origins = \"https://app.example.com\"\n\n{auth}{TARGET}");
+        assert!(Config::from_toml(&origin).is_ok());
+
+        let wildcard_with_auth = format!("[server]\ncors_origins = \"*\"\n\n{auth}{TARGET}");
+        assert!(Config::from_toml(&wildcard_with_auth).is_err());
+
+        let wildcard_without_auth =
+            format!("[server]\nrequire_authentication = false\ncors_origins = \"*\"\n{TARGET}");
+        assert!(Config::from_toml(&wildcard_without_auth).is_ok());
+
+        let several = format!(
+            "[server]\ncors_origins = \"https://a.example, https://b.example\"\n\n{auth}{TARGET}"
+        );
+        assert!(Config::from_toml(&several).is_err());
     }
 
     #[test]

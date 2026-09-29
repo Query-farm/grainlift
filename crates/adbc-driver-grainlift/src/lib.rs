@@ -15,12 +15,20 @@
 
 //! ADBC 1.1 client driver for the Grainlift service.
 
+#[cfg(feature = "host-http")]
+pub mod host_http;
+#[cfg(feature = "iroh")]
 mod iroh_pool;
+#[cfg(all(feature = "iroh-browser", target_os = "emscripten"))]
+mod sab_transport;
 
 use std::collections::{HashMap, HashSet, VecDeque};
+#[cfg(feature = "iroh")]
 use std::str::FromStr;
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 use std::sync::mpsc::{self, SyncSender};
 use std::sync::{Arc, Mutex};
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 use std::thread;
 use std::time::Duration;
 
@@ -38,8 +46,12 @@ use arrow_array::{
 use arrow_buffer::ScalarBuffer;
 use arrow_schema::{ArrowError, DataType, Schema, SchemaRef, UnionMode};
 use grainlift_protocol as protocol;
+#[cfg(any(feature = "reqwest-http", feature = "tls-tcp"))]
 use rustls::pki_types::pem::PemObject;
-use vgi_rpc_client::{HttpClient, RpcClient, RpcError};
+#[cfg(feature = "byte-transports")]
+use vgi_rpc_client::RpcClient;
+use vgi_rpc_client::{HttpClient, RpcError};
+#[cfg(feature = "iroh")]
 use vgi_rpc_iroh::IrohTarget;
 
 pub const DRIVER_NAME: &str = "adbc_driver_grainlift";
@@ -57,6 +69,9 @@ pub const OPTION_TLS_KEY: &str = "grainlift.tls.key";
 pub const OPTION_TLS_SERVER_NAME: &str = "grainlift.tls.server_name";
 pub const OPTION_IROH_SECRET_KEY: &str = "grainlift.iroh.secret_key";
 pub const OPTION_IROH_DIRECT_ADDRESS: &str = "grainlift.iroh.direct_address";
+/// Opaque host context for the host HTTP executor (see `host_http`). Set by
+/// the embedding application, never forwarded to the server.
+pub const OPTION_HOST_CTX: &str = "grainlift.internal.host_ctx";
 const DEFAULT_REQUEST_TIMEOUT_MS: i64 = 30_000;
 const DEFAULT_MAX_RESPONSE_BYTES: i64 = 256 * 1024 * 1024;
 const DEFAULT_MAX_BIND_BYTES: i64 = protocol::MAX_BIND_STREAM_BYTES as i64;
@@ -221,6 +236,7 @@ impl Database for GrainliftDatabase {
             tls_server_name: self.optional_string(OPTION_TLS_SERVER_NAME)?,
             iroh_secret_key: self.optional_string(OPTION_IROH_SECRET_KEY)?,
             iroh_direct_address: self.optional_string(OPTION_IROH_DIRECT_ADDRESS)?,
+            host_ctx: self.optional_string(OPTION_HOST_CTX)?,
         };
         let connection_options = opts
             .into_iter()
@@ -254,10 +270,7 @@ impl Optionable for GrainliftConnection {
     type Option = OptionConnection;
 
     fn set_option(&mut self, key: Self::Option, value: OptionValue) -> Result<()> {
-        let request = connection_option_request(&self.remote.session_id, key.as_ref(), &value)?;
-        self.remote
-            .call(protocol::method::SET_CONNECTION_OPTION, &request)?;
-        Ok(())
+        self.remote.set_connection_option(key.as_ref(), value)
     }
 
     fn get_option_string(&self, key: Self::Option) -> Result<String> {
@@ -299,10 +312,10 @@ impl Connection for GrainliftConnection {
     }
 
     fn new_statement(&mut self) -> Result<Self::StatementType> {
-        let request = session_request(&self.remote.session_id)?;
-        let response = self
-            .remote
-            .call(protocol::method::NEW_STATEMENT, &request)?;
+        let response = self.remote.with_session(|id| {
+            self.remote
+                .call(protocol::method::NEW_STATEMENT, &session_request(id)?)
+        })?;
         let statement_id = decode_response::<protocol::StatementResponse>(&response)?.statement_id;
         Ok(GrainliftStatement {
             remote: self.remote.clone(),
@@ -320,13 +333,12 @@ impl Connection for GrainliftConnection {
                 .map(|code| i64::from(u32::from(code)))
                 .collect::<Vec<_>>()
         });
-        let downstream = self.remote.connection_stream_call(
-            protocol::method::GET_INFO,
-            protocol::GetInfoRequest {
-                session_id: self.remote.session_id.clone(),
-                codes: wire_codes,
-            },
-        )?;
+        let downstream = self
+            .remote
+            .connection_stream_call(protocol::method::GET_INFO, |id| protocol::GetInfoRequest {
+                session_id: id.to_string(),
+                codes: wire_codes.clone(),
+            })?;
         let schema = downstream.schema();
         let grainlift_batch = grainlift_info_batch(codes.as_ref(), schema.clone())?;
         Ok(Box::new(GrainliftInfoReader {
@@ -346,19 +358,20 @@ impl Connection for GrainliftConnection {
         table_type: Option<Vec<&str>>,
         column_name: Option<&str>,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
-        self.remote.connection_stream_call(
-            protocol::method::GET_OBJECTS,
-            protocol::GetObjectsRequest {
-                session_id: self.remote.session_id.clone(),
-                depth: i64::from(i32::from(depth)),
-                catalog: catalog.map(str::to_string),
-                db_schema: db_schema.map(str::to_string),
-                table_name: table_name.map(str::to_string),
-                table_types: table_type
-                    .map(|values| values.into_iter().map(str::to_string).collect()),
-                column_name: column_name.map(str::to_string),
-            },
-        )
+        let table_types: Option<Vec<String>> =
+            table_type.map(|values| values.into_iter().map(str::to_string).collect());
+        self.remote
+            .connection_stream_call(protocol::method::GET_OBJECTS, |id| {
+                protocol::GetObjectsRequest {
+                    session_id: id.to_string(),
+                    depth: i64::from(i32::from(depth)),
+                    catalog: catalog.map(str::to_string),
+                    db_schema: db_schema.map(str::to_string),
+                    table_name: table_name.map(str::to_string),
+                    table_types: table_types.clone(),
+                    column_name: column_name.map(str::to_string),
+                }
+            })
     }
 
     fn get_table_schema(
@@ -367,15 +380,15 @@ impl Connection for GrainliftConnection {
         db_schema: Option<&str>,
         table_name: &str,
     ) -> Result<Schema> {
-        self.remote.connection_schema_call(
-            protocol::method::GET_TABLE_SCHEMA,
-            protocol::GetTableSchemaRequest {
-                session_id: self.remote.session_id.clone(),
-                catalog: catalog.map(str::to_string),
-                db_schema: db_schema.map(str::to_string),
-                table_name: table_name.into(),
-            },
-        )
+        self.remote
+            .connection_schema_call(protocol::method::GET_TABLE_SCHEMA, |id| {
+                protocol::GetTableSchemaRequest {
+                    session_id: id.to_string(),
+                    catalog: catalog.map(str::to_string),
+                    db_schema: db_schema.map(str::to_string),
+                    table_name: table_name.into(),
+                }
+            })
     }
 
     fn get_table_types(&self) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
@@ -395,16 +408,16 @@ impl Connection for GrainliftConnection {
         table_name: Option<&str>,
         approximate: bool,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
-        self.remote.connection_stream_call(
-            protocol::method::GET_STATISTICS,
-            protocol::GetStatisticsRequest {
-                session_id: self.remote.session_id.clone(),
-                catalog: catalog.map(str::to_string),
-                db_schema: db_schema.map(str::to_string),
-                table_name: table_name.map(str::to_string),
-                approximate,
-            },
-        )
+        self.remote
+            .connection_stream_call(protocol::method::GET_STATISTICS, |id| {
+                protocol::GetStatisticsRequest {
+                    session_id: id.to_string(),
+                    catalog: catalog.map(str::to_string),
+                    db_schema: db_schema.map(str::to_string),
+                    table_name: table_name.map(str::to_string),
+                    approximate,
+                }
+            })
     }
 
     fn commit(&mut self) -> Result<()> {
@@ -419,7 +432,7 @@ impl Connection for GrainliftConnection {
         &self,
         partition: impl AsRef<[u8]>,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
-        let request = connection_binary_request(&self.remote.session_id, partition.as_ref())?;
+        let request = connection_binary_request(&self.remote.session_id(), partition.as_ref())?;
         let response = self
             .remote
             .call(protocol::method::READ_PARTITION, &request)?;
@@ -595,12 +608,12 @@ pub struct GrainliftStatement {
 
 impl GrainliftStatement {
     fn request(&self) -> Result<RecordBatch> {
-        statement_request(&self.remote.session_id, &self.statement_id)
+        statement_request(&self.remote.session_id(), &self.statement_id)
     }
 
     fn get_option(&self, key: &str, value_type: &str) -> Result<OptionValue> {
         let request = statement_option_key_request(
-            &self.remote.session_id,
+            &self.remote.session_id(),
             &self.statement_id,
             key,
             value_type,
@@ -627,7 +640,7 @@ impl Optionable for GrainliftStatement {
 
     fn set_option(&mut self, key: Self::Option, value: OptionValue) -> Result<()> {
         let request = statement_option_request(
-            &self.remote.session_id,
+            &self.remote.session_id(),
             &self.statement_id,
             key.as_ref(),
             &value,
@@ -744,7 +757,7 @@ impl Statement for GrainliftStatement {
         let request = RecordBatch::try_new(
             protocol::set_sql_schema(),
             vec![
-                Arc::new(StringArray::from(vec![self.remote.session_id.clone()])),
+                Arc::new(StringArray::from(vec![self.remote.session_id()])),
                 Arc::new(StringArray::from(vec![self.statement_id.clone()])),
                 Arc::new(StringArray::from(vec![query.as_ref().to_string()])),
             ],
@@ -756,7 +769,7 @@ impl Statement for GrainliftStatement {
 
     fn set_substrait_plan(&mut self, plan: impl AsRef<[u8]>) -> Result<()> {
         let request =
-            statement_binary_request(&self.remote.session_id, &self.statement_id, plan.as_ref())?;
+            statement_binary_request(&self.remote.session_id(), &self.statement_id, plan.as_ref())?;
         self.remote
             .call(protocol::method::SET_SUBSTRAIT_PLAN, &request)?;
         Ok(())
@@ -780,13 +793,14 @@ impl CancelHandle for GrainliftCancelHandle {
         let Some(remote) = self.remote.upgrade() else {
             return Ok(());
         };
-        let request = statement_request(&remote.session_id, &self.statement_id)?;
+        let request = statement_request(&remote.session_id(), &self.statement_id)?;
         remote.call(protocol::method::CANCEL_STATEMENT, &request)?;
         Ok(())
     }
 }
 
 #[derive(Clone, Default)]
+#[cfg_attr(not(all(feature = "tls-tcp", feature = "iroh")), allow(dead_code))]
 struct TransportOptions {
     tls_ca: Option<String>,
     tls_cert: Option<String>,
@@ -794,6 +808,8 @@ struct TransportOptions {
     tls_server_name: Option<String>,
     iroh_secret_key: Option<String>,
     iroh_direct_address: Option<String>,
+    #[cfg_attr(not(feature = "host-http"), allow(dead_code))]
+    host_ctx: Option<String>,
 }
 
 struct RemoteConnectionOptions {
@@ -808,36 +824,66 @@ struct RemoteConnectionOptions {
     transport_options: TransportOptions,
 }
 
+enum HttpBackendChoice {
+    #[cfg(feature = "reqwest-http")]
+    Reqwest(reqwest::blocking::Client),
+    #[cfg(feature = "host-http")]
+    Host(Arc<host_http::HostExecutor>),
+}
+
+// At most this many idle VGI HTTP clients are kept per connection. Reusing a
+// client reuses its capability discovery, which otherwise costs one extra
+// round trip per call.
+const MAX_IDLE_HTTP_CLIENTS: usize = 4;
+
 struct HttpTransport {
     endpoint: String,
     bearer_token: Option<String>,
-    http: reqwest::blocking::Client,
+    backend: HttpBackendChoice,
     request_timeout: Duration,
     max_response_bytes: usize,
+    idle_clients: Mutex<Vec<HttpClient>>,
 }
 
+#[cfg(feature = "iroh")]
+type IrohLease = iroh_pool::Lease;
+/// No native Iroh pool in this build; keeps the lease plumbing uniform.
+#[cfg(all(feature = "byte-transports", not(feature = "iroh")))]
+struct IrohLease;
+
+#[cfg(feature = "byte-transports")]
 struct ByteTransport {
     client: Mutex<RpcClient>,
-    _iroh_lease: Option<iroh_pool::Lease>,
+    _iroh_lease: Mutex<Option<IrohLease>>,
     connector: ByteConnector,
 }
 
+#[cfg(feature = "byte-transports")]
 #[derive(Clone)]
 struct ByteConnector {
     endpoint: String,
     request_timeout: Duration,
+    #[cfg_attr(
+        not(any(
+            feature = "tls-tcp",
+            feature = "iroh",
+            all(feature = "iroh-browser", target_os = "emscripten")
+        )),
+        allow(dead_code)
+    )]
     options: TransportOptions,
     // Per ADBC connection: never shared across principals, targets or credentials.
     // Checked-out readers own their clients; at most one idle socket is retained.
     idle_result: Arc<Mutex<Option<RpcClient>>>,
 }
 
+#[cfg(feature = "byte-transports")]
 impl ByteConnector {
     fn reuses_results(&self) -> bool {
         self.endpoint.starts_with("tcp://") || self.endpoint.starts_with("tls+tcp://")
     }
 
-    fn connect_result(&self) -> Result<(RpcClient, Option<iroh_pool::Lease>)> {
+    fn connect_result(&self) -> Result<(RpcClient, Option<IrohLease>)> {
         if self.reuses_results() {
             let idle = self
                 .idle_result
@@ -869,23 +915,80 @@ impl ByteConnector {
         // An excess or unusable connection closes here rather than growing the pool.
     }
 
-    fn connect(&self) -> Result<(RpcClient, Option<iroh_pool::Lease>)> {
+    fn connect(&self) -> Result<(RpcClient, Option<IrohLease>)> {
         let client = if self.endpoint.starts_with("tcp://") {
             let (host, port) = host_and_port(&self.endpoint, "tcp")?;
             RpcClient::tcp_connect_with_timeout(&host, port, Some(self.request_timeout))
                 .map_err(rpc_error)?
         } else if self.endpoint.starts_with("tls+tcp://") {
-            let (host, port) = host_and_port(&self.endpoint, "tls+tcp")?;
-            tls_tcp_client(&host, port, self.request_timeout, &self.options)?
+            #[cfg(feature = "tls-tcp")]
+            {
+                let (host, port) = host_and_port(&self.endpoint, "tls+tcp")?;
+                tls_tcp_client(&host, port, self.request_timeout, &self.options)?
+            }
+            #[cfg(not(feature = "tls-tcp"))]
+            return Err(not_implemented("tls+tcp:// endpoints in this build"));
         } else if self.endpoint.starts_with("iroh://") {
+            #[cfg(feature = "iroh")]
             return self.connect_iroh();
+            #[cfg(all(
+                feature = "iroh-browser",
+                target_os = "emscripten",
+                not(feature = "iroh")
+            ))]
+            return self.connect_iroh_browser();
+            #[cfg(not(any(
+                feature = "iroh",
+                all(feature = "iroh-browser", target_os = "emscripten")
+            )))]
+            return Err(not_implemented("iroh:// endpoints in this build"));
         } else {
             return Err(not_implemented("unsupported Grainlift byte-stream URI"));
         };
         Ok((configure_rpc_client(client), None))
     }
 
-    fn connect_iroh(&self) -> Result<(RpcClient, Option<iroh_pool::Lease>)> {
+    /// `iroh://` from inside Haybarn DuckDB-WASM: one SharedArrayBuffer ring
+    /// slot served by the page's Iroh adapter Worker per VGI byte stream.
+    #[cfg(all(
+        feature = "iroh-browser",
+        target_os = "emscripten",
+        not(feature = "iroh")
+    ))]
+    fn connect_iroh_browser(&self) -> Result<(RpcClient, Option<IrohLease>)> {
+        let endpoint_id = self
+            .endpoint
+            .strip_prefix("iroh://")
+            .unwrap_or_default()
+            .trim_end_matches('/');
+        if endpoint_id.len() != 64
+            || !endpoint_id
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        {
+            return Err(invalid(
+                "iroh:// Grainlift URIs must name a 64-character lowercase hex EndpointId",
+            ));
+        }
+        if self.options.iroh_secret_key.is_some() || self.options.iroh_direct_address.is_some() {
+            return Err(invalid(format!(
+                "{OPTION_IROH_SECRET_KEY} and {OPTION_IROH_DIRECT_ADDRESS} are not supported in the browser; \
+                 the page's Iroh adapter Worker owns the endpoint identity and addressing"
+            )));
+        }
+        let transport = sab_transport::SabTransport::open(
+            &format!("iroh://{endpoint_id}"),
+            self.request_timeout,
+        )
+        .map_err(|error| transport_error(error.to_string()))?;
+        Ok((
+            configure_rpc_client(RpcClient::from_transport(Box::new(transport))),
+            None,
+        ))
+    }
+
+    #[cfg(feature = "iroh")]
+    fn connect_iroh(&self) -> Result<(RpcClient, Option<IrohLease>)> {
         let remote_id = IrohTarget::parse(&self.endpoint)
             .map_err(|error| invalid(error.to_string()))?
             .endpoint_id();
@@ -922,7 +1025,52 @@ impl ByteConnector {
 
 enum RemoteTransport {
     Http(HttpTransport),
+    #[cfg(feature = "byte-transports")]
     Byte(Box<ByteTransport>),
+}
+
+fn http_backend(
+    endpoint: &str,
+    request_timeout: Duration,
+    options: &TransportOptions,
+) -> Result<HttpBackendChoice> {
+    #[cfg(feature = "host-http")]
+    if let Some(host_ctx) = options.host_ctx.as_deref() {
+        if options.tls_ca.is_some() {
+            return Err(invalid(format!(
+                "{OPTION_TLS_CA} is not supported with the host HTTP executor; the host's HTTP stack owns TLS trust"
+            )));
+        }
+        return host_http::HostExecutor::from_option(host_ctx)
+            .map(HttpBackendChoice::Host)
+            .map_err(invalid);
+    }
+    #[cfg(feature = "reqwest-http")]
+    {
+        let mut builder = reqwest::blocking::Client::builder()
+            // VGI's timeout builder setting does not reconfigure a supplied client.
+            .timeout(request_timeout);
+        if endpoint.starts_with("https://")
+            && let Some(path) = options.tls_ca.as_deref()
+        {
+            for certificate in read_certificates(path)? {
+                let certificate = reqwest::Certificate::from_der(certificate.as_ref())
+                    .map_err(|_| invalid("invalid HTTPS CA certificate"))?;
+                builder = builder.add_root_certificate(certificate);
+            }
+        }
+        let http = builder
+            .build()
+            .map_err(|error| Error::with_message_and_status(error.to_string(), Status::IO))?;
+        return Ok(HttpBackendChoice::Reqwest(http));
+    }
+    #[allow(unreachable_code)]
+    {
+        let _ = (endpoint, request_timeout, options);
+        Err(invalid(
+            "HTTP(S) endpoints require a host HTTP executor in this build of adbc_driver_grainlift",
+        ))
+    }
 }
 
 impl RemoteTransport {
@@ -935,27 +1083,14 @@ impl RemoteTransport {
     ) -> Result<Self> {
         let endpoint = normalize_endpoint(endpoint);
         if endpoint.starts_with("http://") || endpoint.starts_with("https://") {
-            let mut builder = reqwest::blocking::Client::builder()
-                // VGI's timeout builder setting does not reconfigure a supplied client.
-                .timeout(request_timeout);
-            if endpoint.starts_with("https://")
-                && let Some(path) = options.tls_ca.as_deref()
-            {
-                for certificate in read_certificates(path)? {
-                    let certificate = reqwest::Certificate::from_der(certificate.as_ref())
-                        .map_err(|_| invalid("invalid HTTPS CA certificate"))?;
-                    builder = builder.add_root_certificate(certificate);
-                }
-            }
-            let http = builder
-                .build()
-                .map_err(|error| Error::with_message_and_status(error.to_string(), Status::IO))?;
+            let backend = http_backend(&endpoint, request_timeout, &options)?;
             return Ok(Self::Http(HttpTransport {
                 endpoint,
                 bearer_token,
-                http,
+                backend,
                 request_timeout,
                 max_response_bytes,
+                idle_clients: Mutex::new(Vec::new()),
             }));
         }
         if bearer_token.is_some() {
@@ -972,48 +1107,99 @@ impl RemoteTransport {
                 "Grainlift URI scheme; supported schemes are grainlift, grainlift+http, grainlift+https, grainlift+tcp, grainlift+tls+tcp, grainlift+iroh, http, https, tcp, tls+tcp, and iroh",
             ));
         }
-        let connector = ByteConnector {
-            endpoint,
-            request_timeout,
-            options,
-            idle_result: Arc::new(Mutex::new(None)),
-        };
-        let (client, lease) = connector.connect()?;
-        Ok(Self::Byte(Box::new(ByteTransport {
-            client: Mutex::new(client),
-            _iroh_lease: lease,
-            connector,
-        })))
+        #[cfg(not(feature = "byte-transports"))]
+        {
+            let _ = options;
+            Err(not_implemented(
+                "tcp://, tls+tcp:// and iroh:// Grainlift endpoints in this build",
+            ))
+        }
+        #[cfg(feature = "byte-transports")]
+        {
+            let connector = ByteConnector {
+                endpoint,
+                request_timeout,
+                options,
+                idle_result: Arc::new(Mutex::new(None)),
+            };
+            let (client, lease) = connector.connect()?;
+            Ok(Self::Byte(Box::new(ByteTransport {
+                client: Mutex::new(client),
+                _iroh_lease: Mutex::new(lease),
+                connector,
+            })))
+        }
     }
 
+    /// Drop cached transport state after a failure so the next call starts
+    /// from a fresh connection.
+    fn reset(&self) -> Result<()> {
+        match self {
+            Self::Http(http) => {
+                if let Ok(mut idle) = http.idle_clients.lock() {
+                    idle.clear();
+                }
+                Ok(())
+            }
+            #[cfg(feature = "byte-transports")]
+            Self::Byte(byte) => {
+                let (client, lease) = byte.connector.connect()?;
+                *byte
+                    .client
+                    .lock()
+                    .map_err(|_| internal("VGI byte-stream client is poisoned"))? = client;
+                *byte
+                    ._iroh_lease
+                    .lock()
+                    .map_err(|_| internal("Iroh lease is poisoned"))? = lease;
+                Ok(())
+            }
+        }
+    }
+
+    #[cfg(feature = "byte-transports")]
     fn is_http(&self) -> bool {
         matches!(self, Self::Http(_))
     }
 
-    fn http_client(&self) -> Result<HttpClient> {
+    /// Run `f` with a VGI HTTP client, reusing an idle one when available. No
+    /// lock is held while `f` performs I/O.
+    fn with_http_client<R>(&self, f: impl FnOnce(&mut HttpClient) -> Result<R>) -> Result<R> {
+        #[allow(irrefutable_let_patterns)]
         let Self::Http(http) = self else {
             return Err(internal(
                 "HTTP stream requested for a byte-stream transport",
             ));
         };
-        build_client(
-            &http.endpoint,
-            http.bearer_token.as_deref(),
-            &http.http,
-            http.request_timeout,
-            http.max_response_bytes,
-        )
+        let idle = http
+            .idle_clients
+            .lock()
+            .map_err(|_| internal("HTTP client pool is poisoned"))?
+            .pop();
+        let mut client = match idle {
+            Some(client) => client,
+            None => build_client(http)?,
+        };
+        let result = f(&mut client);
+        // A failed call may leave the client mid-stream; only reuse clean ones.
+        if result.is_ok()
+            && let Ok(mut idle) = http.idle_clients.lock()
+            && idle.len() < MAX_IDLE_HTTP_CLIENTS
+        {
+            idle.push(client);
+        }
+        result
     }
 
     fn call(&self, method: &str, request: &RecordBatch) -> Result<RecordBatch> {
         match self {
-            Self::Http(_) => {
-                let mut client = self.http_client()?;
+            Self::Http(_) => self.with_http_client(|client| {
                 client
                     .call_unary(method, request, None)
                     .map(|(batch, _)| batch)
                     .map_err(rpc_error)
-            }
+            }),
+            #[cfg(feature = "byte-transports")]
             Self::Byte(byte) => byte
                 .client
                 .lock()
@@ -1045,8 +1231,51 @@ fn normalize_endpoint(endpoint: String) -> String {
 
 struct RemoteConnection {
     transport: RemoteTransport,
-    session_id: String,
+    session: Mutex<SessionState>,
+    /// Re-sent to open a replacement session (see `with_session`).
+    open_request: protocol::OpenConnectionRequest,
     max_bind_bytes: usize,
+}
+
+struct SessionState {
+    id: String,
+    /// ADBC connections start in autocommit mode. Only then can a lost
+    /// session be replaced without losing transaction state.
+    autocommit: bool,
+    /// Connection options set after open, replayed on a replacement session.
+    options: Vec<(String, OptionValue)>,
+}
+
+const AUTOCOMMIT_OPTION: &str = "adbc.connection.autocommit";
+
+/// Delays before each attempt to replace a lost session.
+const RECONNECT_BACKOFF: [Duration; 3] = [
+    Duration::ZERO,
+    Duration::from_secs(1),
+    Duration::from_secs(3),
+];
+
+/// SQLSTATE class 08 (connection exception): the transport to the Grainlift
+/// service failed, as opposed to an error reported by the downstream driver.
+const SQLSTATE_CONNECTION_FAILURE: [std::ffi::c_char; 5] = [
+    b'0' as std::ffi::c_char,
+    b'8' as std::ffi::c_char,
+    b'0' as std::ffi::c_char,
+    b'0' as std::ffi::c_char,
+    b'6' as std::ffi::c_char,
+];
+
+fn transport_error(message: impl Into<String>) -> Error {
+    let mut error = Error::with_message_and_status(message, Status::IO);
+    error.sqlstate = SQLSTATE_CONNECTION_FAILURE;
+    error
+}
+
+/// The server no longer has this connection's session: the transport dropped
+/// (which revokes Iroh sessions) or the session idled past its TTL.
+fn is_lost_session(error: &Error) -> bool {
+    (error.status == Status::IO && error.sqlstate == SQLSTATE_CONNECTION_FAILURE)
+        || (error.status == Status::NotFound && error.message.contains("session"))
 }
 
 impl RemoteConnection {
@@ -1070,22 +1299,111 @@ impl RemoteConnection {
             max_response_bytes,
             transport_options,
         )?;
-        let request = typed_request(protocol::OpenConnectionRequest {
+        let open_request = protocol::OpenConnectionRequest {
             target,
             database_options,
             connection_options,
-        })?;
+        };
+        let request = typed_request(open_request.clone())?;
         let response = transport.call(protocol::method::OPEN_CONNECTION, &request)?;
         let session_id = decode_response::<protocol::SessionResponse>(&response)?.session_id;
         Ok(Self {
             transport,
-            session_id,
+            session: Mutex::new(SessionState {
+                id: session_id,
+                autocommit: true,
+                options: Vec::new(),
+            }),
+            open_request,
             max_bind_bytes,
         })
     }
 
-    fn client(&self) -> Result<HttpClient> {
-        self.transport.http_client()
+    fn session_id(&self) -> String {
+        self.session
+            .lock()
+            .map(|session| session.id.clone())
+            .unwrap_or_default()
+    }
+
+    /// Run a call that starts new work on this connection (a statement, a
+    /// metadata request, an option). If the server session is gone — the
+    /// transport dropped or the session idled past its TTL — open a
+    /// replacement session once and retry. Only in autocommit mode, so no
+    /// transaction is silently lost.
+    fn with_session<R>(&self, call: impl Fn(&str) -> Result<R>) -> Result<R> {
+        let error = match call(&self.session_id()) {
+            Err(error) if is_lost_session(&error) && self.autocommit() => error,
+            other => return other,
+        };
+        // A peer that just restarted may still be reachable only through a
+        // stale pooled connection for a moment (notably Iroh), so retry the
+        // replacement a few times before giving up.
+        let mut last = error;
+        for delay in RECONNECT_BACKOFF {
+            if !delay.is_zero() {
+                std::thread::sleep(delay);
+            }
+            let stale = self.session_id();
+            match self.reopen(&stale).and_then(|()| call(&self.session_id())) {
+                Err(error) if is_lost_session(&error) => last = error,
+                other => return other,
+            }
+        }
+        Err(last)
+    }
+
+    fn autocommit(&self) -> bool {
+        self.session
+            .lock()
+            .map(|session| session.autocommit)
+            .unwrap_or(false)
+    }
+
+    fn reopen(&self, stale_id: &str) -> Result<()> {
+        let mut session = self
+            .session
+            .lock()
+            .map_err(|_| internal("session state is poisoned"))?;
+        if session.id != stale_id {
+            // Another thread already replaced it.
+            return Ok(());
+        }
+        self.transport.reset()?;
+        let request = typed_request(self.open_request.clone())?;
+        let response = self
+            .transport
+            .call(protocol::method::OPEN_CONNECTION, &request)?;
+        let id = decode_response::<protocol::SessionResponse>(&response)?.session_id;
+        for (key, value) in &session.options {
+            let request = connection_option_request(&id, key, value)?;
+            self.call(protocol::method::SET_CONNECTION_OPTION, &request)?;
+        }
+        session.id = id;
+        Ok(())
+    }
+
+    fn set_connection_option(&self, key: &str, value: OptionValue) -> Result<()> {
+        self.with_session(|id| {
+            let request = connection_option_request(id, key, &value)?;
+            self.call(protocol::method::SET_CONNECTION_OPTION, &request)
+        })?;
+        let mut session = self
+            .session
+            .lock()
+            .map_err(|_| internal("session state is poisoned"))?;
+        if key == AUTOCOMMIT_OPTION {
+            session.autocommit =
+                !matches!(&value, OptionValue::String(v) if v.eq_ignore_ascii_case("false"));
+        } else {
+            session.options.retain(|(existing, _)| existing != key);
+            session.options.push((key.to_string(), value));
+        }
+        Ok(())
+    }
+
+    fn with_client<R>(&self, f: impl FnOnce(&mut HttpClient) -> Result<R>) -> Result<R> {
+        self.transport.with_http_client(f)
     }
 
     fn call(&self, method: &str, request: &RecordBatch) -> Result<RecordBatch> {
@@ -1123,7 +1441,7 @@ impl RemoteConnection {
         let init = RecordBatch::try_new(
             protocol::bind_init_schema(),
             vec![
-                Arc::new(StringArray::from(vec![self.session_id.clone()])),
+                Arc::new(StringArray::from(vec![self.session_id()])),
                 Arc::new(StringArray::from(vec![statement_id.to_string()])),
                 Arc::new(BinaryArray::from_vec(vec![schema_ipc.as_slice()])),
             ],
@@ -1163,8 +1481,7 @@ impl RemoteConnection {
         };
 
         match &self.transport {
-            RemoteTransport::Http(_) => {
-                let mut client = self.client()?;
+            RemoteTransport::Http(_) => self.with_client(|client| {
                 let mut stream = client
                     .open_exchange(method, &init, None, false)
                     .map_err(rpc_error)?;
@@ -1179,7 +1496,8 @@ impl RemoteConnection {
                     let _ = stream.cancel();
                 }
                 result
-            }
+            }),
+            #[cfg(feature = "byte-transports")]
             RemoteTransport::Byte(byte) => {
                 let mut client = byte
                     .client
@@ -1204,13 +1522,15 @@ impl RemoteConnection {
     }
 
     fn session_call(&self, method: &str) -> Result<()> {
-        self.call(method, &session_request(&self.session_id)?)?;
+        self.call(method, &session_request(&self.session_id())?)?;
         Ok(())
     }
 
     fn get_connection_option(&self, key: &str, value_type: &str) -> Result<OptionValue> {
-        let request = connection_option_key_request(&self.session_id, key, value_type)?;
-        let response = self.call(protocol::method::GET_CONNECTION_OPTION, &request)?;
+        let response = self.with_session(|id| {
+            let request = connection_option_key_request(id, key, value_type)?;
+            self.call(protocol::method::GET_CONNECTION_OPTION, &request)
+        })?;
         decode_option_response(&response)
     }
 
@@ -1231,10 +1551,9 @@ impl RemoteConnection {
     fn connection_stream_call<T: protocol::RequestRecord>(
         self: &Arc<Self>,
         method: &str,
-        args: T,
+        args: impl Fn(&str) -> T,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
-        let request = typed_request(args)?;
-        let response = self.call(method, &request)?;
+        let response = self.with_session(|id| self.call(method, &typed_request(args(id))?))?;
         self.reader_from_response(&response)
     }
 
@@ -1242,24 +1561,23 @@ impl RemoteConnection {
         self: &Arc<Self>,
         method: &str,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
-        let response = self.call(method, &session_request(&self.session_id)?)?;
+        let response = self.with_session(|id| self.call(method, &session_request(id)?))?;
         self.reader_from_response(&response)
     }
 
     fn connection_schema_call<T: protocol::RequestRecord>(
         &self,
         method: &str,
-        args: T,
+        args: impl Fn(&str) -> T,
     ) -> Result<Schema> {
-        let request = typed_request(args)?;
-        let response = self.call(method, &request)?;
+        let response = self.with_session(|id| self.call(method, &typed_request(args(id))?))?;
         decode_schema_response(&response)
     }
 }
 
 impl Drop for RemoteConnection {
     fn drop(&mut self) {
-        if let Ok(request) = session_request(&self.session_id) {
+        if let Ok(request) = session_request(&self.session_id()) {
             let _ = self.call(protocol::method::CLOSE_CONNECTION, &request);
         }
     }
@@ -1278,18 +1596,22 @@ enum RemoteReaderMode {
         pending: VecDeque<RecordBatch>,
         continuation: Option<String>,
     },
+    #[cfg(feature = "byte-transports")]
     Byte(ByteReader),
 }
 
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 enum ByteReaderCommand {
     Next(mpsc::Sender<Result<Option<RecordBatch>>>),
     Cancel,
 }
 
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 struct ByteReader {
     tx: SyncSender<ByteReaderCommand>,
 }
 
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 impl ByteReader {
     fn open(connector: ByteConnector, request: RecordBatch) -> Result<Self> {
         let (tx, rx) = mpsc::sync_channel(1);
@@ -1297,7 +1619,7 @@ impl ByteReader {
         thread::Builder::new()
             .name("grainlift-result-stream".to_string())
             .spawn(move || {
-                let (mut client, lease) = match connector.connect_result() {
+                let (mut client, _lease) = match connector.connect_result() {
                     Ok(value) => value,
                     Err(error) => {
                         let _ = ready_tx.send(Err(error));
@@ -1352,8 +1674,8 @@ impl ByteReader {
                         }
                     }
                 }
+                // The lease (if any) drops after the stream when the worker returns.
                 drop(stream);
-                drop(lease);
             })
             .map_err(|error| internal(format!("start result stream worker: {error}")))?;
         ready_rx
@@ -1373,6 +1695,92 @@ impl ByteReader {
     }
 }
 
+/// Result stream reader without a worker thread, for DuckDB-WASM (extensions
+/// there must not spawn threads). The stream borrows its client, so both live
+/// in one heap allocation and the stream is always dropped first.
+#[cfg(all(feature = "byte-transports", target_family = "wasm"))]
+struct ByteReader {
+    stream: Option<vgi_rpc_client::StreamSession<'static>>,
+    client: *mut RpcClient,
+    lease: Option<IrohLease>,
+    connector: ByteConnector,
+}
+
+// SAFETY: the reader owns `client` exclusively (the stream is its only
+// borrower) and is used from one thread at a time through `&mut self`.
+#[cfg(all(feature = "byte-transports", target_family = "wasm"))]
+unsafe impl Send for ByteReader {}
+
+#[cfg(all(feature = "byte-transports", target_family = "wasm"))]
+impl ByteReader {
+    fn open(connector: ByteConnector, request: RecordBatch) -> Result<Self> {
+        let (client, lease) = connector.connect_result()?;
+        let client = Box::into_raw(Box::new(client));
+        // SAFETY: `client` stays allocated until Drop, after the stream.
+        let opened = unsafe { &mut *client }.open_producer(
+            protocol::method::READ_RESULT,
+            &request,
+            None,
+            false,
+        );
+        match opened {
+            Ok(stream) => Ok(Self {
+                // SAFETY: see the struct docs; the borrow outlives no owner.
+                stream: Some(unsafe {
+                    std::mem::transmute::<
+                        vgi_rpc_client::StreamSession<'_>,
+                        vgi_rpc_client::StreamSession<'static>,
+                    >(stream)
+                }),
+                client,
+                lease,
+                connector,
+            }),
+            Err(error) => {
+                drop(unsafe { Box::from_raw(client) });
+                Err(rpc_error(error))
+            }
+        }
+    }
+
+    fn next(&mut self) -> Result<Option<RecordBatch>> {
+        let Some(stream) = self.stream.as_mut() else {
+            return Ok(None);
+        };
+        let value = stream
+            .tick()
+            .map(|value| value.map(|(batch, _)| batch))
+            .map_err(rpc_error);
+        if matches!(value, Ok(None)) || value.is_err() {
+            let mut stream = self.stream.take().expect("stream present");
+            let closed = matches!(value, Ok(None)) && stream.close().is_ok();
+            drop(stream);
+            if closed && self.connector.reuses_results() {
+                // SAFETY: the stream (the only borrower) was dropped above.
+                let client = unsafe { Box::from_raw(self.client) };
+                self.client = std::ptr::null_mut();
+                self.connector.recycle_result(*client);
+            }
+        }
+        value
+    }
+}
+
+#[cfg(all(feature = "byte-transports", target_family = "wasm"))]
+impl Drop for ByteReader {
+    fn drop(&mut self) {
+        if let Some(mut stream) = self.stream.take() {
+            let _ = stream.cancel();
+        }
+        if !self.client.is_null() {
+            // SAFETY: no stream borrows the client any more.
+            drop(unsafe { Box::from_raw(self.client) });
+        }
+        drop(self.lease.take());
+    }
+}
+
+#[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 impl Drop for ByteReader {
     fn drop(&mut self) {
         let _ = self.tx.send(ByteReaderCommand::Cancel);
@@ -1381,11 +1789,12 @@ impl Drop for ByteReader {
 
 impl RemoteReader {
     fn open(remote: Arc<RemoteConnection>, result_id: String, schema: SchemaRef) -> Result<Self> {
+        #[cfg(feature = "byte-transports")]
         if !remote.transport.is_http() {
             let request = RecordBatch::try_new(
                 protocol::read_result_schema(),
                 vec![
-                    Arc::new(StringArray::from(vec![remote.session_id.clone()])),
+                    Arc::new(StringArray::from(vec![remote.session_id()])),
                     Arc::new(StringArray::from(vec![result_id.clone()])),
                     Arc::new(Int64Array::from(vec![0])),
                 ],
@@ -1396,7 +1805,7 @@ impl RemoteReader {
             let reader = match ByteReader::open(byte.connector.clone(), request) {
                 Ok(reader) => reader,
                 Err(error) => {
-                    if let Ok(close) = result_request(&remote.session_id, &result_id) {
+                    if let Ok(close) = result_request(&remote.session_id(), &result_id) {
                         let _ = remote.call(protocol::method::CLOSE_RESULT, &close);
                     }
                     return Err(error);
@@ -1413,23 +1822,22 @@ impl RemoteReader {
         let request = RecordBatch::try_new(
             protocol::read_result_schema(),
             vec![
-                Arc::new(StringArray::from(vec![remote.session_id.clone()])),
+                Arc::new(StringArray::from(vec![remote.session_id()])),
                 Arc::new(StringArray::from(vec![result_id.clone()])),
                 Arc::new(Int64Array::from(vec![0])),
             ],
         )?;
-        let (first, continuation, finished) = {
-            let mut client = remote.client()?;
+        let (first, continuation, finished) = remote.with_client(|client| {
             let mut stream = client
                 .open_producer(protocol::method::READ_RESULT, &request, None, false)
                 .map_err(rpc_error)?;
             let first = stream.next_with_token().map_err(rpc_error)?;
             let finished = stream.is_finished();
-            match first {
+            Ok(match first {
                 Some(((batch, _), continuation)) => (Some(batch), continuation, finished),
                 None => (None, None, true),
-            }
-        };
+            })
+        })?;
         Ok(Self {
             remote,
             result_id,
@@ -1458,20 +1866,20 @@ impl RemoteReader {
                     self.finished = true;
                     return Ok(None);
                 };
-                let (batch, next_continuation, finished) = {
-                    let mut client = self.remote.client()?;
+                let (batch, next_continuation, finished) = self.remote.with_client(|client| {
                     let mut stream = client.resume_stream(protocol::method::READ_RESULT, token);
                     let value = stream.next_with_token().map_err(rpc_error)?;
                     let finished = stream.is_finished();
-                    match value {
+                    Ok(match value {
                         Some(((batch, _), continuation)) => (Some(batch), continuation, finished),
                         None => (None, None, true),
-                    }
-                };
+                    })
+                })?;
                 *continuation = next_continuation;
                 self.finished = finished || continuation.is_none();
                 Ok(batch)
             }
+            #[cfg(feature = "byte-transports")]
             RemoteReaderMode::Byte(reader) => {
                 let batch = reader.next()?;
                 self.finished = batch.is_none();
@@ -1483,7 +1891,7 @@ impl RemoteReader {
 
 impl Drop for RemoteReader {
     fn drop(&mut self) {
-        if let Ok(request) = result_request(&self.remote.session_id, &self.result_id) {
+        if let Ok(request) = result_request(&self.remote.session_id(), &self.result_id) {
             let _ = self.remote.call(protocol::method::CLOSE_RESULT, &request);
         }
     }
@@ -1659,32 +2067,33 @@ fn decode_option_response(batch: &RecordBatch) -> Result<OptionValue> {
         .map_err(|error| internal(error.to_string()))
 }
 
-fn build_client(
-    endpoint: &str,
-    bearer_token: Option<&str>,
-    http: &reqwest::blocking::Client,
-    request_timeout: Duration,
-    max_response_bytes: usize,
-) -> Result<HttpClient> {
-    let mut builder = HttpClient::connect(endpoint.to_string())
+fn build_client(http: &HttpTransport) -> Result<HttpClient> {
+    let builder = HttpClient::connect(http.endpoint.clone())
         .protocol(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
-        .timeout(Some(request_timeout))
-        .accepted_max_response_bytes(max_response_bytes)
-        .client(http.clone());
-    if let Some(token) = bearer_token {
+        .timeout(Some(http.request_timeout))
+        .accepted_max_response_bytes(http.max_response_bytes);
+    let mut builder = match &http.backend {
+        #[cfg(feature = "reqwest-http")]
+        HttpBackendChoice::Reqwest(client) => builder.client(client.clone()),
+        #[cfg(feature = "host-http")]
+        HttpBackendChoice::Host(executor) => builder.executor(executor.clone()),
+    };
+    if let Some(token) = http.bearer_token.as_deref() {
         let value = format!("Bearer {token}");
         builder = builder.header("authorization", &value).map_err(rpc_error)?;
     }
     builder.build().map_err(rpc_error)
 }
 
+#[cfg(feature = "byte-transports")]
 fn configure_rpc_client(client: RpcClient) -> RpcClient {
     client
         .protocol(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
 }
 
+#[cfg(feature = "byte-transports")]
 fn host_and_port(endpoint: &str, expected_scheme: &str) -> Result<(String, u16)> {
     let parsed = url::Url::parse(endpoint).map_err(|_| invalid("invalid Grainlift URI"))?;
     if parsed.scheme() != expected_scheme
@@ -1708,6 +2117,7 @@ fn host_and_port(endpoint: &str, expected_scheme: &str) -> Result<(String, u16)>
     Ok((host, port))
 }
 
+#[cfg(feature = "tls-tcp")]
 fn tls_tcp_client(
     host: &str,
     port: u16,
@@ -1754,6 +2164,7 @@ fn tls_tcp_client(
     .map_err(rpc_error)
 }
 
+#[cfg(any(feature = "reqwest-http", feature = "tls-tcp"))]
 fn read_certificates(path: &str) -> Result<Vec<rustls::pki_types::CertificateDer<'static>>> {
     let certificates = rustls::pki_types::CertificateDer::pem_file_iter(path)
         .map_err(|error| {
@@ -1771,6 +2182,7 @@ fn read_certificates(path: &str) -> Result<Vec<rustls::pki_types::CertificateDer
     Ok(certificates)
 }
 
+#[cfg(feature = "tls-tcp")]
 fn read_private_key(path: &str) -> Result<rustls::pki_types::PrivateKeyDer<'static>> {
     rustls::pki_types::PrivateKeyDer::from_pem_file(path)
         .map_err(|error| invalid(format!("could not load TLS private key {path:?}: {error}")))
@@ -1787,7 +2199,9 @@ fn rpc_error(error: RpcError) -> Error {
     {
         return wire.into_adbc();
     }
-    Error::with_message_and_status(error.to_string(), Status::IO)
+    // Anything that is not a structured ADBC error from the server is a
+    // failure of the transport itself.
+    transport_error(error.to_string())
 }
 
 fn is_grainlift_database_option(key: &str) -> bool {
@@ -1805,6 +2219,7 @@ fn is_grainlift_database_option(key: &str) -> bool {
             | OPTION_TLS_SERVER_NAME
             | OPTION_IROH_SECRET_KEY
             | OPTION_IROH_DIRECT_ADDRESS
+            | OPTION_HOST_CTX
     )
 }
 
@@ -1861,9 +2276,62 @@ fn not_implemented(feature: &str) -> Error {
 
 adbc_ffi::export_driver!(AdbcDriverGrainliftInit, GrainliftDriver);
 
-#[cfg(test)]
+/// Prepare transport resources for `uri` on the calling thread. Returns 0 on
+/// success or when nothing needs preparing, non-zero otherwise.
+///
+/// In Haybarn DuckDB-WASM an `iroh://` endpoint needs the page's Iroh adapter
+/// Worker, which can only be requested from DuckDB's main worker thread; a
+/// host calls this while binding (main thread) before the connection is opened
+/// from an arbitrary executor thread. Elsewhere it is a no-op.
+///
+/// # Safety
+/// `uri` must be null or a valid NUL-terminated string.
+// Only for embedding hosts: the plain ADBC shared library exports nothing but
+// the driver entry points.
+#[cfg(any(feature = "host-http", feature = "iroh-browser"))]
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn grainlift_prepare_endpoint(uri: *const std::ffi::c_char) -> i32 {
+    if uri.is_null() {
+        return 0;
+    }
+    let Ok(uri) = unsafe { std::ffi::CStr::from_ptr(uri) }.to_str() else {
+        return 1;
+    };
+    let endpoint = normalize_endpoint(uri.to_string());
+    #[cfg(all(feature = "iroh-browser", target_os = "emscripten"))]
+    if let Some(endpoint_id) = endpoint.strip_prefix("iroh://") {
+        let target = format!("iroh://{}", endpoint_id.trim_end_matches('/'));
+        return i32::from(sab_transport::prepare(&target).is_err());
+    }
+    let _ = endpoint;
+    0
+}
+
+#[cfg(all(test, feature = "reqwest-http", feature = "iroh"))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lost_sessions_are_transport_failures_or_missing_sessions() {
+        assert!(is_lost_session(&transport_error("connection reset")));
+        assert!(is_lost_session(&Error::with_message_and_status(
+            "expired session was not found",
+            Status::NotFound,
+        )));
+        assert!(is_lost_session(&Error::with_message_and_status(
+            "session was not found",
+            Status::NotFound,
+        )));
+        // Errors reported by the downstream database are never retried.
+        assert!(!is_lost_session(&Error::with_message_and_status(
+            "[libpq] server closed the connection",
+            Status::IO,
+        )));
+        assert!(!is_lost_session(&Error::with_message_and_status(
+            "table was not found",
+            Status::NotFound,
+        )));
+    }
 
     #[test]
     fn https_custom_ca_adds_trust_without_disabling_hostname_or_chain_checks() {
@@ -1943,7 +2411,11 @@ mod tests {
             let RemoteTransport::Http(http) = transport else {
                 panic!("expected HTTP transport")
             };
-            let response = http.http.get(endpoint).send();
+            #[allow(irrefutable_let_patterns)]
+            let HttpBackendChoice::Reqwest(client) = &http.backend else {
+                panic!("expected the reqwest HTTP backend")
+            };
+            let response = client.get(endpoint).send();
             assert_eq!(
                 response.is_ok(),
                 succeeds,
