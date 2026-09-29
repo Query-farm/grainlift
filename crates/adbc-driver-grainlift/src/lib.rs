@@ -2286,6 +2286,9 @@ adbc_ffi::export_driver!(AdbcDriverGrainliftInit, GrainliftDriver);
 ///
 /// # Safety
 /// `uri` must be null or a valid NUL-terminated string.
+// Only for embedding hosts: the plain ADBC shared library exports nothing but
+// the driver entry points.
+#[cfg(any(feature = "host-http", feature = "iroh-browser"))]
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn grainlift_prepare_endpoint(uri: *const std::ffi::c_char) -> i32 {
     if uri.is_null() {
