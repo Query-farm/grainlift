@@ -1,0 +1,21 @@
+All checks passed!
+16 files already formatted
+Success: no issues found in 16 source files
+Skipping files that match this pattern: \.git|\.tox
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/__init__.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/conftest.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/run.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_advanced.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_concurrent_clients.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_disconnect_recovery.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_downstream_failures.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_ingestion.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_lifecycle_pressure.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_statement_lifecycle.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_supervisor.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_transport_ownership.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_transports.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_types_metadata.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/transport_support.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/types_abi.py
+🎉 No violations 🎉

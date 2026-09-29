@@ -117,9 +117,21 @@ struct SessionRegistry {
     sessions: HashMap<String, Arc<Session>>,
     // Active transport IDs are server-generated and bounded by listener
     // connection admission. Closed IDs are removed, never kept as tombstones.
-    transports: HashMap<String, String>,
+    transports: HashMap<String, TransportOwner>,
     opening_total: usize,
     opening_by_principal: HashMap<String, usize>,
+}
+
+struct TransportOwner {
+    principal: String,
+    access: Option<TransportTargetAccess>,
+}
+
+/// Server-owned grants attached to an admitted physical connection, never
+/// accepted from RPC input or credential claims.
+pub(crate) struct TransportTargetAccess {
+    pub public_targets: Arc<HashSet<String>>,
+    pub allow_principal_targets: bool,
 }
 
 pub struct Session {
@@ -351,7 +363,25 @@ impl SessionManager {
         connection_options: Vec<(String, adbc_core::options::OptionValue)>,
         transport_id: Option<&str>,
     ) -> Result<String, AdbcError> {
-        if !self.authorizer.allows(&principal, target_name) {
+        let allowed = {
+            let registry = self
+                .registry
+                .lock()
+                .map_err(|_| internal("session registry is poisoned"))?;
+            Self::validate_transport(&registry, transport_id, &principal)?;
+            let access = transport_id
+                .and_then(|id| registry.transports.get(id))
+                .and_then(|owner| owner.access.as_ref());
+            match access {
+                Some(access) => {
+                    access.public_targets.contains(target_name)
+                        || (access.allow_principal_targets
+                            && self.authorizer.allows(&principal, target_name))
+                }
+                None => self.authorizer.allows(&principal, target_name),
+            }
+        };
+        if !allowed {
             return Err(AdbcError::with_message_and_status(
                 "principal is not authorized for the requested target",
                 Status::Unauthorized,
@@ -446,7 +476,11 @@ impl SessionManager {
         principal: &str,
     ) -> Result<(), AdbcError> {
         if let Some(id) = transport_id
-            && registry.transports.get(id).map(String::as_str) != Some(principal)
+            && registry
+                .transports
+                .get(id)
+                .map(|owner| owner.principal.as_str())
+                != Some(principal)
         {
             return Err(not_found("closed or unavailable transport connection"));
         }
@@ -455,6 +489,14 @@ impl SessionManager {
 
     /// Register a physical transport after authentication and admission.
     pub fn open_transport(&self, principal: String) -> Result<String, AdbcError> {
+        self.open_transport_with_access(principal, None)
+    }
+
+    pub(crate) fn open_transport_with_access(
+        &self,
+        principal: String,
+        access: Option<TransportTargetAccess>,
+    ) -> Result<String, AdbcError> {
         let mut registry = self
             .registry
             .lock()
@@ -463,7 +505,9 @@ impl SessionManager {
             return Err(busy("proxy is shutting down"));
         }
         let id = Uuid::new_v4().to_string();
-        registry.transports.insert(id.clone(), principal);
+        registry
+            .transports
+            .insert(id.clone(), TransportOwner { principal, access });
         Ok(id)
     }
 
@@ -1182,7 +1226,7 @@ mod tests {
     use arrow_array::{RecordBatch, RecordBatchIterator, RecordBatchReader};
     use arrow_schema::{ArrowError, Schema};
 
-    use super::{SessionLimits, SessionManager, TargetAuthorizer};
+    use super::{SessionLimits, SessionManager, TargetAuthorizer, TransportTargetAccess};
     use crate::backend::{Backend, BackendConnection, BackendStatement};
     use crate::config::TargetConfig;
 
@@ -1627,5 +1671,109 @@ mod tests {
         assert!(registry.transports.is_empty());
         assert_eq!(registry.opening_total, 0);
         assert!(registry.opening_by_principal.is_empty());
+    }
+
+    #[test]
+    fn shared_transport_grants_are_restricted_even_when_general_policy_allows_all() {
+        for permissions in [
+            HashMap::new(),
+            HashMap::from([("operator".into(), vec!["private".into()])]),
+            HashMap::from([("new-key".into(), vec!["private".into()])]),
+        ] {
+            let manager = SessionManager::with_limits_and_authorizer(
+                Arc::new(DummyBackend),
+                HashMap::from([("sqlite".into(), target()), ("private".into(), target())]),
+                Duration::from_secs(3600),
+                true,
+                SessionLimits::default(),
+                TargetAuthorizer::new(permissions),
+            );
+            let principal = "iroh-key\0new-key";
+            let transport = manager
+                .open_transport_with_access(
+                    principal.into(),
+                    Some(TransportTargetAccess {
+                        public_targets: Arc::new(HashSet::from(["sqlite".into()])),
+                        allow_principal_targets: false,
+                    }),
+                )
+                .unwrap();
+            manager
+                .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&transport))
+                .unwrap();
+            assert_eq!(
+                manager
+                    .open_on_transport(
+                        principal.into(),
+                        "private",
+                        vec![],
+                        vec![],
+                        Some(&transport)
+                    )
+                    .unwrap_err()
+                    .status,
+                Status::Unauthorized
+            );
+            assert!(
+                manager
+                    .open_on_transport(
+                        "bearer\0operator".into(),
+                        "sqlite",
+                        vec![],
+                        vec![],
+                        Some(&transport)
+                    )
+                    .is_err()
+            );
+            manager.close_transport(&transport).unwrap();
+            assert!(
+                manager
+                    .open_on_transport(principal.into(), "sqlite", vec![], vec![], Some(&transport))
+                    .is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn public_targets_do_not_grant_access_to_http_or_other_transports() {
+        let manager = manager(
+            SessionLimits::default(),
+            TargetAuthorizer::new(HashMap::from([("operator".into(), vec!["sqlite".into()])])),
+            Duration::from_secs(3600),
+        );
+        let transport = manager
+            .open_transport_with_access(
+                "iroh-key\0key".into(),
+                Some(TransportTargetAccess {
+                    public_targets: Arc::new(HashSet::from(["sqlite".into()])),
+                    allow_principal_targets: false,
+                }),
+            )
+            .unwrap();
+        assert_eq!(
+            manager
+                .open("bearer\0guest".into(), "sqlite", vec![], vec![])
+                .unwrap_err()
+                .status,
+            Status::Unauthorized
+        );
+        assert_eq!(
+            manager
+                .open("iroh-key\0key".into(), "sqlite", vec![], vec![])
+                .unwrap_err()
+                .status,
+            Status::Unauthorized
+        );
+        assert!(
+            manager
+                .open_on_transport(
+                    "iroh-key\0key".into(),
+                    "sqlite",
+                    vec![],
+                    vec![],
+                    Some(&transport)
+                )
+                .is_ok()
+        );
     }
 }

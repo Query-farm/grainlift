@@ -52,6 +52,13 @@ timings and classified errors, without raw driver error messages, credentials,
 or endpoint keys. Expected SQLite busy errors are recorded until cleanup
 releases the abandoned write lock.
 
+Add `--public-target` to replace the endpoint allowlist with
+`iroh.public_targets = ["sqlite"]`. The same three clients then connect without
+registration, and the test verifies rollback and same-key connection isolation
+under the key-derived principal policy. Existing HTTP credentials and target
+permissions remain in the fixture, so the public-target grants must work
+independently of named Alice/Bob permissions.
+
 Rust regression tests additionally cover individual stream closure, immediate
 explicit physical disconnect, statement/result/connection cleanup, listener
 shutdown, first-stream timeout, transport task cancellation, and the race

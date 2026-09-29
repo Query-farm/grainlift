@@ -1,0 +1,16 @@
+{
+  "transport": "iroh-direct-loopback",
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "source_rows": 20000,
+  "max_pending_batches": 1,
+  "sha256": {
+    "server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "driver": "435ec912f11c0e9aa1daf18e199aef73dcdd97f45ea4254dbb1966360301c403",
+    "extension": "af581be903d21bc8f0303c618fb8eca32d1eebe9a7a3ebc9774ecbed58a4d209",
+    "sqlite_driver": "57a81d8053c47e107960ad4557e88ccb17c32291caf81ea67c3995588350cdfd",
+    "harness": "f0d7485727be964d2db3453290cef535dd216f3454f8eaa38ac7fc93691054ce"
+  },
+  "cases": [],
+  "passed": false,
+  "failure": "TimeoutError"
+}

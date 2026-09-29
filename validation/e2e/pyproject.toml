@@ -1,0 +1,50 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+# SPDX-License-Identifier: Apache-2.0
+
+[project]
+name = "grainlift-downstream-e2e"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+  "adbc-driver-manager==1.12.0",
+  "pyarrow==25.0.1",
+  "pytest==9.1.1",
+  "pytest-timeout==2.4.0",
+]
+
+[dependency-groups]
+dev = ["mypy==2.3.0", "ruff==0.16.2"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+addopts = "-ra --strict-markers"
+xfail_strict = true
+timeout = 60
+timeout_method = "thread"
+
+[tool.ruff]
+extend = "../regression/pyproject.toml"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+files = ["."]
+
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+ignore_missing_imports = true
+
+[tool.pydoclint]
+style = "google"
+arg_type_hints_in_docstring = false
+check_return_types = false
+check_yield_types = false
+check_class_attributes = true
+skip_checking_raises = true
+allow_init_docstring = true

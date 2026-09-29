@@ -1,0 +1,58 @@
+{
+  "host": "EC2 <ec2-host>",
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "3.13.15 (main, Sep  1 2026, 14:15:43) [Clang 22.1.3 ]",
+  "transport": "authenticated HTTP loopback",
+  "build_profile": "debug",
+  "result": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "1",
+    "tests": "56",
+    "time": "28.959",
+    "timestamp": "2026-09-27T22:30:04.467937+00:00",
+    "hostname": "ip-172-31-43-65.ec2.internal"
+  },
+  "expected_failures": [
+    "test_duckdb_inflight_cancellation_and_reuse[statement]"
+  ],
+  "passed": 55,
+  "dependencies": {
+    "adbc-driver-manager": "1.12.0",
+    "pyarrow": "25.0.1",
+    "pytest": "9.1.1",
+    "pytest-timeout": "2.4.0",
+    "ruff": "0.16.2",
+    "mypy": "2.3.0"
+  },
+  "downstream_versions": {
+    "sqlite": "1.12.0",
+    "duckdb": "1.5.5",
+    "datafusion": "0.27.0"
+  },
+  "sha256": {
+    "server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "client": "435ec912f11c0e9aa1daf18e199aef73dcdd97f45ea4254dbb1966360301c403",
+    "sqlite": "57a81d8053c47e107960ad4557e88ccb17c32291caf81ea67c3995588350cdfd",
+    "duckdb": "d00d007f3f7ca1f2896a5e4b89c2ce141bf0508506a9d6d56f9598b8e59d074e",
+    "datafusion": "7ff2fec5694b9b4467a61b87e23fc901c09042317304e6a0733e58a70f338bea",
+    "validation/e2e/conftest.py": "4c06f49b91840db7deb66956b993d64f29d0c3090c63241df2f35527174d7682",
+    "validation/e2e/__init__.py": "051402a88b3484d01d4332a942212fdd500484c4065783625fcf4a7f2a0b3949",
+    "validation/e2e/test_ingestion.py": "32189c66a66429c375bf8baa5f8b3311b9a597344ee603ab04e2095801537cbb",
+    "validation/e2e/test_types_metadata.py": "f5f0d672d8489ee0165f68982e3f1323290b033fad9a83b5559ed23f0c2a243f",
+    "validation/e2e/test_advanced.py": "2b0ffa82147a45c0f5b159a3568f4c7449666ab0d2be18842bd35651e98cb597",
+    "validation/e2e/types_abi.py": "298a7c3e6ef34eb1072ad10ffb1cd82cc16aee29fbb41ee0f5ba734bef2b8be9",
+    "validation/e2e/run.py": "d71843c02cb07fb39a636bfd2ff11666bf07bceb3f47349d43369a99320a58e0",
+    "validation/e2e/test_supervisor.py": "56d82d2b6e5e02d25e7c7942a18bf31a4e390ce1a3fd247d894aae99392aae69",
+    "lockfile": "857ab0fec9609441b0383e8cc0e1f29e44c7da263b2d890cec2b6e10ac915152",
+    "runner": "05d3a5c7138534722d62446c326b7d37a0d983275d907ce8d6e2fa2138d2c958"
+  },
+  "quality": [
+    "ruff check",
+    "ruff format --check",
+    "mypy --strict",
+    "pydoclint isolated"
+  ],
+  "source_state": "working tree changes, not committed"
+}

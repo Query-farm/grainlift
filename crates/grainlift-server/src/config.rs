@@ -69,6 +69,11 @@ pub struct IrohConfig {
     pub endpoint_info_file: Option<PathBuf>,
     #[serde(default)]
     pub principals: HashMap<String, String>,
+    /// Targets shared with every cryptographically verified Iroh peer.
+    /// Unlisted peers use their endpoint key as a distinct principal and may
+    /// access only these targets. Empty retains allowlist-only admission.
+    #[serde(default)]
+    pub public_targets: Vec<String>,
     #[serde(default)]
     pub disable_relays: bool,
     /// Total logical VGI streams admitted across all Iroh connections.
@@ -371,13 +376,21 @@ impl Config {
             if iroh.issuer.trim().is_empty() {
                 return Err("Iroh issuer must not be blank".into());
             }
-            if self.server.require_authentication && iroh.principals.is_empty() {
+            if self.server.require_authentication
+                && iroh.principals.is_empty()
+                && iroh.public_targets.is_empty()
+            {
                 return Err(
-                    "authenticated Iroh requires at least one endpoint-to-principal mapping".into(),
+                    "authenticated Iroh requires endpoint-to-principal mappings or explicit public targets".into(),
                 );
             }
             if iroh.stream_idle_timeout_seconds == Some(0) {
                 return Err("iroh.stream_idle_timeout_seconds must be positive".into());
+            }
+            for target in &iroh.public_targets {
+                if target == "*" || !self.targets.contains_key(target) {
+                    return Err("Iroh public targets must name configured targets; wildcards are not supported".into());
+                }
             }
             if iroh.max_active_streams == 0
                 || iroh.max_active_streams_per_connection == 0
@@ -702,6 +715,31 @@ driver = "adbc_driver_sqlite"
             "[server]\nrequire_authentication = false\n\n[iroh]\nissuer = \"example.org\"\nsecret_key_file = \"iroh.key\"\nmax_active_streams = 32\nmax_active_streams_per_connection = 64\n{TARGET}"
         );
         assert!(Config::from_toml(&invalid_stream_limits).is_err());
+    }
+
+    #[test]
+    fn public_iroh_targets_are_explicit_and_do_not_disable_http_authentication() {
+        let base = format!(
+            "[iroh]\nissuer = \"example.org\"\nsecret_key_file = \"iroh.key\"\npublic_targets = [\"sqlite\"]\n\n[auth.static_bearer_tokens]\ntoken = \"operator\"\n{TARGET}"
+        );
+        let config = Config::from_toml(&base).unwrap();
+        assert!(config.server.require_authentication);
+        assert_eq!(config.iroh.unwrap().public_targets, vec!["sqlite"]);
+        for targets in ["[]", "[\"missing\"]", "[\"*\"]"] {
+            assert!(
+                Config::from_toml(&base.replace(
+                    "public_targets = [\"sqlite\"]",
+                    &format!("public_targets = {targets}")
+                ))
+                .is_err()
+            );
+        }
+        assert!(
+            Config::from_toml(
+                &base.replace("[auth.static_bearer_tokens]\ntoken = \"operator\"\n", "")
+            )
+            .is_err()
+        );
     }
 
     #[test]

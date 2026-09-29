@@ -1,0 +1,17 @@
+All checks passed!
+8 files already formatted
+Success: no issues found in 8 source files
+Skipping files that match this pattern: \.git|\.tox
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/__init__.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/conftest.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/run.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_advanced.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_ingestion.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_supervisor.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_types_metadata.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/types_abi.py
+🎉 No violations 🎉
+...........................x............................                 [100%]
+=========================== short test summary info ============================
+XFAIL validation/e2e/test_ingestion.py::test_duckdb_inflight_cancellation_and_reuse[statement] - arrow-adbc 616acfd Rust StatementCancel locks the executing statement mutex
+55 passed, 1 xfailed in 28.96s

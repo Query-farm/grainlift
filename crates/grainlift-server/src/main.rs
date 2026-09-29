@@ -37,6 +37,7 @@ use tracing::{info, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt as _;
 use tracing_subscriber::util::SubscriberInitExt as _;
+use vgi_rpc::AuthContext;
 use vgi_rpc::auth::Authenticate;
 use vgi_rpc::auth::bearer::bearer_authenticate_static;
 use vgi_rpc::auth::jwt::{JwtConfig, jwt_authenticate};
@@ -45,16 +46,24 @@ use vgi_rpc::tcp::{
     TcpIdentityOptions, TcpMutualTlsConfig, TcpMutualTlsOptions, serve_tcp,
     serve_tcp_with_mtls_identity,
 };
-use vgi_rpc::{AuthContext, PeerAuthenticationPolicy, RpcError};
 use vgi_rpc_iroh::{CancellationToken, IrohServer, IrohServerOptions, VGI_IROH_ALPN};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let server_id = args.server_id.clone();
-    let Launch::Serve(config) = args.resolve()? else {
-        println!("Configuration is valid (drivers and database connectivity were not checked).");
-        return Ok(());
+    let config = match args.resolve()? {
+        Launch::Serve(config) => config,
+        Launch::Checked => {
+            println!(
+                "Configuration is valid (drivers and database connectivity were not checked)."
+            );
+            return Ok(());
+        }
+        Launch::Identity(endpoint) => {
+            println!("{endpoint}");
+            return Ok(());
+        }
     };
     let tracer_provider = init_observability()?;
     let manager = Arc::new(SessionManager::with_limits_authorizer_and_timeout(
@@ -310,13 +319,15 @@ async fn start_iroh_listener(
         std::fs::write(path, serde_json::to_vec_pretty(&record)?)?;
     }
 
-    let policy = iroh_policy(config.principals, require_authentication);
+    let lifecycle = Arc::new(
+        grainlift_server::iroh_lifecycle::IrohSessionLifecycle::new(manager)
+            .with_access_policy(config.principals, config.public_targets),
+    );
+    let policy = lifecycle.authentication_policy(require_authentication);
     let mut options = IrohServerOptions::default()
         .with_issuer(config.issuer)
         .with_policy(policy)
-        .with_lifecycle(Arc::new(
-            grainlift_server::iroh_lifecycle::IrohSessionLifecycle::new(manager),
-        ))
+        .with_lifecycle(lifecycle)
         .with_max_active_streams(config.max_active_streams)
         .with_max_active_streams_per_connection(config.max_active_streams_per_connection);
     // A session's control stream waits for its client's next call; the
@@ -329,29 +340,6 @@ async fn start_iroh_listener(
     Ok(tokio::spawn(async move {
         iroh_server.serve(endpoint, shutdown).await
     }))
-}
-
-fn iroh_policy(
-    principals: HashMap<String, String>,
-    require_authentication: bool,
-) -> PeerAuthenticationPolicy {
-    Arc::new(move |evidence, existing| {
-        let identity = evidence.unique_verified_subject("iroh")?;
-        let endpoint = identity
-            .subject_key()
-            .ok_or_else(|| RpcError::permission_error("Iroh endpoint identity is missing"))?;
-        if let Some(principal) = principals.get(endpoint) {
-            let mut auth = AuthContext::for_principal("iroh", principal);
-            auth.claims.insert("subject".into(), endpoint.into());
-            return Ok(auth);
-        }
-        if require_authentication || !principals.is_empty() {
-            return Err(RpcError::permission_error(
-                "Iroh endpoint is not authorized",
-            ));
-        }
-        Ok(existing.clone())
-    })
 }
 
 fn build_tcp_tls(

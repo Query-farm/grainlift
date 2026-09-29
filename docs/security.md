@@ -69,6 +69,42 @@ endpoint IDs to principals in `iroh.principals`. Endpoint-key possession is
 not, by itself, organizational membership. The optional endpoint information
 file contains only public discovery information.
 
+Clients can use `grainlift.iroh.secret_key_file` to keep private key material
+out of SQL and secret definitions. The driver reads this local file once per
+new ADBC connection and retains the parsed identity for all of that connection's
+streams and cancellation requests. Changing the file affects future connections,
+not existing sessions. The option is exclusive with `grainlift.iroh.secret_key`.
+Reads are limited to 256 bytes; regular files, private Unix permissions, and
+valid key encoding are required, and symlinks are rejected. On Windows restrict
+the containing directory's ACL to the client account. Errors omit file contents
+and paths. Neither option is forwarded to the downstream database driver.
+
+`iroh.public_targets = ["sqlite"]` explicitly shares named targets with every
+cryptographically verified Iroh peer. The list must contain existing target
+names; wildcards are rejected. It defaults to empty, which retains the
+authenticated listener's endpoint allowlist. An unlisted endpoint uses its
+verified 64-character hexadecimal key as principal in the separate `iroh-key`
+authentication domain. This avoids collisions with named `iroh` principals
+and preserves per-key quotas and ownership of sessions, transactions,
+statements, results, and partition tokens. No registration or client-supplied
+principal is involved. Shared database contents remain visible according to
+the downstream database's transaction rules.
+
+Unlisted peers can access only `public_targets`, even if the general target
+permission map is empty or contains a matching principal name. Named peers
+retain their normal target permissions plus these shared targets. The grants
+are stored in the server's admitted Iroh connection registry, not request
+metadata or credential claims; HTTP, TCP, and mTLS do not inherit them. The
+target set is shared across connections and connection records remain bounded
+by listener admission. Closed connections lose both their grants and sessions.
+Keep `server.require_authentication = true`; the existing HTTP listener still
+requires its own bearer or JWT configuration.
+
+Public-target access grants the SQL capabilities of the downstream target,
+including writes when enabled there. Per-key quotas distinguish clients, but
+one caller can generate many keys: global connection/session limits still
+bound the server, while per-key limits are not a per-person abuse limit.
+
 The Iroh listener assigns a server-generated connection identifier after
 authentication and admission. Sessions opened on that physical QUIC connection
 are revoked when it disconnects or the listener shuts down, including sessions

@@ -7,6 +7,7 @@
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -20,6 +21,11 @@ def main() -> None:
     )
     for name in ("server", "driver", "extension", "sqlite-driver", "harness", "output"):
         parser.add_argument("--" + name, required=True, type=Path)
+    parser.add_argument(
+        "--public-target",
+        action="store_true",
+        help="Share sqlite with any verified Iroh key instead of registering clients.",
+    )
     args = parser.parse_args()
     server_path = args.server.resolve(strict=True)
     driver = str(args.driver.resolve(strict=True))
@@ -41,6 +47,17 @@ def main() -> None:
                 "[server]\nsession_ttl_seconds = 3600\nsession_reap_interval_seconds = 30\n",
             )
         )
+        if args.public_target:
+            contents, count = re.subn(
+                r"(?ms)^\[iroh\.principals\]\n.*?(?=^\[|\Z)",
+                "",
+                config.read_text(),
+            )
+            assert count == 1, "expected one endpoint allowlist in test configuration"
+            assert contents.count("[iroh]\n") == 1
+            config.write_text(
+                contents.replace("[iroh]\n", '[iroh]\npublic_targets = ["sqlite"]\n')
+            )
         clients = []
         with (root / "server.log").open("w") as log:
             server = subprocess.Popen(
@@ -98,6 +115,7 @@ def main() -> None:
                 assert server.poll() is None, "server exited"
                 evidence = {
                     "transport": "iroh",
+                    "public_targets": ["sqlite"] if args.public_target else [],
                     "session_ttl_seconds": 3600,
                     "reap_interval_seconds": 30,
                     "client_exit_code": alice.process.exitcode,

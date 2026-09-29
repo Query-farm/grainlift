@@ -17,6 +17,42 @@
 
 # External ADBC validation
 
+For repeatable HTTP, TCP, mTLS, and direct Iroh tests through the native client,
+Rust server, and real SQLite,
+DuckDB, and DataFusion drivers, see the [downstream end-to-end suite](e2e/README.md).
+It covers ingestion, Arrow types, metadata, partition and Substrait execution,
+concurrent clients, and disconnect recovery, with pinned dependencies and a
+dedicated CI job.
+
+## DuckDB bulk ingestion over Iroh
+
+`iroh_bulk_insert.py` starts an isolated server and SQLite WAL database. Independent
+DuckDB processes use file-backed Alice/Bob identities and the real Grainlift ADBC
+driver. It checks 20,000 rows across multiple Arrow batches with a one-batch producer
+queue, exact nullable integer/string/double/blob values, create/append, rollback,
+commit, empty input, overlapping writers, and visibility through read-only catalogs.
+
+Use a matching DuckDB package and locally built `adbc_scanner` extension, plus
+`cryptography`. The extension needs the eager-binding deadlock fix and URI-derived
+secret scopes; Grainlift needs `grainlift.iroh.secret_key_file` support.
+
+```sh
+python validation/iroh_bulk_insert.py \
+  --server /path/to/grainlift-server \
+  --driver /path/to/libadbc_driver_grainlift.so \
+  --sqlite-driver /path/to/libadbc_driver_sqlite.so \
+  --extension /path/to/adbc_scanner.duckdb_extension \
+  --harness ../adbc_scanner/test/iroh_sqlite_contention.py \
+  --output /tmp/iroh-bulk.json
+```
+
+This is a direct-Iroh loopback functional test, not a relay/WAN or capacity
+benchmark. Each client operation has a 12-second watchdog. A constant-false source
+is optimized away by DuckDB and returns no count row; a runtime-empty stream returns
+zero. Both append cases leave the database unchanged.
+
+## Other suites
+
 For deterministic native-client regressions without a downstream database, see
 the [toolkit-backed suite](regression/README.md):
 
@@ -26,6 +62,39 @@ the [toolkit-backed suite](regression/README.md):
 
 It uses the Python toolkit as an independent HTTP server and applies the Ruff,
 strict mypy, and isolated pydoclint standards used by vgi-python.
+
+For targeted shared-SQLite lock contention through DuckDB's Python package and
+the published `adbc_scanner` extension, run:
+
+```sh
+python validation/iroh_sqlite_contention.py \
+  --server /path/to/grainlift \
+  --driver /path/to/libadbc_driver_grainlift.so \
+  --sqlite-driver /path/to/libadbc_driver_sqlite.so \
+  --output /path/to/contention.json
+```
+
+This requires `duckdb`, `cryptography`, and installed server/client binaries.
+It creates a temporary server and WAL-mode SQLite database, authorizes two
+distinct Iroh identities, and drives each from its own Python process. Iroh
+relays are disabled and the clients use a loopback direct-address hint, so this
+isolates locking and transport behavior from internet discovery. Each request
+has a 12-second parent-process watchdog, and competing SQLite writers use a
+3000 ms busy timeout. The live shared demo is not modified.
+
+The cases cover commit while another writer waits, forced lock timeout,
+opposite-order updates after read snapshots, rollback/retry, 50 further updates,
+and an `EXPLAIN` check that must not execute writes. This finite test is not a
+proof of freedom from all deadlocks. Expected SQLite lock errors are recorded
+without raw error messages, and the connections must remain usable afterward.
+
+On EC2, DuckDB 1.5.5 with community extension `7a21dda` completed the contention
+cases without a deadlock, but exposed an extension optimization bug: the forced
+lock timeout took 9.015 seconds rather than approximately three, and `EXPLAIN`
+executed a write. Rerunning with `--disable-optimizer` returned the timeout in
+3.006 seconds and prevented the `EXPLAIN` write. This is a diagnostic workaround,
+not a released fix. See the [recorded results](conformance/results/ec2-20260927-iroh-contention/).
+`completed_with_findings` in the JSON is not a clean validation pass.
 
 This directory validates the complete deployed path rather than instantiating
 the Rust proxy types in-process:

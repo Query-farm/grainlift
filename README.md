@@ -124,6 +124,15 @@ Capabilities ultimately depend on the selected downstream driver. Grainlift
 preserves downstream ADBC errors, including `NOT_IMPLEMENTED`, rather than
 pretending an unsupported operation succeeded.
 
+Active statement cancellation is currently limited by
+[upstream ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817): the Rust
+driver manager blocks cancellation behind the executing statement. Grainlift
+uses unmodified upstream ADBC dependencies and records this as a strict expected
+failure in its [real-driver tests](validation/e2e/KNOWN_FAILURES.md).
+Those tests also record a DuckDB 1.5.5 crash when executing an already-consumed
+parameter binding without rebinding. Native driver crashes terminate the hosting
+server process; see the [known downstream limitations](validation/e2e/KNOWN_FAILURES.md).
+
 ## Quick start
 
 For the packaged command-line service, see [the CLI guide](docs/cli.md).
@@ -302,6 +311,7 @@ Pass Grainlift options as ADBC database options:
 | `grainlift.tls.key` | Client private key for `tls+tcp://` | required for mTLS |
 | `grainlift.tls.server_name` | TLS server name for `tls+tcp://`; HTTPS verifies the URI hostname | endpoint host |
 | `grainlift.iroh.secret_key` | Stable Iroh client secret key | generated per process |
+| `grainlift.iroh.secret_key_file` | Local private-key file, instead of an inline key | unset |
 | `grainlift.iroh.direct_address` | Direct Iroh `host:port` discovery hint | relay/discovery |
 
 ## Transports
@@ -327,6 +337,28 @@ the `[tcp.tls]` server configuration and the `grainlift.tls.*` client options.
 For Iroh, persist the server secret-key file so the service endpoint ID remains
 stable, and map allowed client endpoint IDs to principals in
 `iroh.principals`.
+Create keys with `grainlift-server identity create server.key > server.id`;
+`grainlift-server identity show server.key` prints the existing public ID.
+The packaged `grainlift` command accepts the same identity commands. See the
+[CLI guide](docs/cli.md#create-an-iroh-identity) for file permissions and usage.
+
+To share selected targets with any verified Iroh key, explicitly configure:
+
+```toml
+[iroh]
+issuer = "shared-sqlite"
+secret_key_file = "server.key"
+public_targets = ["sqlite"]
+```
+
+Each unlisted peer is authenticated as its own endpoint key, with access only
+to these targets. No client changes or endpoint registrations are required.
+Named peers in `iroh.principals` retain their normal permissions and also gain
+access to the public targets. An empty or omitted `public_targets` retains the
+default allowlist requirement. This grants database access to anyone who can
+reach the Iroh endpoint and prove possession of a key; it is not read-only
+unless the downstream target enforces that. HTTP/TCP/mTLS authentication and
+authorization remain unchanged. See [security](docs/security.md).
 
 Iroh sessions are also associated with the physical QUIC connection that
 opened them. Once Iroh detects that connection's loss, the server revokes its
@@ -498,6 +530,9 @@ See the [validation guide](validation/README.md) for downstream prerequisites,
 payload-boundary tests, fault injection, load testing, and the
 [ADBC Driver Foundry](https://adbc-drivers.org/) suite. Recorded results and
 their environments are in [validation/RESULTS.md](validation/RESULTS.md).
+The [real downstream HTTP suite](validation/e2e/README.md) adds ingestion
+interruption/recovery, extended Arrow types and metadata, and actual DataFusion
+partitioned results and Substrait execution through the native driver and Rust server.
 The [protocol 0.4 EC2 benchmarks](validation/load-results/ec2-v04-20260926/README.md)
 include remote load and memory/CPU profiles. Native load passed, while the
 Python-worker path showed low throughput and multi-second tails that remain an
