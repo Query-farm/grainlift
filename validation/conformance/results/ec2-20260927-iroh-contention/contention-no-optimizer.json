@@ -1,0 +1,87 @@
+{
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "duckdb": "1.5.5",
+  "extension": "7a21dda",
+  "transport": "iroh_direct",
+  "clients": 2,
+  "busy_timeout_ms": 3000,
+  "watchdog_seconds": 12,
+  "optimizer_disabled": true,
+  "status": "passed",
+  "cases": [
+    {
+      "case": "commit_unblocks_waiting_writer",
+      "commit": {
+        "ok": true,
+        "rows": [
+          [
+            true
+          ]
+        ],
+        "seconds": 0.0016812769999887678
+      },
+      "waiting_writer": {
+        "ok": true,
+        "rows": [
+          [
+            0
+          ]
+        ],
+        "seconds": 0.3327357640000628
+      }
+    },
+    {
+      "case": "busy_timeout_then_connection_reuse",
+      "exceeds_single_busy_timeout": false,
+      "ok": false,
+      "locked": false,
+      "exception": "IOException",
+      "seconds": 3.0058125499999733
+    },
+    {
+      "case": "opposite_order_upgrade_rollback_retry",
+      "ok": false,
+      "locked": false,
+      "exception": "IOException",
+      "seconds": 0.002987900999869453
+    },
+    {
+      "case": "post_contention_50_updates",
+      "rows": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ]
+    },
+    {
+      "case": "explain_must_not_execute_write",
+      "unexpected_write": false,
+      "before": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ],
+      "after": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ]
+    }
+  ],
+  "server_exit_code": 0
+}

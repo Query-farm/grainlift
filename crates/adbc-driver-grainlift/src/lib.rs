@@ -18,13 +18,13 @@
 #[cfg(feature = "host-http")]
 pub mod host_http;
 #[cfg(feature = "iroh")]
+mod iroh_identity;
+#[cfg(feature = "iroh")]
 mod iroh_pool;
 #[cfg(all(feature = "iroh-browser", target_os = "emscripten"))]
 mod sab_transport;
 
 use std::collections::{HashMap, HashSet, VecDeque};
-#[cfg(feature = "iroh")]
-use std::str::FromStr;
 #[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 use std::sync::mpsc::{self, SyncSender};
 use std::sync::{Arc, Mutex};
@@ -68,6 +68,7 @@ pub const OPTION_TLS_CERT: &str = "grainlift.tls.cert";
 pub const OPTION_TLS_KEY: &str = "grainlift.tls.key";
 pub const OPTION_TLS_SERVER_NAME: &str = "grainlift.tls.server_name";
 pub const OPTION_IROH_SECRET_KEY: &str = "grainlift.iroh.secret_key";
+pub const OPTION_IROH_SECRET_KEY_FILE: &str = "grainlift.iroh.secret_key_file";
 pub const OPTION_IROH_DIRECT_ADDRESS: &str = "grainlift.iroh.direct_address";
 /// Opaque host context for the host HTTP executor (see `host_http`). Set by
 /// the embedding application, never forwarded to the server.
@@ -108,6 +109,13 @@ impl GrainliftDatabase {
     fn validate(&self) -> Result<()> {
         self.string_option_any(&[OPTION_GRAINLIFT_URI, OptionDatabase::Uri.as_ref()])?;
         self.string_option(OPTION_TARGET)?;
+        if self.options.contains_key(OPTION_IROH_SECRET_KEY)
+            && self.options.contains_key(OPTION_IROH_SECRET_KEY_FILE)
+        {
+            return Err(invalid(
+                "set only one of grainlift.iroh.secret_key and grainlift.iroh.secret_key_file",
+            ));
+        }
         Ok(())
     }
 
@@ -234,7 +242,16 @@ impl Database for GrainliftDatabase {
             tls_cert: self.optional_string(OPTION_TLS_CERT)?,
             tls_key: self.optional_string(OPTION_TLS_KEY)?,
             tls_server_name: self.optional_string(OPTION_TLS_SERVER_NAME)?,
-            iroh_secret_key: self.optional_string(OPTION_IROH_SECRET_KEY)?,
+            #[cfg(feature = "iroh")]
+            iroh_secret_key: iroh_identity::resolve(
+                self.optional_string(OPTION_IROH_SECRET_KEY)?.as_deref(),
+                self.optional_string(OPTION_IROH_SECRET_KEY_FILE)?
+                    .as_deref(),
+            )?,
+            #[cfg(not(feature = "iroh"))]
+            iroh_secret_key: self
+                .optional_string(OPTION_IROH_SECRET_KEY)?
+                .or(self.optional_string(OPTION_IROH_SECRET_KEY_FILE)?),
             iroh_direct_address: self.optional_string(OPTION_IROH_DIRECT_ADDRESS)?,
             host_ctx: self.optional_string(OPTION_HOST_CTX)?,
         };
@@ -806,6 +823,11 @@ struct TransportOptions {
     tls_cert: Option<String>,
     tls_key: Option<String>,
     tls_server_name: Option<String>,
+    #[cfg(feature = "iroh")]
+    iroh_secret_key: Option<iroh::SecretKey>,
+    /// Without native Iroh the key options are only validated (and rejected
+    /// where unsupported, e.g. in the browser).
+    #[cfg(not(feature = "iroh"))]
     iroh_secret_key: Option<String>,
     iroh_direct_address: Option<String>,
     #[cfg_attr(not(feature = "host-http"), allow(dead_code))]
@@ -992,15 +1014,7 @@ impl ByteConnector {
         let remote_id = IrohTarget::parse(&self.endpoint)
             .map_err(|error| invalid(error.to_string()))?
             .endpoint_id();
-        let secret_key = self
-            .options
-            .iroh_secret_key
-            .as_ref()
-            .map(|secret| {
-                iroh::SecretKey::from_str(secret.trim())
-                    .map_err(|error| invalid(format!("invalid Iroh client secret key: {error}")))
-            })
-            .transpose()?;
+        let secret_key = self.options.iroh_secret_key.clone();
         let direct_address = self
             .options
             .iroh_direct_address
@@ -2218,6 +2232,7 @@ fn is_grainlift_database_option(key: &str) -> bool {
             | OPTION_TLS_KEY
             | OPTION_TLS_SERVER_NAME
             | OPTION_IROH_SECRET_KEY
+            | OPTION_IROH_SECRET_KEY_FILE
             | OPTION_IROH_DIRECT_ADDRESS
             | OPTION_HOST_CTX
     )
@@ -2533,6 +2548,33 @@ mod tests {
             .set_option(OptionDatabase::Uri, "http://localhost:8080".into())
             .unwrap();
 
+        assert!(database.remote_options().is_empty());
+    }
+
+    #[test]
+    fn iroh_identity_sources_are_exclusive_and_never_forwarded() {
+        let mut database = GrainliftDatabase::default();
+        for (key, value) in [
+            ("uri", "iroh://endpoint"),
+            (OPTION_TARGET, "sqlite"),
+            (OPTION_IROH_SECRET_KEY_FILE, "/private/alice.key"),
+        ] {
+            database
+                .set_option(OptionDatabase::from(key), value.into())
+                .unwrap();
+        }
+        database.validate().unwrap();
+        assert!(database.remote_options().is_empty());
+        database
+            .set_option(
+                OptionDatabase::Other(OPTION_IROH_SECRET_KEY.into()),
+                "SECRET-CANARY".into(),
+            )
+            .unwrap();
+        let error = database.validate().unwrap_err();
+        assert_eq!(error.status, Status::InvalidArguments);
+        assert!(!error.message.contains("SECRET-CANARY"));
+        assert!(!error.message.contains("/private/"));
         assert!(database.remote_options().is_empty());
     }
 

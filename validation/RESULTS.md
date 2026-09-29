@@ -17,6 +17,68 @@
 
 # Validation results
 
+## Multi-transport real-driver end-to-end coverage — 2026-09-27
+
+The [combined EC2 run](conformance/results/ec2-20260927-multitransport-e2e/README.md)
+completed **128 passed, 2 strict expected failures, zero unexpected failures,
+187.66 seconds** across HTTP, loopback TCP, mTLS, and direct Iroh with real
+SQLite, DuckDB, and DataFusion drivers. It adds independent-client transaction
+visibility and write contention, abrupt-disconnect cleanup of transactions,
+results, and unfinished uploads, authenticated partition ownership, and
+bounded two-session quota pressure. Ruff, formatting, strict mypy, and
+pydoclint passed. JUnit and raw logs are retained with the report.
+
+In 64 measured session rounds per transport, HTTP p95/max round latency was
+74.739/77.959 ms; Iroh was 53.182/53.360 ms. Server RSS rose from 36.96 to
+38.68 MiB for HTTP and 47.52 to 47.85 MiB for Iroh; observed file-descriptor
+counts stayed at 17 and 20 respectively. This short loopback workload is not
+a sustained load or WAN qualification. The two strict expected failures remain
+[ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817) and
+[DuckDB #26213](https://github.com/duckdb/duckdb/issues/26213).
+
+## Expanded HTTP statement and lifecycle coverage — 2026-09-27
+
+The [expanded EC2 suite](conformance/results/ec2-20260927-http-lifecycle/README.md)
+ran **85 passed, 2 strict expected failures, zero unexpected failures, 34.33 seconds**.
+It adds 31 cases covering schema calls, DML counts, transaction transitions,
+parameter streams, independent bindings, typed options, batch boundaries,
+statement/result quotas, early close, and late downstream error recovery.
+Ruff, formatting, strict mypy, and isolated pydoclint passed. The unmodified
+upstream ADBC dependency pin remains in use.
+
+The original cancellation limitation remains linked to
+[ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817). A new isolated
+regression reproduces a DuckDB 1.5.5 segfault on executing consumed parameter
+input without rebinding, both directly and through Grainlift
+([DuckDB #26213](https://github.com/duckdb/duckdb/issues/26213)). Only the precise
+matching crashes are marked expected; SQLite safely rejects the same call.
+See [known downstream limitations](e2e/KNOWN_FAILURES.md). The earlier run below
+is retained as historical evidence.
+
+## Real downstream HTTP end-to-end coverage — 2026-09-27
+
+The [new EC2 suite](conformance/results/ec2-20260927-http-e2e/README.md) ran the
+native client and Rust server against real SQLite, DuckDB, and DataFusion drivers:
+**55 passed, 1 strict expected failure, no unexpected failures, 28.96 seconds**.
+It adds ingestion interruption/recovery, extended types and metadata, actual
+partitioned execution and Substrait, and successful connection cancellation.
+Quality gates passed and CI now includes the suite.
+
+The expected failure reproduces a production blocker: the pinned upstream Rust
+ADBC manager serializes statement cancellation behind the executing statement.
+DuckDB cancels the same query successfully when called directly. See the
+[defect analysis](e2e/KNOWN_FAILURES.md); the suite does not claim that statement
+cancellation works through the proxy.
+
+## DuckDB bulk ingestion over Iroh — 2026-09-27
+
+The [EC2 bulk-ingestion regression](conformance/results/ec2-20260927-iroh-bulk/README.md)
+reproduced and fixed an eager-binding deadlock in `adbc_scanner`. The rerun passed
+20,000-row exact-value ingestion, bidirectional append visibility, rollback and
+commit isolation, empty input, and overlapping writers through independent Iroh
+identities and read-only catalogs. The extension also passed 30 Python tests and
+60 SQL assertions. This is a bounded functional workload, not a soak or WAN test.
+
 Latest protocol 0.4 load and profiling: 2026-09-26 on EC2 Linux arm64.
 Earlier macOS and 2026-09-23 downstream-driver results below retain their
 original provenance and are not rewritten as current measurements.

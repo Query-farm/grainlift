@@ -1,0 +1,54 @@
+{
+  "suite": "validation/e2e/test_ingestion.py",
+  "transport": "http",
+  "downstream": ["SQLite ADBC 1.12.0", "DuckDB ADBC 1.5.5"],
+  "date": "2026-09-27",
+  "tests": 18,
+  "passed": 17,
+  "failed": 0,
+  "skipped": 0,
+  "expected_failures": 1,
+  "duration_seconds": 14.87,
+  "python": "3.13.15",
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "packages": {
+    "adbc-driver-manager": "1.12.0",
+    "pyarrow": "25.0.1",
+    "pytest": "9.1.1",
+    "pytest-timeout": "2.4.0"
+  },
+  "sha256": {
+    "grainlift-server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "libadbc_driver_grainlift.so": "435ec912f11c0e9aa1daf18e199aef73dcdd97f45ea4254dbb1966360301c403",
+    "test_ingestion.py": "32189c66a66429c375bf8baa5f8b3311b9a597344ee603ab04e2095801537cbb"
+  },
+  "coverage": [
+    "create, append, replace, create_append with multi-batch input",
+    "nullable integer, string, double, binary values and independent session visibility",
+    "temporary-table connection isolation and disposal",
+    "empty input creates declared columns",
+    "duplicate create, missing append, schema mismatch, cursor reuse",
+    "explicit transaction rollback, commit, uncommitted visibility",
+    "producer failure after acknowledged batch, exchange cancellation, reuse",
+    "cumulative server upload cap, no partial table, recovery",
+    "graceful shutdown during upload without kill fallback, transaction rollback, restart and fresh ingestion",
+    "abrupt uploader process loss, HTTP session TTL reclamation and writer-lock recovery",
+    "SQLite StatementCancel and ConnectionCancel preserve direct-driver NOT_IMPLEMENTED during active computation",
+    "DuckDB ConnectionCancel interrupts active computation and permits cursor reuse, matching direct-driver execution status"
+  ],
+  "known_failures": [
+    {
+      "test": "test_duckdb_inflight_cancellation_and_reuse[statement]",
+      "upstream": "apache/arrow-adbc revision 616acfdfcea9b66956fdb3d11437b6cf24edbc39",
+      "cause": "Rust StatementCancelHandle waits for the statement mutex held by StatementExecuteQuery",
+      "observed": "Direct DuckDB StatementCancel interrupts successfully; proxied StatementCancel exceeds the five-second HTTP deadline",
+      "qualification": "Strict xfail only for the recognized proxied IO timeout after successful direct-driver cancellation; any different failure or unexpected success fails the test",
+      "cleanup": "ConnectionCancel stops the native query after the failed StatementCancel probe; no production fallback was introduced"
+    }
+  ],
+  "limitations": [
+    "Producer failure tests transport exchange cancellation, not ADBC StatementCancel",
+    "HTTP client-loss cleanup uses configured session expiry, not socket-disconnect notification",
+    "This is functional validation with debug binaries, not a performance benchmark"
+  ]
+}

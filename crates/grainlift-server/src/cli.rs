@@ -19,7 +19,7 @@ use crate::config::{AuthConfig, Config, ServerConfig, TargetConfig};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-/// Start an ADBC service or validate its configuration.
+/// Start an ADBC service, manage Iroh identities, or validate configuration.
 #[derive(Parser)]
 #[command(version, about)]
 pub struct Args {
@@ -42,6 +42,25 @@ enum Command {
     },
     /// Validate configuration without opening databases or starting listeners.
     Check,
+    /// Create an Iroh identity or display its public endpoint ID.
+    Identity {
+        #[command(subcommand)]
+        command: IdentityCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum IdentityCommand {
+    /// Create a new private key file and print only its public endpoint ID.
+    Create {
+        /// Destination private key file. Must not already exist.
+        key_file: PathBuf,
+    },
+    /// Print only the public endpoint ID derived from an existing private key.
+    Show {
+        /// Existing private key file.
+        key_file: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
@@ -74,12 +93,21 @@ pub enum Launch {
     Serve(Box<Config>),
     /// Configuration validation completed successfully.
     Checked,
+    /// Identity command completed; only this public endpoint ID may be printed.
+    Identity(String),
 }
 
 impl Args {
     /// Resolve arguments without exposing credentials in diagnostics.
     pub fn resolve(self) -> Result<Launch> {
         match self.command {
+            Some(Command::Identity { command }) => {
+                let endpoint = match command {
+                    IdentityCommand::Create { key_file } => crate::identity::create(&key_file)?,
+                    IdentityCommand::Show { key_file } => crate::identity::show(&key_file)?,
+                };
+                Ok(Launch::Identity(endpoint.to_string()))
+            }
             Some(Command::Serve {
                 backend: Some(ServeBackend::Sqlite(args)),
             }) => {

@@ -1,0 +1,69 @@
+{
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "3.13.15 (main, Sep  1 2026, 14:15:43) [Clang 22.1.3 ]",
+  "transport": "authenticated HTTP loopback",
+  "build_profile": "debug",
+  "result": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "2",
+    "tests": "87",
+    "time": "34.328",
+    "timestamp": "2026-09-27T23:50:34.393343+00:00",
+    "hostname": "ip-172-31-43-65.ec2.internal"
+  },
+  "passed": 85,
+  "strict_expected_failures": [
+    "test_downstream_failures::test_consumed_binding_does_not_crash_native_driver[duckdb]",
+    "test_ingestion::test_duckdb_inflight_cancellation_and_reuse[statement]"
+  ],
+  "dependencies": {
+    "adbc-driver-manager": "1.12.0",
+    "pyarrow": "25.0.1",
+    "pytest": "9.1.1",
+    "pytest-timeout": "2.4.0",
+    "ruff": "0.16.2",
+    "mypy": "2.3.0"
+  },
+  "downstream_drivers": {
+    "sqlite": {
+      "version": "1.12.0",
+      "sha256": "57a81d8053c47e107960ad4557e88ccb17c32291caf81ea67c3995588350cdfd"
+    },
+    "duckdb": {
+      "version": "1.5.5",
+      "sha256": "d00d007f3f7ca1f2896a5e4b89c2ce141bf0508506a9d6d56f9598b8e59d074e"
+    },
+    "datafusion": {
+      "version": "0.27.0",
+      "sha256": "7ff2fec5694b9b4467a61b87e23fc901c09042317304e6a0733e58a70f338bea"
+    }
+  },
+  "sha256": {
+    "validation/e2e/conftest.py": "f1905f0a2dfeff28bce8e8c8b7f7925850dbb09be2fac29adaa8d880f5c4e1b0",
+    "validation/e2e/__init__.py": "051402a88b3484d01d4332a942212fdd500484c4065783625fcf4a7f2a0b3949",
+    "validation/e2e/test_ingestion.py": "84dc4df8d15cee7034bb4aa1cc6c2bdc343f0065801f81d806866e4e985e5208",
+    "validation/e2e/test_types_metadata.py": "f5f0d672d8489ee0165f68982e3f1323290b033fad9a83b5559ed23f0c2a243f",
+    "validation/e2e/test_advanced.py": "2b0ffa82147a45c0f5b159a3568f4c7449666ab0d2be18842bd35651e98cb597",
+    "validation/e2e/types_abi.py": "298a7c3e6ef34eb1072ad10ffb1cd82cc16aee29fbb41ee0f5ba734bef2b8be9",
+    "validation/e2e/run.py": "d71843c02cb07fb39a636bfd2ff11666bf07bceb3f47349d43369a99320a58e0",
+    "validation/e2e/test_supervisor.py": "56d82d2b6e5e02d25e7c7942a18bf31a4e390ce1a3fd247d894aae99392aae69",
+    "validation/e2e/test_statement_lifecycle.py": "1dfe5d7eafb4ab46003cbd98a6da4f5bec8d37113c9f1fd59c5f47f3ca2b9b2c",
+    "validation/e2e/test_downstream_failures.py": "8800a759da55714c081f5e9321e072fd940882b4435335c069a3fd54a7d0d87c",
+    "Cargo.toml": "cd786b22be319e5f5ab8f23017e1b7978e889413f944494a87d9bc8b33ab5347",
+    "Cargo.lock": "9f4ebeedbe73b80c1d9017b1f10077018cbcd9194ec58e7f7cc8be6533b14393",
+    "validation/e2e/uv.lock": "857ab0fec9609441b0383e8cc0e1f29e44c7da263b2d890cec2b6e10ac915152",
+    "grainlift-server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "libadbc_driver_grainlift.so": "88be08530862f4b8580973dc587c8c7d53f7005fea753723404b1e710cefa7d9"
+  },
+  "adbc_revision": "616acfdfcea9b66956fdb3d11437b6cf24edbc39",
+  "local_adbc_patches": false,
+  "source_state": "working tree changes, not committed",
+  "quality": [
+    "ruff check",
+    "ruff format --check",
+    "mypy --strict",
+    "pydoclint isolated"
+  ]
+}

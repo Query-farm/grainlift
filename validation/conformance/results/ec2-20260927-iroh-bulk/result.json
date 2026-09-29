@@ -1,0 +1,97 @@
+{
+  "started_at": "2026-09-27T22:03:22.061777+00:00",
+  "transport": "iroh-direct-loopback",
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "source_rows": 20000,
+  "max_pending_batches": 1,
+  "sha256": {
+    "server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "driver": "435ec912f11c0e9aa1daf18e199aef73dcdd97f45ea4254dbb1966360301c403",
+    "extension": "5c3c5b1b03b1c54be93b948c7427c0b9b0a9218eafc3697b376a3d0718aacdb5",
+    "sqlite_driver": "57a81d8053c47e107960ad4557e88ccb17c32291caf81ea67c3995588350cdfd",
+    "harness": "f0d7485727be964d2db3453290cef535dd216f3454f8eaa38ac7fc93691054ce"
+  },
+  "runner_sha256": "3d0f2e39cc5adec2c43ab1916116f167516974feb09cc002dd740013a15d5bed",
+  "cases": [
+    {
+      "case": "multi_batch_create_exact_values_visible_to_bob",
+      "ok": true,
+      "rows": [
+        [
+          20000
+        ]
+      ],
+      "seconds": 0.0919927059985639
+    },
+    {
+      "case": "bob_append_visible_to_alice",
+      "ok": true,
+      "rows": [
+        [
+          5000
+        ]
+      ],
+      "seconds": 0.03684302100009518
+    },
+    {
+      "case": "uncommitted_append_private_then_rollback",
+      "ok": true,
+      "rows": [
+        [
+          3000
+        ]
+      ],
+      "seconds": 0.028723143997922307
+    },
+    {
+      "case": "append_commit_visible_to_bob",
+      "ok": true,
+      "rows": [
+        [
+          3000
+        ]
+      ],
+      "seconds": 0.02884141200047452
+    },
+    {
+      "case": "empty_append",
+      "ok": true,
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "seconds": 0.017773610998119693
+    },
+    {
+      "case": "optimizer_pruned_empty_source_no_write",
+      "ok": true,
+      "rows": [],
+      "seconds": 0.0008905309987312648
+    },
+    {
+      "case": "overlapping_writers_both_visible",
+      "clients": [
+        {
+          "ok": true,
+          "rows": [
+            [
+              1000
+            ]
+          ],
+          "seconds": 0.022203707998414757
+        },
+        {
+          "ok": true,
+          "rows": [
+            [
+              1000
+            ]
+          ],
+          "seconds": 0.022706820000166772
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

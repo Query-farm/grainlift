@@ -635,6 +635,196 @@ async fn iroh_disconnect_cleans_handles_without_expiring_other_same_identity_con
     server_endpoint.close().await;
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn public_iroh_keys_have_separate_owners_quotas_and_target_grants() {
+    use grainlift_server::iroh_lifecycle::IrohSessionLifecycle;
+    use iroh::{Endpoint, RelayMode, SecretKey, endpoint::presets};
+    use vgi_rpc_client::RpcClient;
+    use vgi_rpc_iroh::{
+        CancellationToken, IrohClientOptions, IrohConnection, IrohServer, IrohServerOptions,
+        VGI_IROH_ALPN,
+    };
+
+    async fn endpoint(key: u8) -> Endpoint {
+        Endpoint::builder(presets::N0)
+            .secret_key(SecretKey::from_bytes(&[key; 32]))
+            .relay_mode(RelayMode::Disabled)
+            .alpns(vec![VGI_IROH_ALPN.to_vec()])
+            .bind()
+            .await
+            .unwrap()
+    }
+    async fn call(
+        connection: &IrohConnection,
+        method: &'static str,
+        request: RecordBatch,
+    ) -> vgi_rpc::Result<RecordBatch> {
+        let transport = connection.open_transport().await.unwrap();
+        tokio::task::spawn_blocking(move || {
+            RpcClient::from_transport(Box::new(transport))
+                .protocol(protocol::PROTOCOL_NAME)
+                .protocol_version(protocol::PROTOCOL_VERSION)
+                .call_unary(method, &request, None)
+                .map(|(batch, _)| batch)
+        })
+        .await
+        .unwrap()
+    }
+    async fn open(connection: &IrohConnection, target: &str) -> vgi_rpc::Result<String> {
+        let request = protocol::encode_request(
+            protocol::OpenConnectionRequest {
+                target: target.into(),
+                database_options: vec![],
+                connection_options: vec![],
+            },
+            protocol::MAX_CONTROL_BYTES,
+        )
+        .unwrap();
+        let response = call(connection, protocol::method::OPEN_CONNECTION, request).await?;
+        Ok(protocol::decode_response::<protocol::SessionResponse>(
+            &response,
+            protocol::MAX_CONTROL_BYTES,
+        )
+        .unwrap()
+        .session_id)
+    }
+    let state = Arc::new(FaultState::default());
+    let manager = Arc::new(SessionManager::with_limits_and_authorizer(
+        Arc::new(FaultBackend {
+            state: state.clone(),
+        }),
+        HashMap::from([("shared".into(), target()), ("private".into(), target())]),
+        Duration::from_secs(3600),
+        true,
+        SessionLimits {
+            max_sessions: 8,
+            max_sessions_per_principal: 2,
+            ..SessionLimits::default()
+        },
+        TargetAuthorizer::default(),
+    ));
+    let server_endpoint = endpoint(51).await;
+    let alice_endpoint = endpoint(52).await;
+    let bob_endpoint = endpoint(53).await;
+    let named_endpoint = endpoint(54).await;
+    let alice_key = alice_endpoint.id().to_string();
+    let bob_key = bob_endpoint.id().to_string();
+    // Deliberately collide a named alias with an unlisted endpoint's key.
+    let lifecycle = Arc::new(
+        IrohSessionLifecycle::new(manager.clone()).with_access_policy(
+            HashMap::from([(named_endpoint.id().to_string(), alice_key.clone())]),
+            vec!["shared".into()],
+        ),
+    );
+    let server = IrohServer::with_options(
+        Arc::new(build_server(manager.clone(), "public-test".into())),
+        IrohServerOptions::default()
+            .with_policy(lifecycle.authentication_policy(true))
+            .with_lifecycle(lifecycle),
+    );
+    let shutdown = CancellationToken::new();
+    let task = {
+        let endpoint = server_endpoint.clone();
+        let shutdown = shutdown.clone();
+        tokio::spawn(async move {
+            server.serve(endpoint, shutdown).await.unwrap();
+        })
+    };
+    let alice = IrohConnection::connect_addr(
+        alice_endpoint.clone(),
+        server_endpoint.addr(),
+        IrohClientOptions::default(),
+    )
+    .await
+    .unwrap();
+    let bob = IrohConnection::connect_addr(
+        bob_endpoint.clone(),
+        server_endpoint.addr(),
+        IrohClientOptions::default(),
+    )
+    .await
+    .unwrap();
+    let named = IrohConnection::connect_addr(
+        named_endpoint.clone(),
+        server_endpoint.addr(),
+        IrohClientOptions::default(),
+    )
+    .await
+    .unwrap();
+    let alice_session = open(&alice, "shared").await.unwrap();
+    assert!(open(&alice, "private").await.is_err());
+    let alice_second = open(&alice, "shared").await.unwrap();
+    assert!(
+        open(&alice, "shared").await.is_err(),
+        "per-key quota must apply across streams"
+    );
+    let bob_session = open(&bob, "shared").await.unwrap();
+    assert!(open(&bob, "private").await.is_err());
+    let named_session = open(&named, "private").await.unwrap();
+    assert!(
+        manager
+            .get(&alice_session, &format!("iroh-key\0{alice_key}"))
+            .is_ok()
+    );
+    assert!(
+        manager
+            .get(&bob_session, &format!("iroh-key\0{bob_key}"))
+            .is_ok()
+    );
+    assert!(
+        manager
+            .get(&named_session, &format!("iroh\0{alice_key}"))
+            .is_ok()
+    );
+    for connection in [&bob, &named] {
+        assert!(
+            call(
+                connection,
+                protocol::method::COMMIT,
+                session_request(&alice_session)
+            )
+            .await
+            .is_err()
+        );
+        assert!(
+            call(
+                connection,
+                protocol::method::CLOSE_CONNECTION,
+                session_request(&alice_session)
+            )
+            .await
+            .is_err()
+        );
+    }
+    alice.close();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while manager.resource_counts().unwrap().sessions != 2 {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert!(
+        manager
+            .get(&alice_second, &format!("iroh-key\0{alice_key}"))
+            .is_err()
+    );
+    call(
+        &bob,
+        protocol::method::COMMIT,
+        session_request(&bob_session),
+    )
+    .await
+    .unwrap();
+    shutdown.cancel();
+    task.await.unwrap();
+    assert_eq!(manager.resource_counts().unwrap().sessions, 0);
+    alice_endpoint.close().await;
+    bob_endpoint.close().await;
+    named_endpoint.close().await;
+    server_endpoint.close().await;
+}
+
 fn statement_request(session_id: &str, statement_id: &str) -> RecordBatch {
     RecordBatch::try_new(
         protocol::statement_schema(),

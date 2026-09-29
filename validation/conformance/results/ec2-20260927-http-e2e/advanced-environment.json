@@ -1,0 +1,23 @@
+{
+  "host": "EC2 <ec2-host>",
+  "platform": "Linux-6.18.41-94.142.amzn2023.aarch64-aarch64-with-glibc2.34",
+  "python": "3.14.7",
+  "transport": "HTTP authenticated loopback",
+  "downstream": "ADBC Driver Foundry DataFusion 0.27.0, real engine execution",
+  "passed": 11,
+  "failed": 0,
+  "skipped": 0,
+  "seconds": 2.6,
+  "dependencies": {
+    "adbc-driver-manager": "1.12.0",
+    "pyarrow": "25.0.1",
+    "pytest": "9.1.1",
+    "pytest-timeout": "2.4.0"
+  },
+  "sha256": {
+    "server": "59284b4f2a44aacc320648891f48365c9c4308afc5875c1d942d85cf56a7f333",
+    "client": "435ec912f11c0e9aa1daf18e199aef73dcdd97f45ea4254dbb1966360301c403",
+    "datafusion": "7ff2fec5694b9b4467a61b87e23fc901c09042317304e6a0733e58a70f338bea",
+    "advanced_tests": "2b0ffa82147a45c0f5b159a3568f4c7449666ab0d2be18842bd35651e98cb597"
+  }
+}

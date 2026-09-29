@@ -1,0 +1,114 @@
+{
+  "transport": "iroh",
+  "public_targets": [
+    "sqlite"
+  ],
+  "session_ttl_seconds": 3600,
+  "reap_interval_seconds": 30,
+  "client_exit_code": -9,
+  "writer_recovered_seconds": 35.055,
+  "write_attempts": [
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0123891590010317
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0112325820009573
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0106001179992745
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0118777319985384
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.011862764000398
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0121156860004703
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0123097200012126
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0122516529991117
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.012317606000579
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0112999619996117
+    },
+    {
+      "ok": false,
+      "locked": true,
+      "read_only": false,
+      "unsupported": false,
+      "exception": "IOException",
+      "seconds": 3.0111568069987698
+    },
+    {
+      "ok": true,
+      "rows": [
+        [
+          1
+        ]
+      ],
+      "seconds": 1.6386600969999563
+    }
+  ],
+  "committed_value_preserved": true,
+  "uncommitted_write_rolled_back": true,
+  "server_survived": true,
+  "same_identity_connection_survived": true,
+  "server_shutdown_clean": true
+}

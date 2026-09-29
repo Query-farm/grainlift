@@ -1,0 +1,21 @@
+All checks passed!
+10 files already formatted
+Success: no issues found in 10 source files
+Skipping files that match this pattern: \.git|\.tox
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/__init__.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/conftest.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/run.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_advanced.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_downstream_failures.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_ingestion.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_statement_lifecycle.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_supervisor.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/test_types_metadata.py
+/home/ec2-user/Development/grainlift-disconnect-20260927/validation/e2e/types_abi.py
+🎉 No violations 🎉
+............x................x.......................................... [ 82%]
+...............                                                          [100%]
+=========================== short test summary info ============================
+XFAIL validation/e2e/test_downstream_failures.py::test_consumed_binding_does_not_crash_native_driver[duckdb] - DuckDB 1.5.5 segfaults on a consumed binding, reproduced without Grainlift; see KNOWN_FAILURES.md
+XFAIL validation/e2e/test_ingestion.py::test_duckdb_inflight_cancellation_and_reuse[statement] - Upstream Rust ADBC manager locks the executing statement mutex: https://github.com/apache/arrow-adbc/issues/4817
+85 passed, 2 xfailed in 34.33s
