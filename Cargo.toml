@@ -65,12 +65,14 @@ vgi-rpc = { version = "0.27.3", default-features = false, features = ["macros"] 
 vgi-rpc-client = { version = "0.27.3", default-features = false, features = ["http"] }
 vgi-rpc-iroh = "0.27.3"
 
-# Development: the host HTTP executor lives on vgi-rpc-rust branch
-# feat/http-executor. Replace these path entries with the pushed git rev before
-# merging. Pin the shared transport graph together to preserve Rust type identity.
+# Pending a crates.io transport release: the host HTTP executor
+# (vgi-rpc-client HttpExecutor, reqwest feature split) on vgi-rpc-rust branch
+# feat/http-executor. Pin the shared transport graph together to preserve Rust
+# type identity.
+# https://github.com/Query-farm/vgi-rpc-rust/commit/2b3d548692a26e17c6faa52c5e2cce2428da5dc3
 [patch.crates-io]
-vgi-rpc = { path = "../vgi-rpc-rust-wasm/vgi-rpc" }
-vgi-rpc-client = { path = "../vgi-rpc-rust-wasm/vgi-rpc-client" }
-vgi-rpc-macros = { path = "../vgi-rpc-rust-wasm/vgi-rpc-macros" }
-vgi-rpc-iroh = { path = "../vgi-rpc-rust-wasm/vgi-rpc-iroh" }
-vgi-iroh-transport = { path = "../vgi-rpc-rust-wasm/vgi-iroh-transport" }
+vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
