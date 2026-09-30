@@ -1426,6 +1426,7 @@ mod tests {
             allow_client_connection_options: false,
             allowed_client_database_options: Vec::new(),
             allowed_client_connection_options: Vec::new(),
+            init_statements: Vec::new(),
         }
     }
 

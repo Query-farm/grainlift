@@ -26,6 +26,8 @@ import pytest
 
 from .transport_support import configure_iroh, configure_mtls, unused_port
 
+SQLITE_BUSY_TIMEOUT_MS = 2000
+
 
 def downstream_library(backend: str) -> str:
     """Resolve an explicit library or the platform entry in a dbc driver manifest."""
@@ -125,6 +127,10 @@ class Proxy:
             + f"entrypoint = {q(self.entrypoint)}\n"
             + 'allowed_client_connection_options = ["adbc.connection.autocommit"]\n'
         )
+        if backend == "sqlite":
+            # The SQLite driver never sets a busy timeout: without one, a lock
+            # still held by a just-closed session fails at once (SQLITE_BUSY).
+            contents += f"init_statements = [{q(f'PRAGMA busy_timeout = {SQLITE_BUSY_TIMEOUT_MS}')}]\n"
         for key, value in self.database_options.items():
             contents += (
                 f'\n[[targets.{backend}.database_options]]\nkey = {q(key)}\ntype = "string"\nvalue = {q(value)}\n'

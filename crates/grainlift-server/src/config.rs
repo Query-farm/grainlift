@@ -223,6 +223,11 @@ pub struct TargetConfig {
     pub allowed_client_database_options: Vec<String>,
     #[serde(default)]
     pub allowed_client_connection_options: Vec<String>,
+    /// SQL run on every new downstream connection, in order, before the
+    /// session is handed out (e.g. `PRAGMA busy_timeout = 5000` for SQLite,
+    /// `SET search_path = ...` for PostgreSQL). A failure fails the open.
+    #[serde(default)]
+    pub init_statements: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -475,6 +480,13 @@ impl Config {
             }
             validate_options(name, "database", &target.database_options)?;
             validate_options(name, "connection", &target.connection_options)?;
+            if target
+                .init_statements
+                .iter()
+                .any(|sql| sql.trim().is_empty())
+            {
+                return Err(format!("target {name:?} has a blank init statement").into());
+            }
             validate_option_policy(
                 name,
                 "database",
@@ -740,6 +752,21 @@ driver = "adbc_driver_sqlite"
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn parses_and_validates_target_init_statements() {
+        let config = |statements: &str| {
+            Config::from_toml(&format!(
+                "[server]\nrequire_authentication = false\n\n{TARGET}\ninit_statements = {statements}\n"
+            ))
+        };
+        let parsed = config(r#"["PRAGMA busy_timeout = 5000"]"#).unwrap();
+        assert_eq!(
+            parsed.targets.values().next().unwrap().init_statements,
+            ["PRAGMA busy_timeout = 5000"]
+        );
+        assert!(config(r#"["  "]"#).is_err());
     }
 
     #[test]
