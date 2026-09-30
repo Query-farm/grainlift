@@ -108,6 +108,8 @@ when the target allows them. See [security](security.md) for the full policy.
 
 DuckDB can load the native Grainlift ADBC client through the published
 [`adbc_scanner` community extension](https://duckdb.org/community_extensions/extensions/adbc_scanner).
+The separate [Python client wheel](python-driver.md) can supply the native
+library path through `adbc_driver_grainlift.driver_path()` after installation.
 The connection path is DuckDB → ADBC scanner → Grainlift client driver →
 Grainlift server → SQLite ADBC driver. The server wheel contains the server;
 the client also needs the separate Grainlift ADBC shared library.

@@ -1,0 +1,104 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+# SPDX-License-Identifier: Apache-2.0
+
+name: Python ADBC driver wheels
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish tested driver wheels to PyPI
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: 0.11.7
+      - run: uvx ruff check packaging/build_driver_context.py packaging/driver
+      - run: uvx ruff format --check packaging/build_driver_context.py packaging/driver
+      - run: uvx --with adbc-driver-manager mypy --strict packaging/build_driver_context.py packaging/driver/python/adbc_driver_grainlift
+      - run: uvx pydoclint --style google packaging/build_driver_context.py packaging/driver/python/adbc_driver_grainlift
+      - run: uv run --no-project --python 3.13 python -m unittest discover -s packaging/driver/tests -p 'test_*.py'
+
+  wheel:
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+          - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu }
+          - { runner: macos-latest, target: aarch64-apple-darwin }
+          - { runner: windows-latest, target: x86_64-pc-windows-msvc }
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: 0.11.7
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.97.1
+      - run: uv python install 3.13 3.14
+      - name: Stage a self-contained driver source distribution
+        run: uv run --no-project --python 3.13 python packaging/build_driver_context.py "$RUNNER_TEMP/grainlift-driver-context"
+      - name: Build portable driver wheel
+        working-directory: ${{ runner.temp }}/grainlift-driver-context
+        run: uvx 'cibuildwheel>=3,<4' --output-dir "${{ github.workspace }}/dist-driver"
+        env:
+          CIBW_BUILD: cp313-*
+          CIBW_SKIP: '*-musllinux* *-win32 *-manylinux_i686'
+          CIBW_ARCHS: native
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+          CIBW_BEFORE_ALL_LINUX: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.97.1
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH" RUSTUP_TOOLCHAIN=1.97.1'
+      - name: Test only the installed driver wheel
+        run: |
+          cargo build --release --locked -p grainlift-server
+          wheel=$(find dist-driver -name '*.whl' -print -quit)
+          server="$(pwd)/target/release/grainlift-server"
+          if [[ "$RUNNER_OS" == Windows ]]; then server="$(cygpath -w "$server.exe")"; fi
+          for python in 3.13 3.14; do
+            uv run --no-project --python "$python" --with "$wheel" --with adbc-driver-sqlite --with pyarrow \
+              python -I packaging/driver/tests/installed_smoke.py --server "$server"
+          done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: driver-wheel-${{ matrix.target }}
+          path: dist-driver/*.whl
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: wheel
+    runs-on: ubuntu-latest
+    environment: pypi-driver
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          pattern: driver-wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
