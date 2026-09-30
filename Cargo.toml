@@ -31,14 +31,14 @@ homepage = "https://query.farm"
 repository = "https://github.com/Query-farm/grainlift"
 
 [workspace.dependencies]
-adbc_core = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "616acfdfcea9b66956fdb3d11437b6cf24edbc39" }
-adbc_driver_manager = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "616acfdfcea9b66956fdb3d11437b6cf24edbc39" }
-adbc_ffi = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "616acfdfcea9b66956fdb3d11437b6cf24edbc39" }
-arrow-array = "59"
-arrow-buffer = "59"
-arrow-ipc = "59"
-arrow-schema = "59"
-axum = "0.7"
+adbc_core = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "c942d481c6e083040c68676e3dd454dad89503e9" }
+adbc_driver_manager = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "c942d481c6e083040c68676e3dd454dad89503e9" }
+adbc_ffi = { version = "0.25.0", git = "https://github.com/apache/arrow-adbc.git", rev = "c942d481c6e083040c68676e3dd454dad89503e9" }
+arrow-array = "60"
+arrow-buffer = "60"
+arrow-ipc = "60"
+arrow-schema = "60"
+axum = "0.8"
 base64 = "0.23"
 clap = { version = "4", features = ["derive", "env"] }
 opentelemetry = { version = "0.32", default-features = false, features = ["trace"] }
@@ -61,18 +61,6 @@ iroh = { version = "=1.1.0", default-features = false, features = ["tls-ring"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 # Minimal feature sets: the client driver builds for wasm32-unknown-emscripten.
 # The server and the native driver transports opt into more in their manifests.
-vgi-rpc = { version = "0.27.3", default-features = false, features = ["macros"] }
-vgi-rpc-client = { version = "0.27.3", default-features = false, features = ["http"] }
-vgi-rpc-iroh = "0.27.3"
-
-# Pending a crates.io transport release: the host HTTP executor
-# (vgi-rpc-client HttpExecutor, reqwest feature split) and the fix that makes
-# EOF without an end-of-stream marker a transport error (Query-farm/vgi-rpc-rust
-# #7). Pin the shared transport graph together to preserve Rust type identity.
-# https://github.com/Query-farm/vgi-rpc-rust/commit/7762c5bfa0e10511c6274743b5206cae6ae4fa7d
-[patch.crates-io]
-vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
-vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
-vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
-vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
-vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
+vgi-rpc = { version = "0.28.0", default-features = false, features = ["macros"] }
+vgi-rpc-client = { version = "0.28.0", default-features = false, features = ["http"] }
+vgi-rpc-iroh = "0.28.0"
