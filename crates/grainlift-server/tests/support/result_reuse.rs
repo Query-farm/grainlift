@@ -52,6 +52,9 @@ impl CountingTcp {
             while !done.load(Ordering::Acquire) {
                 match listener.accept() {
                     Ok((mut socket, _)) => {
+                        // BSD/macOS accepted sockets inherit the listener's
+                        // O_NONBLOCK; the server needs blocking reads.
+                        socket.set_nonblocking(false).unwrap();
                         socket.set_nodelay(true).unwrap();
                         socket
                             .set_read_timeout(Some(Duration::from_secs(3)))
@@ -296,19 +299,17 @@ fn timeout_and_invalid_output_never_enter_the_idle_pool() {
         let server = CountingTcp::start();
         let mut connection = server.connection();
         let mut statement = connection.new_statement().unwrap();
-        statement.set_sql_query("select value from test").unwrap();
         server.fault.store(fault, Ordering::Release);
-        // Setup may fail before a reader exists, or the first pull may detect it.
-        match statement.execute() {
-            Ok(mut reader) => assert!(reader.next().unwrap().is_err()),
-            Err(error) => assert!(matches!(
-                error.status,
-                Status::IO | Status::Timeout | Status::Internal
-            )),
-        }
-        server.wait_active(1);
+        // The faulted result connection (socket 2) is discarded and the read
+        // resumes on a fresh one (socket 3), which completes and is pooled.
         query(&mut statement);
-        assert_eq!(server.count(), 3);
+        server.wait_active(2);
+        query(&mut statement);
+        assert_eq!(
+            server.count(),
+            3,
+            "the resumed connection is reused and the faulted one is not"
+        );
         drop(statement);
         drop(connection);
         server.wait_active(0);

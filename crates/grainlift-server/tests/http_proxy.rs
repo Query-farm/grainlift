@@ -940,3 +940,195 @@ async fn ordinary_adbc_client_reads_multiple_batches_over_raw_iroh() {
     shutdown.cancel();
     task.await.unwrap();
 }
+
+/// Serve `fake_manager` over HTTP, failing `read_result` requests chosen by
+/// `fail`: the server handles the request (advancing the result) and the
+/// response is then replaced by a 502, as when it is lost in transit.
+async fn start_lossy_http_server(
+    fail: impl Fn(usize) -> bool + Clone + Send + Sync + 'static,
+) -> (String, tokio::task::JoinHandle<()>) {
+    use axum::response::IntoResponse;
+
+    let server = Arc::new(build_server(fake_manager(false), "lossy-worker".into()));
+    let state = HttpState::builder().server(server).build();
+    let reads = Arc::new(AtomicUsize::new(0));
+    let router = vgi_rpc::http::build_router(state).layer(axum::middleware::from_fn(
+        move |request: axum::extract::Request, next: axum::middleware::Next| {
+            let reads = Arc::clone(&reads);
+            let fail = fail.clone();
+            async move {
+                let is_read = request.uri().path().contains("read_result");
+                let response = next.run(request).await;
+                if is_read && fail(reads.fetch_add(1, Ordering::SeqCst)) {
+                    let _ = axum::body::to_bytes(response.into_body(), usize::MAX).await;
+                    return axum::http::StatusCode::BAD_GATEWAY.into_response();
+                }
+                response
+            }
+        },
+    ));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let task = tokio::spawn(async move {
+        axum::serve(listener, router).await.unwrap();
+    });
+    (format!("http://{address}"), task)
+}
+
+fn int64_values(batch: &RecordBatch) -> Vec<i64> {
+    batch
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int64Array>()
+        .unwrap()
+        .values()
+        .to_vec()
+}
+
+/// Execute the fake query, calling `between` after the first batch arrives.
+fn stream_values(
+    endpoint: String,
+    between: impl FnOnce(),
+) -> AdbcResult<(Vec<i64>, GrainliftConnection)> {
+    let mut driver = GrainliftDriver;
+    let database = driver.new_database_with_opts([
+        (OptionDatabase::Uri, endpoint.into()),
+        (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+    ])?;
+    let mut connection = database.new_connection()?;
+    let mut values = Vec::new();
+    {
+        let mut statement = connection.new_statement()?;
+        statement.set_sql_query("select value from test")?;
+        let mut reader = statement.execute()?;
+        let first = reader.next().expect("first batch")?;
+        values.extend(int64_values(&first));
+        between();
+        for batch in reader {
+            values.extend(int64_values(&batch.map_err(adbc_core::error::Error::from)?));
+        }
+    }
+    Ok((values, connection))
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn http_result_stream_rereads_a_batch_whose_response_was_lost() {
+    // Request 0 opens the result; request 1 fetches the second batch.
+    let (endpoint, task) = start_lossy_http_server(|read| read == 1).await;
+    // The connection owns a runtime, so it must drop off the async runtime.
+    let values = tokio::task::spawn_blocking(move || stream_values(endpoint, || {}).map(|r| r.0))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(values, vec![1, 2, 3, 4]);
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn http_result_stream_reports_an_unrecoverable_interruption() {
+    let (endpoint, task) = start_lossy_http_server(|read| read >= 1).await;
+    let error = tokio::task::spawn_blocking(move || -> AdbcResult<()> {
+        let error = stream_values(endpoint, || {})
+            .err()
+            .expect("stream must fail");
+        // Arrow stream errors reach the caller through `ArrowError`, so only
+        // the message survives.
+        assert!(
+            error
+                .message
+                .contains("result stream interrupted after 1 batches"),
+            "{}",
+            error.message
+        );
+        Ok(())
+    })
+    .await
+    .unwrap();
+    error.unwrap();
+    task.abort();
+}
+
+/// A TCP proxy whose live connections can be severed on demand.
+struct SeveringProxy {
+    port: u16,
+    live: Arc<std::sync::Mutex<Vec<std::net::TcpStream>>>,
+}
+
+impl SeveringProxy {
+    fn start(upstream: u16) -> Self {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let live = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let registry = Arc::clone(&live);
+        std::thread::spawn(move || {
+            for client in listener.incoming() {
+                let Ok(client) = client else { break };
+                let Ok(server) = std::net::TcpStream::connect(("127.0.0.1", upstream)) else {
+                    break;
+                };
+                registry
+                    .lock()
+                    .unwrap()
+                    .extend([client.try_clone().unwrap(), server.try_clone().unwrap()]);
+                for (mut from, mut to) in [
+                    (client.try_clone().unwrap(), server.try_clone().unwrap()),
+                    (server, client),
+                ] {
+                    std::thread::spawn(move || {
+                        let _ = std::io::copy(&mut from, &mut to);
+                        let _ = to.shutdown(std::net::Shutdown::Both);
+                    });
+                }
+            }
+        });
+        Self { port, live }
+    }
+
+    fn sever(&self) {
+        for stream in self.live.lock().unwrap().drain(..) {
+            let _ = stream.shutdown(std::net::Shutdown::Both);
+        }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn tcp_result_stream_resumes_on_a_new_connection() {
+    let server = Arc::new(build_server(fake_manager(false), "tcp-worker".into()));
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let serve_shutdown = Arc::clone(&shutdown);
+    let (bound_tx, bound_rx) = mpsc::sync_channel(1);
+    let thread = std::thread::spawn(move || {
+        serve_tcp(
+            server,
+            "127.0.0.1",
+            0,
+            None,
+            serve_shutdown,
+            move |_host, port| bound_tx.send(port).unwrap(),
+        )
+        .unwrap();
+    });
+    let port = bound_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+    let proxy = SeveringProxy::start(port);
+    let endpoint = format!("tcp://127.0.0.1:{}", proxy.port);
+    let values = tokio::task::spawn_blocking(move || {
+        let (values, connection) = stream_values(endpoint, || proxy.sever())?;
+        // The session survived, so the connection keeps working.
+        let mut connection = connection;
+        let mut statement = connection.new_statement()?;
+        statement.set_sql_query("select value from test")?;
+        let again: Vec<i64> = statement
+            .execute()?
+            .flat_map(|batch| int64_values(&batch.unwrap()))
+            .collect();
+        assert_eq!(again, vec![1, 2, 3, 4]);
+        AdbcResult::Ok(values)
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(values, vec![1, 2, 3, 4]);
+    shutdown.store(true, Ordering::Release);
+    let _ = std::net::TcpStream::connect(("127.0.0.1", port));
+    thread.join().unwrap();
+}

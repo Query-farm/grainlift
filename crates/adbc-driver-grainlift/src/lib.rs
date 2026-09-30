@@ -1288,8 +1288,53 @@ fn transport_error(message: impl Into<String>) -> Error {
 /// The server no longer has this connection's session: the transport dropped
 /// (which revokes Iroh sessions) or the session idled past its TTL.
 fn is_lost_session(error: &Error) -> bool {
-    (error.status == Status::IO && error.sqlstate == SQLSTATE_CONNECTION_FAILURE)
+    is_transport_failure(error)
         || (error.status == Status::NotFound && error.message.contains("session"))
+}
+
+fn is_transport_failure(error: &Error) -> bool {
+    error.status == Status::IO && error.sqlstate == SQLSTATE_CONNECTION_FAILURE
+}
+
+/// Retry one result-stream read after a transport failure. Safe because
+/// `read_result` is addressed by batch sequence and the server replays the
+/// last batch it produced when asked for the same sequence again, so a
+/// response lost in transit is fetched again rather than skipped. The session
+/// is not replaced: a replacement session would not have the result. If the
+/// session is gone too (an Iroh connection closed, or the TTL expired), the
+/// result is lost and the caller must rerun the query.
+fn retry_result_read<R>(delivered: i64, mut read: impl FnMut() -> Result<R>) -> Result<R> {
+    match read() {
+        Err(error) if is_transport_failure(&error) => resume_after_failure(delivered, error, read),
+        other => other,
+    }
+}
+
+fn resume_after_failure<R>(
+    delivered: i64,
+    failure: Error,
+    mut read: impl FnMut() -> Result<R>,
+) -> Result<R> {
+    let mut last = failure;
+    for delay in RECONNECT_BACKOFF {
+        if !delay.is_zero() {
+            std::thread::sleep(delay);
+        }
+        match read() {
+            Err(error) if is_transport_failure(&error) => last = error,
+            Ok(value) => return Ok(value),
+            Err(error) => return Err(result_lost(delivered, error)),
+        }
+    }
+    Err(result_lost(delivered, last))
+}
+
+fn result_lost(delivered: i64, cause: Error) -> Error {
+    transport_error(format!(
+        "result stream interrupted after {delivered} batches and could not be resumed; \
+         rerun the query ({})",
+        cause.message
+    ))
 }
 
 impl RemoteConnection {
@@ -1603,6 +1648,8 @@ struct RemoteReader {
     schema: SchemaRef,
     mode: RemoteReaderMode,
     finished: bool,
+    /// Batches returned so far: the sequence of the next batch to read.
+    delivered: i64,
 }
 
 enum RemoteReaderMode {
@@ -1698,7 +1745,7 @@ impl ByteReader {
         Ok(Self { tx })
     }
 
-    fn next(&self) -> Result<Option<RecordBatch>> {
+    fn next(&mut self) -> Result<Option<RecordBatch>> {
         let (reply_tx, reply_rx) = mpsc::channel();
         self.tx
             .send(ByteReaderCommand::Next(reply_tx))
@@ -1805,51 +1852,37 @@ impl RemoteReader {
     fn open(remote: Arc<RemoteConnection>, result_id: String, schema: SchemaRef) -> Result<Self> {
         #[cfg(feature = "byte-transports")]
         if !remote.transport.is_http() {
-            let request = RecordBatch::try_new(
-                protocol::read_result_schema(),
-                vec![
-                    Arc::new(StringArray::from(vec![remote.session_id()])),
-                    Arc::new(StringArray::from(vec![result_id.clone()])),
-                    Arc::new(Int64Array::from(vec![0])),
-                ],
-            )?;
-            let RemoteTransport::Byte(byte) = &remote.transport else {
-                unreachable!();
-            };
-            let reader = match ByteReader::open(byte.connector.clone(), request) {
-                Ok(reader) => reader,
-                Err(error) => {
-                    if let Ok(close) = result_request(&remote.session_id(), &result_id) {
-                        let _ = remote.call(protocol::method::CLOSE_RESULT, &close);
+            let reader =
+                match retry_result_read(0, || Self::open_byte_reader(&remote, &result_id, 0)) {
+                    Ok(reader) => reader,
+                    Err(error) => {
+                        if let Ok(close) = result_request(&remote.session_id(), &result_id) {
+                            let _ = remote.call(protocol::method::CLOSE_RESULT, &close);
+                        }
+                        return Err(error);
                     }
-                    return Err(error);
-                }
-            };
+                };
             return Ok(Self {
                 remote,
                 result_id,
                 schema,
                 mode: RemoteReaderMode::Byte(reader),
                 finished: false,
+                delivered: 0,
             });
         }
-        let request = RecordBatch::try_new(
-            protocol::read_result_schema(),
-            vec![
-                Arc::new(StringArray::from(vec![remote.session_id()])),
-                Arc::new(StringArray::from(vec![result_id.clone()])),
-                Arc::new(Int64Array::from(vec![0])),
-            ],
-        )?;
-        let (first, continuation, finished) = remote.with_client(|client| {
-            let mut stream = client
-                .open_producer(protocol::method::READ_RESULT, &request, None, false)
-                .map_err(rpc_error)?;
-            let first = stream.next_with_token().map_err(rpc_error)?;
-            let finished = stream.is_finished();
-            Ok(match first {
-                Some(((batch, _), continuation)) => (Some(batch), continuation, finished),
-                None => (None, None, true),
+        let request = read_result_request(&remote.session_id(), &result_id, 0)?;
+        let (first, continuation, finished) = retry_result_read(0, || {
+            remote.with_client(|client| {
+                let mut stream = client
+                    .open_producer(protocol::method::READ_RESULT, &request, None, false)
+                    .map_err(rpc_error)?;
+                let first = stream.next_with_token().map_err(rpc_error)?;
+                let finished = stream.is_finished();
+                Ok(match first {
+                    Some(((batch, _), continuation)) => (Some(batch), continuation, finished),
+                    None => (None, None, true),
+                })
             })
         })?;
         Ok(Self {
@@ -1861,7 +1894,21 @@ impl RemoteReader {
                 continuation,
             },
             finished,
+            delivered: 0,
         })
+    }
+
+    #[cfg(feature = "byte-transports")]
+    fn open_byte_reader(
+        remote: &RemoteConnection,
+        result_id: &str,
+        sequence: i64,
+    ) -> Result<ByteReader> {
+        let RemoteTransport::Byte(byte) = &remote.transport else {
+            unreachable!();
+        };
+        let request = read_result_request(&remote.session_id(), result_id, sequence)?;
+        ByteReader::open(byte.connector.clone(), request)
     }
 
     fn next_remote(&mut self) -> Result<Option<RecordBatch>> {
@@ -1880,22 +1927,45 @@ impl RemoteReader {
                     self.finished = true;
                     return Ok(None);
                 };
-                let (batch, next_continuation, finished) = self.remote.with_client(|client| {
-                    let mut stream = client.resume_stream(protocol::method::READ_RESULT, token);
-                    let value = stream.next_with_token().map_err(rpc_error)?;
-                    let finished = stream.is_finished();
-                    Ok(match value {
-                        Some(((batch, _), continuation)) => (Some(batch), continuation, finished),
-                        None => (None, None, true),
-                    })
-                })?;
+                // The token carries the batch sequence, so retrying it after a
+                // lost response re-reads the same batch.
+                let remote = &self.remote;
+                let (batch, next_continuation, finished) =
+                    retry_result_read(self.delivered, || {
+                        remote.with_client(|client| {
+                            let mut stream =
+                                client.resume_stream(protocol::method::READ_RESULT, token.clone());
+                            let value = stream.next_with_token().map_err(rpc_error)?;
+                            let finished = stream.is_finished();
+                            Ok(match value {
+                                Some(((batch, _), continuation)) => {
+                                    (Some(batch), continuation, finished)
+                                }
+                                None => (None, None, true),
+                            })
+                        })
+                    })?;
                 *continuation = next_continuation;
                 self.finished = finished || continuation.is_none();
                 Ok(batch)
             }
             #[cfg(feature = "byte-transports")]
             RemoteReaderMode::Byte(reader) => {
-                let batch = reader.next()?;
+                let batch = match reader.next() {
+                    Err(error) if is_transport_failure(&error) => {
+                        // The stream broke; reopen it at the next sequence.
+                        let (remote, result_id, delivered) =
+                            (&self.remote, &self.result_id, self.delivered);
+                        resume_after_failure(delivered, error, || {
+                            let mut replacement =
+                                Self::open_byte_reader(remote, result_id, delivered)?;
+                            let batch = replacement.next()?;
+                            *reader = replacement;
+                            Ok(batch)
+                        })?
+                    }
+                    other => other?,
+                };
                 self.finished = batch.is_none();
                 Ok(batch)
             }
@@ -1916,7 +1986,10 @@ impl Iterator for RemoteReader {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.next_remote() {
-            Ok(Some(batch)) => Some(Ok(batch)),
+            Ok(Some(batch)) => {
+                self.delivered += 1;
+                Some(Ok(batch))
+            }
             Ok(None) => None,
             Err(error) => {
                 self.finished = true;
@@ -2033,6 +2106,17 @@ fn statement_binary_request(
             Arc::new(StringArray::from(vec![session_id.to_string()])),
             Arc::new(StringArray::from(vec![statement_id.to_string()])),
             Arc::new(BinaryArray::from_vec(vec![payload])),
+        ],
+    )?)
+}
+
+fn read_result_request(session_id: &str, result_id: &str, sequence: i64) -> Result<RecordBatch> {
+    Ok(RecordBatch::try_new(
+        protocol::read_result_schema(),
+        vec![
+            Arc::new(StringArray::from(vec![session_id.to_string()])),
+            Arc::new(StringArray::from(vec![result_id.to_string()])),
+            Arc::new(Int64Array::from(vec![sequence])),
         ],
     )?)
 }

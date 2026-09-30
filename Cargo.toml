@@ -66,13 +66,13 @@ vgi-rpc-client = { version = "0.27.3", default-features = false, features = ["ht
 vgi-rpc-iroh = "0.27.3"
 
 # Pending a crates.io transport release: the host HTTP executor
-# (vgi-rpc-client HttpExecutor, reqwest feature split) on vgi-rpc-rust branch
-# feat/http-executor. Pin the shared transport graph together to preserve Rust
-# type identity.
-# https://github.com/Query-farm/vgi-rpc-rust/commit/2b3d548692a26e17c6faa52c5e2cce2428da5dc3
+# (vgi-rpc-client HttpExecutor, reqwest feature split) and the fix that makes
+# EOF without an end-of-stream marker a transport error (Query-farm/vgi-rpc-rust
+# #7). Pin the shared transport graph together to preserve Rust type identity.
+# https://github.com/Query-farm/vgi-rpc-rust/commit/7762c5bfa0e10511c6274743b5206cae6ae4fa7d
 [patch.crates-io]
-vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
-vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
-vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
-vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
-vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "2b3d548692a26e17c6faa52c5e2cce2428da5dc3" }
+vgi-rpc = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
+vgi-rpc-client = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
+vgi-rpc-macros = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
+vgi-rpc-iroh = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
+vgi-iroh-transport = { git = "https://github.com/Query-farm/vgi-rpc-rust", rev = "7762c5bfa0e10511c6274743b5206cae6ae4fa7d" }
