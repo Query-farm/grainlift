@@ -10,6 +10,7 @@
 
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use serde_json::{Map, Value, json};
+use std::collections::BTreeMap;
 
 use crate::*;
 
@@ -216,7 +217,7 @@ fn field(field: &Field) -> Result<Value, ProtocolError> {
         "name": field.name(),
         "type": data_type(field.data_type())?,
         "nullable": field.is_nullable(),
-        "metadata": field.metadata(),
+        "metadata": field.metadata().iter().collect::<BTreeMap<_, _>>(),
     }))
 }
 
@@ -242,7 +243,7 @@ fn data_type(value: &DataType) -> Result<Value, ProtocolError> {
 fn schema(value: &Schema) -> Result<Value, ProtocolError> {
     Ok(json!({
         "fields": value.fields().iter().map(|item| field(item)).collect::<Result<Vec<_>, _>>()?,
-        "metadata": value.metadata(),
+        "metadata": value.metadata().iter().collect::<BTreeMap<_, _>>(),
     }))
 }
 

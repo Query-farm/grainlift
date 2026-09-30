@@ -21,7 +21,7 @@ use std::sync::Arc;
 use adbc_core::error::{Error as AdbcError, Status};
 use adbc_core::options::OptionValue;
 use arrow_array::{Array, BinaryArray, Int64Array, RecordBatch, StringArray};
-use arrow_ipc::convert::fb_to_schema;
+use arrow_ipc::convert::try_fb_to_schema;
 use arrow_ipc::root_as_message;
 use arrow_ipc::writer::{IpcDataGenerator, IpcWriteOptions};
 use arrow_schema::{ArrowError, DataType, Field, Schema, SchemaRef};
@@ -408,7 +408,7 @@ pub fn decode_schema(bytes: &[u8]) -> Result<Schema, ProtocolError> {
     let ipc_schema = message
         .header_as_schema()
         .ok_or(ProtocolError::InvalidSchemaMessage)?;
-    Ok(fb_to_schema(ipc_schema))
+    try_fb_to_schema(ipc_schema).map_err(|_| ProtocolError::InvalidSchemaMessage)
 }
 
 pub fn require_one_row(batch: &RecordBatch) -> Result<(), ProtocolError> {
