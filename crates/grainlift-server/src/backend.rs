@@ -140,11 +140,19 @@ impl Backend for DriverManagerBackend {
                 .into_iter()
                 .map(|(key, value)| (OptionDatabase::from(key.as_str()), value)),
         )?;
-        let connection = database.new_connection_with_opts(
+        let mut connection = database.new_connection_with_opts(
             connection_options
                 .into_iter()
                 .map(|(key, value)| (OptionConnection::from(key.as_str()), value)),
         )?;
+        for sql in &target.init_statements {
+            let mut statement = connection.new_statement()?;
+            statement.set_sql_query(sql)?;
+            // Drain rather than execute_update: e.g. SQLite PRAGMAs return a row.
+            for batch in statement.execute()? {
+                batch?;
+            }
+        }
         Ok(Box::new(ManagerConnection { connection }))
     }
 }
@@ -390,6 +398,7 @@ mod tests {
             allow_client_connection_options: false,
             allowed_client_database_options: vec!["uri".into(), "username".into()],
             allowed_client_connection_options: vec!["adbc.connection.autocommit".into()],
+            init_statements: Vec::new(),
         }
     }
 

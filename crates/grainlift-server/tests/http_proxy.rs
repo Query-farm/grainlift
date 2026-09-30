@@ -368,6 +368,7 @@ async fn ordinary_adbc_client_reads_multiple_remote_batches() {
                 "allowed.int".into(),
                 "allowed.double".into(),
             ],
+            init_statements: Vec::new(),
         },
     );
     targets.insert("other".into(), targets["fake"].clone());
@@ -624,6 +625,7 @@ async fn authentication_is_required() {
                 allow_client_connection_options: false,
                 allowed_client_database_options: Vec::new(),
                 allowed_client_connection_options: Vec::new(),
+                init_statements: Vec::new(),
             },
         )]),
         Duration::from_secs(60),
@@ -670,6 +672,7 @@ fn fake_manager(require_authentication: bool) -> Arc<SessionManager> {
                 allow_client_connection_options: false,
                 allowed_client_database_options: Vec::new(),
                 allowed_client_connection_options: Vec::new(),
+                init_statements: Vec::new(),
             },
         )]),
         Duration::from_secs(60),

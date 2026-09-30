@@ -147,6 +147,9 @@ impl Args {
     }
 }
 
+/// How long a `serve sqlite` session waits on another session's lock.
+const SQLITE_BUSY_TIMEOUT_MS: u32 = 5000;
+
 impl SqliteArgs {
     fn configuration(&self) -> Result<Config> {
         if !self.listen.ip().is_loopback() {
@@ -166,6 +169,9 @@ impl SqliteArgs {
             allow_client_connection_options: false,
             allowed_client_database_options: vec![],
             allowed_client_connection_options: vec!["adbc.connection.autocommit".into()],
+            // The SQLite driver never sets a busy timeout, so without this any
+            // lock held by another session fails at once with SQLITE_BUSY.
+            init_statements: vec![format!("PRAGMA busy_timeout = {SQLITE_BUSY_TIMEOUT_MS}")],
         };
         let config = Config {
             server: ServerConfig {

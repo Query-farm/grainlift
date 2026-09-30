@@ -14,6 +14,8 @@ import adbc_driver_manager as manager
 import pyarrow as pa
 import pytest
 
+from .conftest import SQLITE_BUSY_TIMEOUT_MS
+
 if TYPE_CHECKING:
     from .conftest import Proxy
 
@@ -124,3 +126,13 @@ def test_concurrent_clients_slow_reader_allows_writer(proxy_factory: Any, transp
                 cursor.execute("SELECT COUNT(*) FROM shared_values")
                 assert cursor.fetchone() == (101,)
             assert reader.read_all().column(0).to_pylist() == list(range(7, 100))
+
+
+@pytest.mark.parametrize("transport", ["http", "tcp"])
+def test_target_init_statements_configure_every_session(proxy_factory: Any, transport: str) -> None:
+    """Apply the target's init statements (a SQLite busy timeout) to each new downstream session."""
+    proxy = proxy_factory("sqlite", transport=transport)
+    for principal in ("test", "other"):
+        with proxy.connect(principal=principal) as connection, connection.cursor() as cursor:
+            cursor.execute("PRAGMA busy_timeout")
+            assert cursor.fetchone() == (SQLITE_BUSY_TIMEOUT_MS,)

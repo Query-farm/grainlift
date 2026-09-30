@@ -102,6 +102,10 @@ allowed_client_connection_options = [
   "adbc.connection.db_schema",
   "adbc.connection.transaction.isolation_level",
 ]
+# SQL run on every new downstream connection. The SQLite driver never sets a
+# busy timeout, so without one any lock held by another session fails at once
+# with "database is locked".
+init_statements = ["PRAGMA busy_timeout = 5000"]
 
 [[targets.sqlite.database_options]]
 key = "uri"
