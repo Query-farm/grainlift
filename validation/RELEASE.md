@@ -90,14 +90,13 @@ edits before building; the script rejects package inputs that change during a
 build. Output directories must be new to prevent stale artifacts from passing.
 
 ```sh
-cargo build --locked -p adbc-driver-grainlift
-cargo build --locked --manifest-path ../grainlift-rust-hello-world/Cargo.toml
+cargo build --locked -p adbc-driver-grainlift -p grainlift-synthetic-worker
 python3.13 validation/release_bundle.py build \
   --output target/python-candidate --python 3.13
 
 # Use OpenSSL 3 (including on macOS); never upload the private test keys.
 bash validation/diagnostics/make_test_tls.sh target/python-candidate-tls
-export GRAINLIFT_SYNTHETIC_RUST_SERVER="$(cd ../grainlift-rust-hello-world && pwd)/target/debug/grainlift-rust-hello-world"
+export GRAINLIFT_SYNTHETIC_RUST_SERVER="$PWD/target/debug/grainlift-synthetic-worker"
 export GRAINLIFT_MATCHED_TLS_DIR="$PWD/target/python-candidate-tls"
 
 # On Linux, use libadbc_driver_grainlift.so instead.
@@ -145,7 +144,7 @@ the same runtime matrix on every push/PR against that pinned candidate. Source
 changes in the sibling projects require building and configuring a new
 candidate. The workflow rebuilds the native driver from the current Grainlift
 checkout and uploads runtime evidence even if validation fails. It also builds
-the synthetic Rust example from an explicit Git revision and generates private
+the synthetic Rust worker from `validation/synthetic-worker` and generates private
 test certificates outside the evidence directory. All three native test suites
 receive the same compiled driver. Missing optional hosting dependencies or
 native comparison inputs must not silently reduce coverage: skips fail the gate.

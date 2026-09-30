@@ -42,18 +42,19 @@ without overlapping compilers, tests or profilers.
 ## Matched HTTP and TCP comparison
 
 The experimental `soak.tcp_host` serves the unchanged Python SDK protocol over
-VGI's authenticated TCP transport. Rust uses the sibling example's `--tls-dir`
+VGI's authenticated TCP transport. Rust uses the synthetic worker's `--tls-dir`
 mode. Both are loopback-only, require verified client certificates, and permit
 only the test identity `spiffe://benchmark.test/client`. This older diagnostic
 host is separate from the SDK's supported TCP/mTLS hosting API; see the
 [supported-host qualification](../load-results/ec2-supported-hosting-20260926/README.md).
 
 Install `requirements-granian.txt` and `requirements-mtls.txt` into the remote
-regression environment and build the Rust example in release mode. On EC2:
+regression environment and build the synthetic worker in release mode. On EC2:
 
 ```console
+cargo build --locked --release -p grainlift-synthetic-worker
 bash validation/diagnostics/make_test_tls.sh /private/new-test-certificates
-bash validation/diagnostics/run_transports.sh /absolute/grainlift /absolute/new-evidence /absolute/unchanged-driver.so /absolute/grainlift-rust-hello-world /private/new-test-certificates
+bash validation/diagnostics/run_transports.sh /absolute/grainlift /absolute/new-evidence /absolute/unchanged-driver.so /absolute/grainlift/target/release/grainlift-synthetic-worker /private/new-test-certificates
 ```
 
 The script rotates three repetitions of each of the four combinations, then
@@ -78,7 +79,8 @@ the service, checks accepted RPC connections have drained within five seconds,
 and exits its owning process, which closes the listener. Failure falls back
 to the harness's bounded process termination. This is not active-client
 graceful-shutdown qualification. Rust retains the upstream listener's existing
-limits and shutdown implementation; see the example README for those bounds.
+limits and shutdown implementation; see the [synthetic worker](../synthetic-worker/README.md)
+for those bounds.
 
 The certificate directory is private (umask 077), contains one-day disposable
 keys, and must remain outside committed evidence. Integration tests in
@@ -92,12 +94,13 @@ simultaneous readers, stale sockets, timeout, malformed output and stream errors
 
 ## Matched Rust/Python synthetic worker
 
-Build the sibling [Rust example](https://github.com/Query-farm/grainlift-rust-hello-world)
-in release mode on EC2, using its locked dependencies. With the existing
-regression environment, Python SDK and pinned Granian installed, run:
+Build the [synthetic worker](../synthetic-worker/README.md) in release mode on
+EC2 with the workspace's locked dependencies
+(`cargo build --locked --release -p grainlift-synthetic-worker`). With the
+existing regression environment, Python SDK and pinned Granian installed, run:
 
 ```console
-bash validation/diagnostics/run_matched.sh /absolute/grainlift /absolute/evidence /absolute/unchanged-driver.so /absolute/grainlift-rust-hello-world
+bash validation/diagnostics/run_matched.sh /absolute/grainlift /absolute/evidence /absolute/unchanged-driver.so /absolute/grainlift/target/release/grainlift-synthetic-worker
 ```
 
 The script runs eleven cases sequentially: three rotated repetitions each of
@@ -113,7 +116,7 @@ Run the optional real C-ABI integration test using these environment variables:
 
 ```console
 cd validation/regression
-GRAINLIFT_SYNTHETIC_RUST_SERVER=/absolute/grainlift-rust-hello-world \
+GRAINLIFT_SYNTHETIC_RUST_SERVER=/absolute/grainlift/target/release/grainlift-synthetic-worker \
 GRAINLIFT_MATCHED_DRIVER=/absolute/unchanged-driver.so \
 .venv/bin/pytest -q tests/test_matched.py
 ```

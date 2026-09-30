@@ -16,7 +16,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use adbc_core::error::Result as AdbcResult;
+use adbc_core::error::{Error as AdbcError, Result as AdbcResult, Status};
 use adbc_core::options::{
     AdbcVersion, InfoCode, ObjectDepth, OptionConnection, OptionDatabase, OptionStatement,
     OptionValue,
@@ -27,10 +27,17 @@ use adbc_core::{
 };
 use adbc_driver_manager::{ManagedConnection, ManagedDriver, ManagedStatement};
 use arrow_array::{RecordBatch, RecordBatchReader};
-use arrow_schema::Schema;
+use arrow_schema::{ArrowError, Schema, SchemaRef};
+use vgi_rpc::stream_codec::StreamStateCodec;
 
 use crate::config::{ClientOptionPolicy, TargetConfig};
 
+/// Opens backend connections for a configured target.
+///
+/// [`DriverManagerBackend`] loads real ADBC drivers. A custom backend (for
+/// example a service that answers queries itself) implements this trait and
+/// [`BackendConnection`]/[`BackendStatement`], overriding only the operations
+/// it supports; every other operation returns ADBC `NOT_IMPLEMENTED`.
 pub trait Backend: Send + Sync {
     fn open(
         &self,
@@ -40,67 +47,337 @@ pub trait Backend: Send + Sync {
     ) -> AdbcResult<Box<dyn BackendConnection>>;
 }
 
+/// One server-side ADBC connection.
+///
+/// Only [`new_statement`](Self::new_statement) is required. Every other
+/// method defaults to an ADBC `NOT_IMPLEMENTED` error, including connection
+/// cancellation.
 pub trait BackendConnection: Send {
-    fn cancel_handle(&self) -> Arc<dyn CancelHandle>;
     fn new_statement(&mut self) -> AdbcResult<Box<dyn BackendStatement>>;
-    fn set_option(&mut self, key: &str, value: OptionValue) -> AdbcResult<()>;
-    fn get_option_string(&self, key: &str) -> AdbcResult<String>;
-    fn get_option_bytes(&self, key: &str) -> AdbcResult<Vec<u8>>;
-    fn get_option_int(&self, key: &str) -> AdbcResult<i64>;
-    fn get_option_double(&self, key: &str) -> AdbcResult<f64>;
+
+    fn cancel_handle(&self) -> Arc<dyn CancelHandle> {
+        Arc::new(NotImplementedCancel)
+    }
+    fn set_option(&mut self, _key: &str, _value: OptionValue) -> AdbcResult<()> {
+        not_implemented("set_option")
+    }
+    fn get_option_string(&self, _key: &str) -> AdbcResult<String> {
+        not_implemented("get_option_string")
+    }
+    fn get_option_bytes(&self, _key: &str) -> AdbcResult<Vec<u8>> {
+        not_implemented("get_option_bytes")
+    }
+    fn get_option_int(&self, _key: &str) -> AdbcResult<i64> {
+        not_implemented("get_option_int")
+    }
+    fn get_option_double(&self, _key: &str) -> AdbcResult<f64> {
+        not_implemented("get_option_double")
+    }
     fn get_info(
         &self,
-        codes: Option<HashSet<InfoCode>>,
-    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
+        _codes: Option<HashSet<InfoCode>>,
+    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("get_info")
+    }
     fn get_objects(
         &self,
-        depth: ObjectDepth,
-        catalog: Option<&str>,
-        db_schema: Option<&str>,
-        table_name: Option<&str>,
-        table_type: Option<Vec<&str>>,
-        column_name: Option<&str>,
-    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
+        _depth: ObjectDepth,
+        _catalog: Option<&str>,
+        _db_schema: Option<&str>,
+        _table_name: Option<&str>,
+        _table_type: Option<Vec<&str>>,
+        _column_name: Option<&str>,
+    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("get_objects")
+    }
     fn get_table_schema(
         &self,
-        catalog: Option<&str>,
-        db_schema: Option<&str>,
-        table_name: &str,
-    ) -> AdbcResult<Schema>;
-    fn get_table_types(&self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
-    fn get_statistic_names(&self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
+        _catalog: Option<&str>,
+        _db_schema: Option<&str>,
+        _table_name: &str,
+    ) -> AdbcResult<Schema> {
+        not_implemented("get_table_schema")
+    }
+    fn get_table_types(&self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("get_table_types")
+    }
+    fn get_statistic_names(&self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("get_statistic_names")
+    }
     fn get_statistics(
         &self,
-        catalog: Option<&str>,
-        db_schema: Option<&str>,
-        table_name: Option<&str>,
-        approximate: bool,
-    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
-    fn commit(&mut self) -> AdbcResult<()>;
-    fn rollback(&mut self) -> AdbcResult<()>;
+        _catalog: Option<&str>,
+        _db_schema: Option<&str>,
+        _table_name: Option<&str>,
+        _approximate: bool,
+    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("get_statistics")
+    }
+    fn commit(&mut self) -> AdbcResult<()> {
+        not_implemented("commit")
+    }
+    fn rollback(&mut self) -> AdbcResult<()> {
+        not_implemented("rollback")
+    }
     fn read_partition(
         &self,
-        partition: &[u8],
-    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
+        _partition: &[u8],
+    ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("read_partition")
+    }
 }
 
+/// One server-side ADBC statement.
+///
+/// Every method defaults to an ADBC `NOT_IMPLEMENTED` error. A query backend
+/// typically overrides [`set_sql_query`](Self::set_sql_query) and either
+/// [`execute`](Self::execute), for results read from a
+/// [`RecordBatchReader`], or [`execute_result`](Self::execute_result), which
+/// can also return a serializable [`ResultProducer`].
 pub trait BackendStatement: Send {
-    fn set_option(&mut self, key: &str, value: OptionValue) -> AdbcResult<()>;
-    fn get_option_string(&self, key: &str) -> AdbcResult<String>;
-    fn get_option_bytes(&self, key: &str) -> AdbcResult<Vec<u8>>;
-    fn get_option_int(&self, key: &str) -> AdbcResult<i64>;
-    fn get_option_double(&self, key: &str) -> AdbcResult<f64>;
-    fn bind(&mut self, batch: RecordBatch) -> AdbcResult<()>;
-    fn bind_stream(&mut self, reader: Box<dyn RecordBatchReader + Send>) -> AdbcResult<()>;
-    fn set_sql_query(&mut self, query: &str) -> AdbcResult<()>;
-    fn set_substrait_plan(&mut self, plan: &[u8]) -> AdbcResult<()>;
-    fn prepare(&mut self) -> AdbcResult<()>;
-    fn execute(&mut self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>>;
-    fn execute_update(&mut self) -> AdbcResult<Option<i64>>;
-    fn execute_schema(&mut self) -> AdbcResult<Schema>;
-    fn execute_partitions(&mut self) -> AdbcResult<PartitionedResult>;
-    fn get_parameter_schema(&self) -> AdbcResult<Schema>;
-    fn cancel_handle(&self) -> Arc<dyn CancelHandle>;
+    fn set_option(&mut self, _key: &str, _value: OptionValue) -> AdbcResult<()> {
+        not_implemented("set_option")
+    }
+    fn get_option_string(&self, _key: &str) -> AdbcResult<String> {
+        not_implemented("get_option_string")
+    }
+    fn get_option_bytes(&self, _key: &str) -> AdbcResult<Vec<u8>> {
+        not_implemented("get_option_bytes")
+    }
+    fn get_option_int(&self, _key: &str) -> AdbcResult<i64> {
+        not_implemented("get_option_int")
+    }
+    fn get_option_double(&self, _key: &str) -> AdbcResult<f64> {
+        not_implemented("get_option_double")
+    }
+    fn bind(&mut self, _batch: RecordBatch) -> AdbcResult<()> {
+        not_implemented("bind")
+    }
+    fn bind_stream(&mut self, _reader: Box<dyn RecordBatchReader + Send>) -> AdbcResult<()> {
+        not_implemented("bind_stream")
+    }
+    fn set_sql_query(&mut self, _query: &str) -> AdbcResult<()> {
+        not_implemented("set_sql_query")
+    }
+    fn set_substrait_plan(&mut self, _plan: &[u8]) -> AdbcResult<()> {
+        not_implemented("set_substrait_plan")
+    }
+    fn prepare(&mut self) -> AdbcResult<()> {
+        not_implemented("prepare")
+    }
+    /// Execute the statement and return a reader that owns the result cursor.
+    fn execute(&mut self) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        not_implemented("execute")
+    }
+    /// Execute the statement for the service's `execute` method.
+    ///
+    /// The default wraps [`execute`](Self::execute). Override this instead to
+    /// return [`QueryResult::from_producer`], whose state travels in HTTP
+    /// continuation tokens rather than in server memory.
+    fn execute_result(&mut self) -> AdbcResult<QueryResult> {
+        self.execute().map(QueryResult::from_reader)
+    }
+    fn execute_update(&mut self) -> AdbcResult<Option<i64>> {
+        not_implemented("execute_update")
+    }
+    fn execute_schema(&mut self) -> AdbcResult<Schema> {
+        not_implemented("execute_schema")
+    }
+    fn execute_partitions(&mut self) -> AdbcResult<PartitionedResult> {
+        not_implemented("execute_partitions")
+    }
+    fn get_parameter_schema(&self) -> AdbcResult<Schema> {
+        not_implemented("get_parameter_schema")
+    }
+    fn cancel_handle(&self) -> Arc<dyn CancelHandle> {
+        Arc::new(NotImplementedCancel)
+    }
+}
+
+fn not_implemented<T>(operation: &str) -> AdbcResult<T> {
+    Err(AdbcError::with_message_and_status(
+        format!("{operation} is not implemented by this backend"),
+        Status::NotImplemented,
+    ))
+}
+
+/// Cancellation handle used by the default `cancel_handle` implementations.
+struct NotImplementedCancel;
+
+impl CancelHandle for NotImplementedCancel {
+    fn try_cancel(&self) -> AdbcResult<()> {
+        not_implemented("cancel")
+    }
+}
+
+/// Serializable result state that produces one batch per call.
+///
+/// An alternative to returning a [`RecordBatchReader`]: the value's fields
+/// hold everything needed to produce the rest of the result. Return it from
+/// [`BackendStatement::execute_result`] with [`QueryResult::from_producer`].
+/// Over HTTP the service encodes the producer into the sealed `read_result`
+/// continuation token after every batch, so the server keeps no iterator,
+/// cursor or replay batch between fetches, and a retried fetch re-produces its
+/// batch from the token's state. Byte transports (TCP, mTLS and Iroh) drive
+/// the same encoded state within one stream.
+///
+/// Encoding uses VGI-RPC's [`StreamStateCodec`]; derive it with
+/// `#[derive(serde::Serialize, serde::Deserialize, vgi_rpc::StreamState)]`.
+/// Keep sockets, files and backend cursors out of the state; results that
+/// need them should return a reader instead. The encoded state is bounded by
+/// [`SessionManager::with_producer_state_limit`](crate::session::SessionManager::with_producer_state_limit)
+/// (64 KiB by default).
+pub trait ResultProducer: StreamStateCodec + Send + 'static {
+    /// Return the next batch and advance the state, or `None` at the end.
+    fn produce(&mut self) -> AdbcResult<Option<RecordBatch>>;
+}
+
+/// The result of [`BackendStatement::execute_result`]: a known schema and
+/// either a reader or a serializable [`ResultProducer`].
+pub struct QueryResult {
+    schema: SchemaRef,
+    source: QuerySource,
+}
+
+enum QuerySource {
+    Reader(Box<dyn RecordBatchReader + Send + 'static>),
+    Producer(Box<dyn ErasedProducer>, ProducerDecoder),
+}
+
+impl QueryResult {
+    /// A result read from `reader`, which owns any cursor resources.
+    pub fn from_reader(reader: Box<dyn RecordBatchReader + Send + 'static>) -> Self {
+        Self {
+            schema: reader.schema(),
+            source: QuerySource::Reader(reader),
+        }
+    }
+
+    /// A result whose state is carried by a serializable producer. Every
+    /// produced batch must have exactly `schema`.
+    pub fn from_producer<P: ResultProducer>(schema: SchemaRef, producer: P) -> Self {
+        Self {
+            schema,
+            source: QuerySource::Producer(Box::new(producer), decode_producer::<P>),
+        }
+    }
+
+    /// The schema shared by every batch of this result.
+    pub fn schema(&self) -> SchemaRef {
+        self.schema.clone()
+    }
+
+    /// Whether this result is backed by a [`ResultProducer`].
+    pub fn is_producer(&self) -> bool {
+        matches!(self.source, QuerySource::Producer(..))
+    }
+
+    /// Read the result in memory, driving a producer until it is exhausted.
+    pub fn into_reader(self) -> Box<dyn RecordBatchReader + Send + 'static> {
+        match self.source {
+            QuerySource::Reader(reader) => reader,
+            QuerySource::Producer(producer, _) => Box::new(ProducerReader {
+                schema: self.schema,
+                producer: Some(producer),
+            }),
+        }
+    }
+
+    pub(crate) fn into_parts(self) -> (SchemaRef, ResultSource) {
+        let source = match self.source {
+            QuerySource::Reader(reader) => ResultSource::Reader(reader),
+            QuerySource::Producer(producer, decode) => ResultSource::Producer(producer, decode),
+        };
+        (self.schema, source)
+    }
+}
+
+impl From<Box<dyn RecordBatchReader + Send + 'static>> for QueryResult {
+    fn from(reader: Box<dyn RecordBatchReader + Send + 'static>) -> Self {
+        Self::from_reader(reader)
+    }
+}
+
+pub(crate) enum ResultSource {
+    Reader(Box<dyn RecordBatchReader + Send + 'static>),
+    Producer(Box<dyn ErasedProducer>, ProducerDecoder),
+}
+
+/// Restores the one producer type a result was created with.
+pub(crate) type ProducerDecoder = fn(&[u8]) -> AdbcResult<Box<dyn ErasedProducer>>;
+
+pub(crate) trait ErasedProducer: Send {
+    fn produce(&mut self) -> AdbcResult<Option<RecordBatch>>;
+    fn encode(&self) -> AdbcResult<Vec<u8>>;
+}
+
+impl<P: ResultProducer> ErasedProducer for P {
+    fn produce(&mut self) -> AdbcResult<Option<RecordBatch>> {
+        ResultProducer::produce(self)
+    }
+
+    fn encode(&self) -> AdbcResult<Vec<u8>> {
+        // The type name guards against restoring state as a different type.
+        let name = std::any::type_name::<P>().as_bytes();
+        let state = StreamStateCodec::encode(self).map_err(|_| {
+            AdbcError::with_message_and_status(
+                "Result producer state could not be encoded",
+                Status::InvalidData,
+            )
+        })?;
+        let mut encoded = Vec::with_capacity(name.len() + 1 + state.len());
+        encoded.extend_from_slice(name);
+        encoded.push(0);
+        encoded.extend_from_slice(&state);
+        Ok(encoded)
+    }
+}
+
+fn decode_producer<P: ResultProducer>(encoded: &[u8]) -> AdbcResult<Box<dyn ErasedProducer>> {
+    let name = std::any::type_name::<P>().as_bytes();
+    let state = encoded
+        .strip_prefix(name)
+        .and_then(|rest| rest.strip_prefix(&[0]))
+        .ok_or_else(|| {
+            AdbcError::with_message_and_status("Unknown result producer", Status::InvalidData)
+        })?;
+    let producer = <P as StreamStateCodec>::decode(state).map_err(|_| {
+        AdbcError::with_message_and_status(
+            "Result producer state could not be decoded",
+            Status::InvalidData,
+        )
+    })?;
+    Ok(Box::new(producer))
+}
+
+struct ProducerReader {
+    schema: SchemaRef,
+    producer: Option<Box<dyn ErasedProducer>>,
+}
+
+impl Iterator for ProducerReader {
+    type Item = Result<RecordBatch, ArrowError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let producer = self.producer.as_mut()?;
+        match producer.produce() {
+            Ok(Some(batch)) => Some(Ok(batch)),
+            Ok(None) => {
+                self.producer = None;
+                None
+            }
+            Err(error) => {
+                self.producer = None;
+                Some(Err(ArrowError::ExternalError(Box::new(error))))
+            }
+        }
+    }
+}
+
+impl RecordBatchReader for ProducerReader {
+    fn schema(&self) -> SchemaRef {
+        self.schema.clone()
+    }
 }
 
 #[derive(Default)]

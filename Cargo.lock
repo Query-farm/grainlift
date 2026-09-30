@@ -1543,6 +1543,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "grainlift-synthetic-worker"
+version = "0.4.0"
+dependencies = [
+ "adbc_core",
+ "arrow-array",
+ "arrow-schema",
+ "axum",
+ "clap",
+ "grainlift-server",
+ "rustls",
+ "serde_json",
+ "tokio",
+ "vgi-rpc",
+]
+
+[[package]]
 name = "half"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

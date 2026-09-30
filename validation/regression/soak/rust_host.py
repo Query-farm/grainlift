@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Supervise the sibling Rust synthetic server through the trusted soak pipe."""
+"""Supervise the Rust synthetic worker (validation/synthetic-worker) through the trusted soak pipe."""
 
 import json
 import os

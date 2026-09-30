@@ -19,6 +19,7 @@ members = [
     "crates/grainlift-protocol",
     "crates/grainlift-server",
     "crates/adbc-driver-grainlift",
+    "validation/synthetic-worker",
 ]
 
 [workspace.package]

@@ -67,8 +67,11 @@ python -m pytest validation/conformance \
 
 Use the Python SDK from the reviewed wheel candidate or a deliberate development
 checkout. `python_host` uses the existing regression synthetic workload. The
-Rust example accepts the same command-line contract for HTTP and mTLS; the
-other transport adapters are provided by the Go and TypeScript examples.
+Rust [synthetic worker](../synthetic-worker/README.md) accepts the same
+command-line contract for HTTP and mTLS; build it with
+`cargo build --locked -p grainlift-synthetic-worker` and pass
+`--worker-command '["/absolute/path/target/debug/grainlift-synthetic-worker"]'`.
+The other transport adapters are provided by the Go and TypeScript examples.
 
 ## Worker process contract
 

@@ -422,6 +422,26 @@ transports:
 `wasm32-unknown-emscripten`; the C declarations for `host-http` are in
 `crates/adbc-driver-grainlift/src/host_http.rs`.
 
+### Serving your own backend
+
+The `grainlift-server` library also serves a backend written in Rust instead of
+a downstream ADBC driver. Implement `backend::Backend`, `BackendConnection` and
+`BackendStatement`; every operation you do not override returns ADBC
+`NOT_IMPLEMENTED`. `BackendStatement::execute` returns a record batch reader.
+`execute_result` can instead return `QueryResult::from_producer`, a
+`ResultProducer` whose state (derived with VGI-RPC's `StreamState`) travels in
+the sealed HTTP continuation token after every batch, so the server keeps no
+iterator or replay batch and a retried fetch recomputes its batch.
+
+`dev::run(backend, "target", RunOptions::new("description"))` serves it on
+loopback for development with `--host http|mtls`, `--port` and
+`--auth token|anonymous` flags. `hosting::http_authenticator` combines static
+bearer tokens with optional anonymous access: requests without credentials act
+as a separate anonymous principal, while a wrong token is rejected rather than
+downgraded. See
+[grainlift-rust-hello-world](https://github.com/Query-farm/grainlift-rust-hello-world)
+for a complete example.
+
 ## Stateful sessions and deployment
 
 ADBC is stateful. One Grainlift server process owns each downstream database,
@@ -550,7 +570,9 @@ the SDK's default host remains unchanged.
 The [matched synthetic comparison](validation/load-results/ec2-matched-synthetic-20260926/README.md)
 uses one HTTP client and identical Arrow results: Rust averages 9.39 ms/query,
 Python/Granian 17.72 ms, and Python/Granian with process isolation 22.19 ms.
-The Rust example reuses the server library and is available in
+The Rust synthetic worker reuses the server library and lives in
+[validation/synthetic-worker](validation/synthetic-worker/README.md). For a
+hello-world service to learn from, see
 [grainlift-rust-hello-world](https://github.com/Query-farm/grainlift-rust-hello-world).
 The [HTTP/TCP comparison](validation/load-results/ec2-transport-comparison-20260926/README.md)
 then measured Python at 17.60 ms over HTTP and 18.72 ms over TCP/mTLS. TCP
@@ -568,6 +590,7 @@ per ADBC connection. All 16,000 measured queries passed with full cleanup.
 - `crates/grainlift-protocol`: typed ADBC-over-VGI wire contract
 - `examples`: client examples
 - `validation`: C-ABI, Foundry, fault, payload, and load tests
+- `validation/synthetic-worker`: bounded Rust fixture for conformance and matched benchmarks
 - `docs`: operator-facing security and process-isolation guidance
 
 ## License

@@ -18,7 +18,7 @@ set -euo pipefail
 repo=${1:?Pass the absolute Grainlift checkout}
 evidence=${2:?Pass a new evidence directory}
 driver=${3:?Pass the unchanged native driver shared library}
-server=${4:?Pass the release Rust synthetic server}
+server=${4:?Pass the release synthetic worker (target/release/grainlift-synthetic-worker)}
 certificates=${5:?Pass the private test certificate directory}
 mkdir -p "$evidence"
 test ! -e "$evidence/stages.tsv"

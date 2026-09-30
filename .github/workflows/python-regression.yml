@@ -120,15 +120,8 @@ jobs:
           uv run --no-project --python '${{ matrix.python }}' python validation/release_bundle.py fetch
           --url "$CANDIDATE_URL" --sha256 "$CANDIDATE_SHA256" --output target/python-candidate
       - run: cargo build --locked -p adbc-driver-grainlift
-      - name: Check out the pinned synthetic Rust worker
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: Query-farm/grainlift-rust-hello-world
-          ref: 4aca4a0c6b7ee98fd616303c568f13af5c2cd0a0
-          path: target/rust-example
-          persist-credentials: false
       - name: Build the synthetic worker for cross-host lifecycle tests
-        run: cargo build --locked --manifest-path target/rust-example/Cargo.toml --target-dir target
+        run: cargo build --locked -p grainlift-synthetic-worker
       - name: Generate private test certificates
         shell: bash
         run: |
@@ -144,7 +137,7 @@ jobs:
             Linux) driver="$PWD/target/debug/libadbc_driver_grainlift.so" ;;
             *) exit 1 ;;
           esac
-          export GRAINLIFT_SYNTHETIC_RUST_SERVER="$PWD/target/debug/grainlift-rust-hello-world"
+          export GRAINLIFT_SYNTHETIC_RUST_SERVER="$PWD/target/debug/grainlift-synthetic-worker"
           export GRAINLIFT_MATCHED_TLS_DIR="$RUNNER_TEMP/grainlift-candidate-tls"
           uv run --no-project --python '${{ matrix.python }}' python validation/release_bundle.py check \
             --bundle target/python-candidate/bundle --python '${{ matrix.python }}' \

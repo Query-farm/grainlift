@@ -21,10 +21,12 @@ use adbc_core::options::{InfoCode, ObjectDepth, OptionValue};
 use arrow_array::{BooleanArray, RecordBatch};
 use grainlift_protocol as protocol;
 use serde::{Deserialize, Serialize};
+use vgi_rpc::StreamState;
 use vgi_rpc::server::{MethodInfo, MethodType, RpcServer, StateDecoder};
 use vgi_rpc::stream::{
     ExchangeState, OutputCollector, ProducerState, StreamResult, StreamStateKind,
 };
+use vgi_rpc::stream_codec::StreamStateCodec;
 use vgi_rpc::{CallContext, Request, RpcError};
 
 use crate::session::{BindMode, SessionManager};
@@ -93,28 +95,46 @@ impl ExchangeState for BindExchange {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// Sealed into each `read_result` continuation token. Reader results keep
+/// their cursor in the session; producer results carry their encoded state
+/// here instead.
+#[derive(Clone, Debug, Serialize, Deserialize, StreamState)]
 struct ResultCursor {
     session_id: String,
     result_id: String,
     sequence: i64,
+    producer: Option<Vec<u8>>,
 }
 
-struct ResultProducer {
+struct ResultStream {
     manager: Arc<SessionManager>,
     cursor: ResultCursor,
 }
 
-impl ProducerState for ResultProducer {
+impl ProducerState for ResultStream {
     fn produce(&mut self, out: &mut OutputCollector, ctx: &CallContext) -> vgi_rpc::Result<()> {
         let principal = self.manager.principal(&ctx.auth)?;
         let session = self
             .manager
             .get(&self.cursor.session_id, &principal)
             .map_err(adbc_rpc_error)?;
-        let batch = session
-            .next_result(&self.cursor.result_id, self.cursor.sequence)
-            .map_err(adbc_rpc_error)?;
+        let batch = match self.cursor.producer.take() {
+            None => session
+                .next_result(&self.cursor.result_id, self.cursor.sequence)
+                .map_err(adbc_rpc_error)?,
+            Some(state) => {
+                let (batch, advanced) = session
+                    .next_produced_result(
+                        &self.cursor.result_id,
+                        self.cursor.sequence,
+                        state,
+                        response_limit(ctx),
+                    )
+                    .map_err(adbc_rpc_error)?;
+                self.cursor.producer = Some(advanced);
+                batch
+            }
+        };
         match batch {
             Some(batch) => {
                 out.emit(batch)?;
@@ -134,8 +154,7 @@ impl ProducerState for ResultProducer {
     }
 
     fn encode_state(&self) -> vgi_rpc::Result<Vec<u8>> {
-        serde_json::to_vec(&self.cursor)
-            .map_err(|error| RpcError::runtime_error(format!("encode result cursor: {error}")))
+        self.cursor.encode()
     }
 }
 
@@ -619,11 +638,11 @@ fn register_statement_operations(
             session
                 .invalidate_statement_results(&statement_id)
                 .map_err(adbc_rpc_error)?;
-            let reader = session
-                .with_statement(&statement_id, |statement| statement.execute())
+            let result = session
+                .with_statement(&statement_id, |statement| statement.execute_result())
                 .map_err(adbc_rpc_error)?;
             let (result_id, schema) = session
-                .insert_statement_result(&statement_id, reader)
+                .insert_statement_query_result(&statement_id, result)
                 .map_err(adbc_rpc_error)?;
             Ok(Some(result_response(
                 &session,
@@ -763,9 +782,9 @@ fn register_result_operations(server: &mut RpcServer, manager: Arc<SessionManage
     let handler_manager = manager.clone();
     let decoder_manager = manager;
     let decoder: StateDecoder = Arc::new(move |bytes: &[u8]| {
-        let cursor: ResultCursor = serde_json::from_slice(bytes)
+        let cursor = ResultCursor::decode(bytes)
             .map_err(|error| RpcError::protocol_error(format!("decode result cursor: {error}")))?;
-        Ok(StreamStateKind::Producer(Box::new(ResultProducer {
+        Ok(StreamStateKind::Producer(Box::new(ResultStream {
             manager: decoder_manager.clone(),
             cursor,
         })))
@@ -780,15 +799,18 @@ fn register_result_operations(server: &mut RpcServer, manager: Arc<SessionManage
                 let result_id = string(request, "result_id")?.to_string();
                 let sequence = protocol::int64_value(&request.batch, "sequence")
                     .map_err(protocol_rpc_error)?;
-                let schema = session.result_schema(&result_id).map_err(adbc_rpc_error)?;
+                let (schema, producer) = session
+                    .open_result_stream(&result_id, sequence)
+                    .map_err(adbc_rpc_error)?;
                 Ok(StreamResult::producer(
                     schema,
-                    Box::new(ResultProducer {
+                    Box::new(ResultStream {
                         manager: handler_manager.clone(),
                         cursor: ResultCursor {
                             session_id,
                             result_id,
                             sequence,
+                            producer,
                         },
                     }),
                 ))

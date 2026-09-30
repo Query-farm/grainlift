@@ -26,9 +26,16 @@ use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::SchemaRef;
 use uuid::Uuid;
 
-use crate::backend::{Backend, BackendConnection, BackendStatement};
+use crate::backend::{
+    Backend, BackendConnection, BackendStatement, ErasedProducer, ProducerDecoder, QueryResult,
+    ResultSource,
+};
 use crate::bind_upload::BindUpload;
 use crate::config::{ClientOptionPolicy, TargetConfig};
+
+/// Default bound on the encoded [`ResultProducer`](crate::backend::ResultProducer)
+/// state carried in each continuation token.
+pub const DEFAULT_PRODUCER_STATE_BYTES: usize = 64 * 1024;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SessionLimits {
@@ -109,6 +116,7 @@ pub struct SessionManager {
     limits: SessionLimits,
     authorizer: TargetAuthorizer,
     operation_timeout: Duration,
+    producer_state_bytes: usize,
     closing: AtomicBool,
 }
 
@@ -145,6 +153,7 @@ pub struct Session {
     connection_option_policy: ClientOptionPolicy,
     bind_uploads: Mutex<HashMap<String, BindUploadEntry>>,
     limits: SessionLimits,
+    producer_state_bytes: usize,
 }
 
 struct SessionResources {
@@ -227,12 +236,25 @@ pub struct StatementEntry {
 
 pub struct ResultEntry {
     owner_statement_id: Option<String>,
-    reader: Box<dyn RecordBatchReader + Send + 'static>,
+    source: EntrySource,
     schema: SchemaRef,
     next_sequence: i64,
-    last: Option<(i64, RecordBatch)>,
-    terminal_error: Option<(i64, AdbcError)>,
     finished: bool,
+}
+
+enum EntrySource {
+    /// A live reader plus the last batch, retained for replay.
+    Reader {
+        reader: Box<dyn RecordBatchReader + Send + 'static>,
+        last: Option<(i64, RecordBatch)>,
+        terminal_error: Option<(i64, AdbcError)>,
+    },
+    /// Only the initial encoded state; later state lives in continuation
+    /// tokens, so no iterator or replay batch is retained.
+    Producer {
+        decode: ProducerDecoder,
+        initial_state: Vec<u8>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -304,8 +326,19 @@ impl SessionManager {
             limits,
             authorizer,
             operation_timeout,
+            producer_state_bytes: DEFAULT_PRODUCER_STATE_BYTES,
             closing: AtomicBool::new(false),
         }
+    }
+
+    /// Bound the encoded [`ResultProducer`](crate::backend::ResultProducer)
+    /// state carried in each continuation token (default
+    /// [`DEFAULT_PRODUCER_STATE_BYTES`]). Larger state fails execution or the
+    /// fetch with ADBC `INVALID_DATA`.
+    pub fn with_producer_state_limit(mut self, bytes: usize) -> Self {
+        debug_assert!(bytes > 0);
+        self.producer_state_bytes = bytes;
+        self
     }
 
     pub fn principal(&self, auth: &vgi_rpc::AuthContext) -> vgi_rpc::Result<String> {
@@ -450,6 +483,7 @@ impl SessionManager {
             connection_option_policy,
             bind_uploads: Mutex::new(HashMap::new()),
             limits: self.limits,
+            producer_state_bytes: self.producer_state_bytes,
         });
         let mut registry = self
             .registry
@@ -990,7 +1024,7 @@ impl Session {
         &self,
         reader: Box<dyn RecordBatchReader + Send + 'static>,
     ) -> Result<(String, SchemaRef), AdbcError> {
-        self.insert_owned_result(None, reader)
+        self.insert_owned_result(None, QueryResult::from_reader(reader))
     }
 
     pub fn insert_statement_result(
@@ -998,8 +1032,18 @@ impl Session {
         statement_id: &str,
         reader: Box<dyn RecordBatchReader + Send + 'static>,
     ) -> Result<(String, SchemaRef), AdbcError> {
+        self.insert_statement_query_result(statement_id, QueryResult::from_reader(reader))
+    }
+
+    /// Register a statement's result, replacing its earlier results. A
+    /// producer's initial state is encoded and size-checked now.
+    pub fn insert_statement_query_result(
+        &self,
+        statement_id: &str,
+        result: QueryResult,
+    ) -> Result<(String, SchemaRef), AdbcError> {
         self.invalidate_statement_results(statement_id)?;
-        self.insert_owned_result(Some(statement_id.to_string()), reader)
+        self.insert_owned_result(Some(statement_id.to_string()), result)
     }
 
     pub fn invalidate_statement_results(&self, statement_id: &str) -> Result<(), AdbcError> {
@@ -1023,12 +1067,24 @@ impl Session {
     fn insert_owned_result(
         &self,
         owner_statement_id: Option<String>,
-        reader: Box<dyn RecordBatchReader + Send + 'static>,
+        result: QueryResult,
     ) -> Result<(String, SchemaRef), AdbcError> {
         let resources = Arc::clone(&self.resources);
         let limit = self.limits.max_results_per_session;
+        let state_limit = self.producer_state_bytes;
         self.worker.call(move || {
-            let schema = reader.schema();
+            let (schema, source) = result.into_parts();
+            let source = match source {
+                ResultSource::Reader(reader) => EntrySource::Reader {
+                    reader,
+                    last: None,
+                    terminal_error: None,
+                },
+                ResultSource::Producer(producer, decode) => EntrySource::Producer {
+                    decode,
+                    initial_state: encode_producer(producer.as_ref(), state_limit)?,
+                },
+            };
             let id = Uuid::new_v4().to_string();
             let mut results = resources
                 .results
@@ -1041,11 +1097,9 @@ impl Session {
                 id.clone(),
                 Arc::new(Mutex::new(ResultEntry {
                     owner_statement_id,
-                    reader,
+                    source,
                     schema: schema.clone(),
                     next_sequence: 0,
-                    last: None,
-                    terminal_error: None,
                     finished: false,
                 })),
             );
@@ -1069,6 +1123,100 @@ impl Session {
                 .map_err(|_| internal("result is poisoned"))?
                 .schema();
             Ok(schema)
+        })
+    }
+
+    /// Open a `read_result` stream: the result schema and, for a producer
+    /// result, its initial encoded state. Producer results resume only from
+    /// continuation tokens, so they accept only sequence 0 here.
+    pub fn open_result_stream(
+        &self,
+        id: &str,
+        sequence: i64,
+    ) -> Result<(SchemaRef, Option<Vec<u8>>), AdbcError> {
+        let resources = Arc::clone(&self.resources);
+        let id = id.to_string();
+        self.worker.call(move || {
+            let result = resources
+                .results
+                .lock()
+                .map_err(|_| internal("result registry is poisoned"))?
+                .get(&id)
+                .cloned()
+                .ok_or_else(|| not_found("result"))?;
+            let entry = result.lock().map_err(|_| internal("result is poisoned"))?;
+            match &entry.source {
+                EntrySource::Reader { .. } => Ok((entry.schema(), None)),
+                EntrySource::Producer { initial_state, .. } if sequence == 0 => {
+                    Ok((entry.schema(), Some(initial_state.clone())))
+                }
+                EntrySource::Producer { .. } => Err(AdbcError::with_message_and_status(
+                    "Producer results resume from continuation tokens",
+                    Status::InvalidArguments,
+                )),
+            }
+        })
+    }
+
+    /// Resume a producer result from continuation-token `state`, produce the
+    /// batch at `sequence`, and return it with the state for the next token.
+    ///
+    /// Fetching the previous sequence again re-produces its batch from the
+    /// token's state; older sequences fail. Batches must match the result
+    /// schema and stay within `max_batch_bytes`. Any production, validation or
+    /// encoding failure closes the result.
+    pub fn next_produced_result(
+        &self,
+        id: &str,
+        sequence: i64,
+        state: Vec<u8>,
+        max_batch_bytes: usize,
+    ) -> Result<(Option<RecordBatch>, Vec<u8>), AdbcError> {
+        let resources = Arc::clone(&self.resources);
+        let id = id.to_string();
+        let state_limit = self.producer_state_bytes;
+        self.worker.call(move || {
+            let result = resources
+                .results
+                .lock()
+                .map_err(|_| internal("result registry is poisoned"))?
+                .get(&id)
+                .cloned()
+                .ok_or_else(|| not_found("result"))?;
+            let mut entry = result.lock().map_err(|_| internal("result is poisoned"))?;
+            let EntrySource::Producer { decode, .. } = &entry.source else {
+                return Err(not_found("producer result"));
+            };
+            let decode = *decode;
+            if sequence != entry.next_sequence && sequence != entry.next_sequence - 1 {
+                return Err(AdbcError::with_message_and_status(
+                    "Invalid result sequence",
+                    Status::InvalidArguments,
+                ));
+            }
+            if entry.finished && sequence == entry.next_sequence {
+                return Ok((None, state));
+            }
+            match produce_from_state(decode, &state, &entry.schema, max_batch_bytes, state_limit) {
+                Ok(None) => {
+                    entry.finished = true;
+                    Ok((None, state))
+                }
+                Ok(Some((batch, advanced))) => {
+                    entry.next_sequence = entry.next_sequence.max(sequence + 1);
+                    Ok((Some(batch), advanced))
+                }
+                Err(error) => {
+                    drop(entry);
+                    let removed = resources
+                        .results
+                        .lock()
+                        .map_err(|_| internal("result registry is poisoned"))?
+                        .remove(&id);
+                    drop(removed);
+                    Err(error)
+                }
+            }
         })
     }
 
@@ -1146,12 +1294,23 @@ impl ResultEntry {
     }
 
     pub fn next(&mut self, sequence: i64) -> Result<Option<RecordBatch>, AdbcError> {
-        if let Some((last_sequence, batch)) = &self.last
+        let EntrySource::Reader {
+            reader,
+            last,
+            terminal_error,
+        } = &mut self.source
+        else {
+            return Err(AdbcError::with_message_and_status(
+                "Producer results resume from continuation tokens",
+                Status::InvalidArguments,
+            ));
+        };
+        if let Some((last_sequence, batch)) = last
             && sequence == *last_sequence
         {
             return Ok(Some(batch.clone()));
         }
-        if let Some((error_sequence, error)) = &self.terminal_error
+        if let Some((error_sequence, error)) = terminal_error
             && sequence == *error_sequence
         {
             return Err(error.clone());
@@ -1168,25 +1327,57 @@ impl ResultEntry {
         if self.finished {
             return Ok(None);
         }
-        match self.reader.next() {
+        match reader.next() {
             Some(Ok(batch)) => {
-                self.last = Some((sequence, batch.clone()));
+                *last = Some((sequence, batch.clone()));
                 self.next_sequence += 1;
                 Ok(Some(batch))
             }
             Some(Err(error)) => {
                 let error = AdbcError::from(error);
-                self.terminal_error = Some((sequence, error.clone()));
+                *terminal_error = Some((sequence, error.clone()));
                 self.finished = true;
                 Err(error)
             }
             None => {
                 self.finished = true;
-                self.last = None;
+                *last = None;
                 Ok(None)
             }
         }
     }
+}
+
+fn encode_producer(producer: &dyn ErasedProducer, limit: usize) -> Result<Vec<u8>, AdbcError> {
+    let encoded = producer.encode()?;
+    if encoded.len() > limit {
+        return Err(invalid_data(
+            "Result producer state exceeds configured limit",
+        ));
+    }
+    Ok(encoded)
+}
+
+/// Decode, produce one batch, validate it, and re-encode the advanced state.
+fn produce_from_state(
+    decode: ProducerDecoder,
+    state: &[u8],
+    schema: &SchemaRef,
+    max_batch_bytes: usize,
+    state_limit: usize,
+) -> Result<Option<(RecordBatch, Vec<u8>)>, AdbcError> {
+    let mut producer = decode(state)?;
+    let Some(batch) = producer.produce()? else {
+        return Ok(None);
+    };
+    if batch.schema().as_ref() != schema.as_ref() {
+        return Err(invalid_data("Result schema changed"));
+    }
+    if batch.get_array_memory_size() > max_batch_bytes {
+        return Err(invalid_data("Result batch exceeds configured limit"));
+    }
+    let advanced = encode_producer(producer.as_ref(), state_limit)?;
+    Ok(Some((batch, advanced)))
 }
 
 fn quota(kind: &str) -> AdbcError {

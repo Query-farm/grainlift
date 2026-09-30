@@ -24,7 +24,8 @@ use axum::routing::get;
 use clap::Parser;
 use grainlift_server::backend::DriverManagerBackend;
 use grainlift_server::cli::{Args, Launch};
-use grainlift_server::config::{AuthConfig, IrohConfig, TcpConfig, TcpTlsConfig};
+use grainlift_server::config::{AuthConfig, IrohConfig, TcpTlsConfig};
+use grainlift_server::hosting::{self, load_mtls_config, start_tcp_listener};
 use grainlift_server::service::build_server_with_max_bind;
 use grainlift_server::session::SessionManager;
 use opentelemetry::global;
@@ -32,7 +33,6 @@ use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_otlp::{Protocol, WithExportConfig};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use rustls::pki_types::pem::PemObject;
 use tracing::{info, warn};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt as _;
@@ -42,10 +42,7 @@ use vgi_rpc::auth::Authenticate;
 use vgi_rpc::auth::bearer::bearer_authenticate_static;
 use vgi_rpc::auth::jwt::{JwtConfig, jwt_authenticate};
 use vgi_rpc::http::HttpState;
-use vgi_rpc::tcp::{
-    TcpIdentityOptions, TcpMutualTlsConfig, TcpMutualTlsOptions, serve_tcp,
-    serve_tcp_with_mtls_identity,
-};
+use vgi_rpc::tcp::{TcpIdentityOptions, TcpMutualTlsConfig, TcpMutualTlsOptions};
 use vgi_rpc_iroh::{CancellationToken, IrohServer, IrohServerOptions, VGI_IROH_ALPN};
 
 #[tokio::main]
@@ -102,7 +99,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let shutdown = CancellationToken::new();
     let tcp_shutdown = Arc::new(AtomicBool::new(false));
     let mut tcp_task = if let Some(tcp) = config.tcp.clone() {
-        Some(start_tcp_listener(Arc::clone(&server), tcp, Arc::clone(&tcp_shutdown)).await?)
+        let transport = if tcp.tls.is_some() { "tls+tcp" } else { "tcp" };
+        let tls = match &tcp.tls {
+            Some(tls) => Some(
+                TcpMutualTlsOptions::new(build_tcp_tls(tls).map_err(std::io::Error::other)?)
+                    .with_identity(TcpIdentityOptions {
+                        policy: Some(vgi_rpc::peer_identity_primary("spiffe")),
+                        ..TcpIdentityOptions::default()
+                    }),
+            ),
+            None => None,
+        };
+        let listener = start_tcp_listener(
+            Arc::clone(&server),
+            tcp.listen,
+            tls,
+            Arc::clone(&tcp_shutdown),
+        )
+        .await?;
+        info!(address = %listener.address, transport, "Grainlift listening");
+        Some(listener.task)
     } else {
         None
     };
@@ -232,62 +248,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     service_error.map_or(Ok(()), Err)
 }
 
-async fn start_tcp_listener(
-    server: Arc<vgi_rpc::RpcServer>,
-    config: TcpConfig,
-    shutdown: Arc<AtomicBool>,
-) -> Result<tokio::task::JoinHandle<std::io::Result<()>>, Box<dyn std::error::Error>> {
-    let transport = if config.tls.is_some() {
-        "tls+tcp"
-    } else {
-        "tcp"
-    };
-    let (bound_tx, bound_rx) = tokio::sync::oneshot::channel();
-    let task = tokio::task::spawn_blocking(move || {
-        let host = config.listen.ip().to_string();
-        let port = config.listen.port();
-        if let Some(tls) = config.tls {
-            let tls = build_tcp_tls(&tls).map_err(std::io::Error::other)?;
-            serve_tcp_with_mtls_identity(
-                server,
-                &host,
-                port,
-                None,
-                shutdown,
-                TcpMutualTlsOptions::new(tls).with_identity(TcpIdentityOptions {
-                    policy: Some(vgi_rpc::peer_identity_primary("spiffe")),
-                    ..TcpIdentityOptions::default()
-                }),
-                move |bound_host, bound_port| {
-                    let _ = bound_tx.send(format!("{bound_host}:{bound_port}"));
-                },
-            )
-        } else {
-            serve_tcp(
-                server,
-                &host,
-                port,
-                None,
-                shutdown,
-                move |bound_host, bound_port| {
-                    let _ = bound_tx.send(format!("{bound_host}:{bound_port}"));
-                },
-            )
-        }
-    });
-    match bound_rx.await {
-        Ok(address) => {
-            info!(%address, transport, "Grainlift listening");
-            Ok(task)
-        }
-        Err(_) => match task.await {
-            Ok(Err(error)) => Err(error.into()),
-            Ok(Ok(())) => Err(std::io::Error::other("TCP listener exited before binding").into()),
-            Err(error) => Err(error.into()),
-        },
-    }
-}
-
 async fn start_iroh_listener(
     server: Arc<vgi_rpc::RpcServer>,
     manager: Arc<SessionManager>,
@@ -345,37 +305,13 @@ async fn start_iroh_listener(
 fn build_tcp_tls(
     config: &TcpTlsConfig,
 ) -> Result<TcpMutualTlsConfig, Box<dyn std::error::Error + Send + Sync>> {
-    let certificates = read_certificates(&config.server_certificate_chain)?;
-    let private_key = read_private_key(&config.server_private_key)?;
-    let mut client_roots = rustls::RootCertStore::empty();
-    for certificate in read_certificates(&config.client_ca)? {
-        client_roots.add(certificate)?;
-    }
-    Ok(TcpMutualTlsConfig::new(
-        certificates,
-        private_key,
-        client_roots,
+    load_mtls_config(
+        &config.server_certificate_chain,
+        &config.server_private_key,
+        &config.client_ca,
         config.trust_domains.clone(),
-    )?
-    .with_handshake_timeout(Duration::from_secs(config.handshake_timeout_seconds))?)
-}
-
-fn read_certificates(
-    path: &std::path::Path,
-) -> Result<Vec<rustls::pki_types::CertificateDer<'static>>, Box<dyn std::error::Error + Send + Sync>>
-{
-    let certificates =
-        rustls::pki_types::CertificateDer::pem_file_iter(path)?.collect::<Result<Vec<_>, _>>()?;
-    if certificates.is_empty() {
-        return Err(format!("certificate file {:?} contains no certificates", path).into());
-    }
-    Ok(certificates)
-}
-
-fn read_private_key(
-    path: &std::path::Path,
-) -> Result<rustls::pki_types::PrivateKeyDer<'static>, Box<dyn std::error::Error + Send + Sync>> {
-    Ok(rustls::pki_types::PrivateKeyDer::from_pem_file(path)?)
+        Duration::from_secs(config.handshake_timeout_seconds),
+    )
 }
 
 fn build_authenticator(config: &AuthConfig) -> Authenticate {
@@ -403,28 +339,7 @@ fn build_authenticator(config: &AuthConfig) -> Authenticate {
 }
 
 async fn shutdown_signal() {
-    let ctrl_c = async {
-        if let Err(error) = tokio::signal::ctrl_c().await {
-            warn!(%error, "could not install Ctrl-C handler");
-        }
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
-            Ok(mut signal) => {
-                signal.recv().await;
-            }
-            Err(error) => warn!(%error, "could not install SIGTERM handler"),
-        }
-    };
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        () = ctrl_c => {}
-        () = terminate => {}
-    }
+    hosting::shutdown_signal().await;
     info!("shutdown signal received");
 }
 

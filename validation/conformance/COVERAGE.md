@@ -77,8 +77,9 @@ Transport-specific deselection is reported explicitly. It is not a skipped
 failure or evidence of full wire-fault parity across transports. In particular,
 an independent raw-Iroh malformed-request client remains a coverage gap.
 
-The Python and Rust reference workers have their own suites. The Rust example
-supports two distinct HTTP and mTLS principals for the shared ownership gate.
+The Python and Rust reference workers have their own suites. The Rust synthetic
+worker (`validation/synthetic-worker`) supports two distinct HTTP and mTLS
+principals for the shared ownership gate.
 Earlier HTTP reference runs are recorded in `RESULTS.md`; rerunning the new
 Go/TypeScript transport matrix does not retroactively validate either reference
 worker.

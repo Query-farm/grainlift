@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check matched-workload validation and the optional native Rust example."""
+"""Check matched-workload validation and the optional native Rust synthetic worker."""
 
 import json
 import os
@@ -56,7 +56,7 @@ def test_rust_example_native_errors_partial_close_and_shutdown(monkeypatch: pyte
     binary = os.environ.get("GRAINLIFT_SYNTHETIC_RUST_SERVER")
     driver = os.environ.get("GRAINLIFT_MATCHED_DRIVER")
     if not binary or not driver:
-        pytest.skip("Set the Rust example and native driver paths for integration")
+        pytest.skip("Set the Rust synthetic worker and native driver paths for integration")
     output = tmp_path / "host.json"
     monkeypatch.setenv("GRAINLIFT_DIAGNOSTIC_HTTP", "rust")
     monkeypatch.setenv("GRAINLIFT_DIAGNOSTIC_OUTPUT", str(output))

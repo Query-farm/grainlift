@@ -79,6 +79,37 @@ jobs:
           path: e2e-results.xml
           if-no-files-found: warn
 
+  synthetic-worker-conformance:
+    name: Shared worker conformance (Rust synthetic worker)
+    needs: rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: 1.97.1
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: 0.11.7
+      - run: cargo build --locked -p adbc-driver-grainlift -p grainlift-synthetic-worker
+      - name: Verify HTTP and mTLS through the native ADBC driver
+        run: |
+          bash validation/diagnostics/make_test_tls.sh "$RUNNER_TEMP/grainlift-synthetic-tls"
+          for transport in http mtls; do
+            uv run --no-project --python 3.13 \
+              --with pytest==9.1.1 --with pyarrow==25.0.1 \
+              --with adbc-driver-manager==1.12.0 --with cryptography==50.0.1 \
+              python -m pytest validation/conformance -q \
+              --native-driver "$PWD/target/debug/libadbc_driver_grainlift.so" \
+              --worker-command "[\"$PWD/target/debug/grainlift-synthetic-worker\"]" \
+              --worker-transport "$transport" \
+              --worker-tls-dir "$RUNNER_TEMP/grainlift-synthetic-tls"
+          done
+
   external-validation:
     name: External ADBC validation (${{ matrix.backend }}, ${{ matrix.transport }})
     needs: rust

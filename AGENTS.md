@@ -66,6 +66,9 @@ HTTP(S), TCP, mutual-TLS TCP, or raw Iroh QUIC streams.
 - `crates/adbc-driver-grainlift`: exported ADBC C ABI and transport clients.
 - `validation`: Python C-ABI smoke, Driver Foundry conformance, load harness,
   and reproducible results.
+- `validation/synthetic-worker`: unpublished synthetic Rust worker used by the
+  conformance and matched-benchmark harnesses. Keep its flags, readiness line,
+  stdin shutdown and report fields stable.
 - `docs`: operator-facing security and process-isolation guidance.
 
 The local sibling `../vgi-rpc-rust` is the upstream transport implementation.

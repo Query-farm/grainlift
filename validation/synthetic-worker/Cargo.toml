@@ -1,0 +1,40 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Bounded synthetic worker used by the shared conformance suite and the matched
+# Rust/Python benchmarks. It is a validation fixture, not an example to copy.
+[package]
+name = "grainlift-synthetic-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Bounded synthetic Grainlift worker for conformance and matched ADBC benchmarks"
+publish = false
+
+[dependencies]
+grainlift-server = { path = "../../crates/grainlift-server" }
+adbc_core.workspace = true
+arrow-array.workspace = true
+arrow-schema.workspace = true
+axum.workspace = true
+clap.workspace = true
+rustls.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+vgi-rpc = { workspace = true, features = ["http", "tcp-mtls"] }
