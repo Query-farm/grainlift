@@ -28,7 +28,7 @@ readme = "../../README.md"
 [dependencies]
 adbc_core.workspace = true
 arrow-array.workspace = true
-arrow-data = "59"
+arrow-data = "60"
 arrow-ipc.workspace = true
 arrow-schema.workspace = true
 base64.workspace = true
