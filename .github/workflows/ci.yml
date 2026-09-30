@@ -16,7 +16,9 @@
 name: CI
 
 on:
+  # PR branches are covered by pull_request; push only for main.
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

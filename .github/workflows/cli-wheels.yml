@@ -15,6 +15,11 @@ on:
         type: boolean
         default: false
 
+# Cancel superseded PR runs; main and manual (publish) runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 

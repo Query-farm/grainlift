@@ -27,6 +27,12 @@ updates:
         patterns:
           - "adbc_*"
           - "arrow-*"
+      # Everything else in one weekly PR instead of one PR (and one full CI
+      # run) per crate.
+      rust-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /

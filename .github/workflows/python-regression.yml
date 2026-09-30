@@ -15,7 +15,9 @@
 name: Python regression and release candidate
 
 on:
+  # PR branches are covered by pull_request; push only for main.
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -27,6 +29,11 @@ on:
         description: SHA-256 from the candidate SHA256SUMS file
         required: true
         type: string
+
+# Cancel superseded PR runs; main and manual (publish) runs always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
