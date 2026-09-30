@@ -58,8 +58,11 @@ export GRAINLIFT_HELLO_TOKEN=local-development-token-change-me
   `GRAINLIFT_HELLO_OTHER_TOKEN` of at least 16 bytes adds `other-principal`.
   Both are authorized for the `default` target.
 - `--tls-dir` selects TCP with mutual TLS. The directory holds `server.pem`,
-  `server-key.pem` and `ca.pem`; only `spiffe://benchmark.test/client` and
-  `spiffe://benchmark.test/other` are authorized.
+  `server-key.pem` and `ca.pem`; `spiffe://benchmark.test/client` is
+  authorized, and `spiffe://benchmark.test/other` only when
+  `GRAINLIFT_HELLO_OTHER_TOKEN` enables the second principal (the shared
+  conformance suite does; the release-candidate regression suite expects
+  `other` to be rejected).
   `validation/diagnostics/make_test_tls.sh` creates one-day test certificates.
 - The first stdout line is a JSON readiness message with `endpoint`,
   `sample_pid` and `transport`. It never contains a token.

@@ -84,13 +84,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("GRAINLIFT_HELLO_TOKEN").unwrap_or_default();
     let other_token = std::env::var("GRAINLIFT_HELLO_OTHER_TOKEN").unwrap_or_default();
     let (bearer_credentials, authorized_targets) = if mtls {
-        (
-            HashMap::new(),
-            HashMap::from([
-                (mtls_principal("client"), vec!["default".into()]),
-                (mtls_principal("other"), vec!["default".into()]),
-            ]),
-        )
+        (HashMap::new(), mtls_targets(!other_token.is_empty()))
     } else {
         bearer_config(token, other_token)?
     };
@@ -231,6 +225,18 @@ fn mtls_principal(name: &str) -> String {
     format!("peer/spiffe/spiffe%3A%2F%2Fbenchmark.test/spiffe%3A%2F%2Fbenchmark.test%2F{name}")
 }
 
+/// Authorized mTLS identities. The `other` client certificate is admitted only
+/// when a second principal is enabled (GRAINLIFT_HELLO_OTHER_TOKEN is set), as
+/// the shared conformance harness does for its ownership checks; otherwise it
+/// is rejected, as the release-candidate regression suite expects.
+fn mtls_targets(second_principal: bool) -> HashMap<String, Vec<String>> {
+    let mut targets = HashMap::from([(mtls_principal("client"), vec!["default".into()])]);
+    if second_principal {
+        targets.insert(mtls_principal("other"), vec!["default".into()]);
+    }
+    targets
+}
+
 fn bearer_config(
     token: String,
     other_token: String,
@@ -293,7 +299,7 @@ fn load_tls(directory: &Path) -> Result<TcpMutualTlsConfig, Box<dyn std::error::
 
 #[cfg(test)]
 mod tests {
-    use super::{bearer_config, mtls_principal};
+    use super::{bearer_config, mtls_principal, mtls_targets};
 
     #[test]
     fn optional_second_bearer_identity_is_distinct_and_authorized() {
@@ -311,6 +317,16 @@ mod tests {
         assert!(bearer_config("short".into(), String::new()).is_err());
         assert!(bearer_config("same-long-secret".into(), "same-long-secret".into()).is_err());
         assert!(bearer_config("first-long-secret".into(), "too-short".into()).is_err());
+    }
+
+    #[test]
+    fn other_mtls_identity_requires_the_second_principal() {
+        let single = mtls_targets(false);
+        assert!(single.contains_key(&mtls_principal("client")));
+        assert!(!single.contains_key(&mtls_principal("other")));
+        let both = mtls_targets(true);
+        assert!(both.contains_key(&mtls_principal("client")));
+        assert!(both.contains_key(&mtls_principal("other")));
     }
 
     #[test]

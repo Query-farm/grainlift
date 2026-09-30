@@ -80,11 +80,7 @@ def test_tcp_native_authentication_errors_disconnect_and_cleanup(
             **client_auth("mtls", token, directory),
         }
         for override in (
-            # The synthetic worker also authorizes `other` for the conformance ownership gate.
-            {
-                "grainlift.tls.cert": str(directory / "denied.pem"),
-                "grainlift.tls.key": str(directory / "denied-key.pem"),
-            },
+            {"grainlift.tls.cert": str(directory / "other.pem"), "grainlift.tls.key": str(directory / "other-key.pem")},
             {"grainlift.tls.server_name": "wrong.invalid"},
         ):
             with (
