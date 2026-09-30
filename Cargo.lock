@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "adbc-driver-grainlift"
-version = "0.4.0"
+version = "0.4.0-rc.3"
 dependencies = [
  "adbc_core",
  "adbc_ffi",
@@ -1490,7 +1490,7 @@ dependencies = [
 
 [[package]]
 name = "grainlift-protocol"
-version = "0.4.0"
+version = "0.4.0-rc.3"
 dependencies = [
  "adbc_core",
  "arrow-array",
@@ -1506,7 +1506,7 @@ dependencies = [
 
 [[package]]
 name = "grainlift-server"
-version = "0.4.0"
+version = "0.4.0-rc.3"
 dependencies = [
  "adbc-driver-grainlift",
  "adbc_core",
@@ -1544,7 +1544,7 @@ dependencies = [
 
 [[package]]
 name = "grainlift-synthetic-worker"
-version = "0.4.0"
+version = "0.4.0-rc.3"
 dependencies = [
  "adbc_core",
  "arrow-array",
