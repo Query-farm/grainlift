@@ -129,6 +129,9 @@ def configure_iroh(root: Path, server: Path) -> tuple[str, dict[str, dict[str, s
     q = json.dumps
     config = (
         '\n[iroh]\nissuer = "e2e"\ndisable_relays = true\n'
+        # Drop a killed client's QUIC connection (and its sessions) after 2s
+        # of silence instead of Iroh's default 30s.
+        "connection_idle_timeout_seconds = 2\n"
         f"secret_key_file = {q(str(root / 'server.key'))}\n"
         f"endpoint_info_file = {q(str(root / 'endpoint.json'))}\n[iroh.principals]\n"
         + "".join(f"{q(identities[name])} = {q(name)}\n" for name in ("test", "other"))

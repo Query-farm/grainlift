@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import adbc_driver_manager as manager
@@ -108,3 +109,17 @@ def test_mtls_rejects_wrong_server_name(proxy_factory: Any) -> None:
     with proxy.connect() as connection, connection.cursor() as cursor:
         cursor.execute("SELECT 42")
         assert cursor.fetchone() == (42,)
+
+
+def test_idle_iroh_connection_outlives_the_idle_timeout(proxy_factory: Any) -> None:
+    """Keep a healthy but silent Iroh client's session alive past the server's short idle timeout."""
+    proxy = proxy_factory(transport="iroh")
+    with proxy.connect(autocommit=False) as connection, connection.cursor() as cursor:
+        cursor.execute("CREATE TABLE idle_survivor (id INTEGER)")
+        cursor.execute("INSERT INTO idle_survivor VALUES (1)")
+        # Longer than connection_idle_timeout_seconds (2s): only keep-alive pings
+        # hold the QUIC connection, and with it the open transaction.
+        time.sleep(3)
+        cursor.execute("SELECT count(*) FROM idle_survivor")
+        assert cursor.fetchone() == (1,)
+        connection.commit()

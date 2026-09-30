@@ -90,6 +90,12 @@ pub struct IrohConfig {
     /// `server.session_ttl_seconds`; a shorter value silently breaks idle
     /// ADBC connections.
     pub stream_idle_timeout_seconds: Option<u64>,
+    /// How long a silent peer's QUIC connection survives before the server
+    /// drops it and revokes its sessions (default: Iroh's 30s). A killed or
+    /// unplugged client sends no close, so this bounds how long its locks and
+    /// session slots stay held. Healthy idle peers are unaffected: the server
+    /// keeps them alive with pings at a third of this interval (at most 5s).
+    pub connection_idle_timeout_seconds: Option<u64>,
 }
 
 const fn default_iroh_max_active_streams() -> usize {
@@ -389,6 +395,9 @@ impl Config {
                     "authenticated Iroh requires endpoint-to-principal mappings or explicit public targets".into(),
                 );
             }
+            if iroh.connection_idle_timeout_seconds == Some(0) {
+                return Err("iroh.connection_idle_timeout_seconds must be positive".into());
+            }
             if iroh.stream_idle_timeout_seconds == Some(0) {
                 return Err("iroh.stream_idle_timeout_seconds must be positive".into());
             }
@@ -663,6 +672,19 @@ driver = "adbc_driver_sqlite"
         );
         let zero = format!("{iroh}stream_idle_timeout_seconds = 0\n{TARGET}");
         assert!(Config::from_toml(&zero).is_err());
+    }
+
+    #[test]
+    fn validates_iroh_connection_idle_timeout() {
+        let iroh = "[server]\nrequire_authentication = false\n\n[iroh]\nissuer = \"example.org\"\nsecret_key_file = \"iroh.key\"\n";
+        let parse = |line: &str| Config::from_toml(&format!("{iroh}{line}{TARGET}"));
+        let timeout = |config: Config| config.iroh.unwrap().connection_idle_timeout_seconds;
+        assert_eq!(timeout(parse("").unwrap()), None);
+        assert_eq!(
+            timeout(parse("connection_idle_timeout_seconds = 3\n").unwrap()),
+            Some(3)
+        );
+        assert!(parse("connection_idle_timeout_seconds = 0\n").is_err());
     }
 
     #[test]

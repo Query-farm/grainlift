@@ -71,7 +71,7 @@ jobs:
         env:
           GRAINLIFT_SERVER: ${{ github.workspace }}/target/debug/grainlift-server
           GRAINLIFT_DRIVER: ${{ github.workspace }}/target/debug/libadbc_driver_grainlift.so
-        run: ./validation/run_e2e.sh all --junitxml=e2e-results.xml
+        run: ./validation/run_e2e.sh all -n auto --junitxml=e2e-results.xml
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:

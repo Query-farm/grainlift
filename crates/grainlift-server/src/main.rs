@@ -264,6 +264,17 @@ async fn start_iroh_listener(
     if config.disable_relays {
         builder = builder.relay_mode(iroh::RelayMode::Disabled);
     }
+    if let Some(seconds) = config.connection_idle_timeout_seconds {
+        let idle = Duration::from_secs(seconds);
+        // Ping well inside the timeout so only a dead peer ever reaches it.
+        let keep_alive = (idle / 3).min(Duration::from_secs(5));
+        builder = builder.transport_config(
+            iroh::endpoint::QuicTransportConfig::builder()
+                .max_idle_timeout(Some(idle.try_into()?))
+                .keep_alive_interval(keep_alive)
+                .build(),
+        );
+    }
     let endpoint = builder.bind().await?;
     let endpoint_id = endpoint.id();
     let endpoint_addr = endpoint.addr();
