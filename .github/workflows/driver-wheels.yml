@@ -50,6 +50,9 @@ jobs:
           - { runner: macos-latest, target: aarch64-apple-darwin }
           - { runner: windows-latest, target: x86_64-pc-windows-msvc }
     runs-on: ${{ matrix.runner }}
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: sccache
     defaults:
       run:
         shell: bash
@@ -63,6 +66,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           toolchain: 1.97.1
+      # Compiled crates are cached in the GitHub Actions cache and shared by
+      # every wheel job and run (and passed into the Linux containers below).
+      - uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
       - run: uv python install 3.13 3.14
       - name: Stage a self-contained driver source distribution
         run: uv run --no-project --python 3.13 python packaging/build_driver_context.py "$RUNNER_TEMP/grainlift-driver-context"
@@ -75,8 +81,18 @@ jobs:
           CIBW_ARCHS: native
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
-          CIBW_BEFORE_ALL_LINUX: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.97.1
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH" RUSTUP_TOOLCHAIN=1.97.1'
+          CIBW_BEFORE_ALL_LINUX: >-
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.97.1 &&
+            arch=$(uname -m) &&
+            case $arch in
+            x86_64) sum=45f1447fbe231e3037bde351ef70677dd212216c8d62ae7ca409fecc4d6acc89 ;;
+            aarch64) sum=2b3284d5da3b46a47dc4229e75bb7b88ac4aa99c8d754fb7d2f84997e5a4354a ;;
+            esac &&
+            curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/sccache.tgz "https://github.com/mozilla/sccache/releases/download/v0.18.0/sccache-v0.18.0-$arch-unknown-linux-musl.tar.gz" &&
+            echo "$sum  /tmp/sccache.tgz" | sha256sum -c - &&
+            tar xzf /tmp/sccache.tgz -C /usr/local/bin --strip-components=1 "sccache-v0.18.0-$arch-unknown-linux-musl/sccache"
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH" RUSTUP_TOOLCHAIN=1.97.1 RUSTC_WRAPPER=sccache'
+          CIBW_ENVIRONMENT_PASS_LINUX: SCCACHE_GHA_ENABLED ACTIONS_RESULTS_URL ACTIONS_RUNTIME_TOKEN ACTIONS_CACHE_SERVICE_V2
       - name: Test only the installed driver wheel
         run: |
           cargo build --release --locked -p grainlift-server
@@ -92,6 +108,9 @@ jobs:
           name: driver-wheel-${{ matrix.target }}
           path: dist-driver/*.whl
           if-no-files-found: error
+      - name: sccache statistics (host builds)
+        if: always()
+        run: sccache --show-stats
 
   publish:
     if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
