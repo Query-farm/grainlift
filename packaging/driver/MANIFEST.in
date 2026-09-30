@@ -4,5 +4,4 @@
 
 include Cargo.toml Cargo.lock LICENSE.txt NOTICE.txt README.md
 include intercept-linux-linker.sh intercept-macos-linker.sh .cargo/config.toml
-recursive-include crates *.toml *.rs
 recursive-include python *.py py.typed
