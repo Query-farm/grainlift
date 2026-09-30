@@ -1,0 +1,32 @@
+# Copyright (c) 2026 ADBC Drivers Contributors
+# Copyright (c) 2026 Query Farm LLC
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=77", "setuptools-rust>=1.11,<2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adbc-driver-grainlift"
+dynamic = ["version"]
+description = "ADBC client driver for Grainlift services"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "Query Farm LLC" }]
+dependencies = ["adbc-driver-manager>=1.12.0,<2"]
+
+[project.urls]
+Repository = "https://github.com/Query-farm/grainlift"
+Documentation = "https://github.com/Query-farm/grainlift/blob/main/docs/python-driver.md"
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["adbc_driver_grainlift*"]
+
+[[tool.setuptools-rust.ext-modules]]
+target = "adbc_driver_grainlift.libadbc_driver_grainlift"
+path = "crates/adbc-driver-grainlift/Cargo.toml"
+binding = "NoBinding"
+cargo-manifest-args = ["--locked"]
+strip = "Debug"
