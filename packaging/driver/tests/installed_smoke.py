@@ -12,6 +12,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from contextlib import closing
 from importlib.metadata import distribution
 from pathlib import Path
 
@@ -39,9 +40,10 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as temporary:
         root = Path(temporary)
         database, token = root / "database.sqlite", root / "token"
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection:
             connection.execute("CREATE TABLE example (value INTEGER)")
             connection.execute("INSERT INTO example VALUES (42)")
+            connection.commit()
         with socket.socket() as probe:
             probe.bind(("127.0.0.1", 0))
             port = probe.getsockname()[1]
@@ -118,7 +120,7 @@ def main() -> None:
                 process.kill()
                 process.wait(timeout=5)
                 raise AssertionError("Grainlift service did not stop") from None
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection:
             assert connection.execute("SELECT COUNT(*) FROM example").fetchone() == (2,)
 
 
