@@ -64,4 +64,3 @@ tokio-util = { version = "0.7", features = ["rt"] }
 vgi-rpc = { version = "0.28.0", default-features = false, features = ["macros"] }
 vgi-rpc-client = { version = "0.28.0", default-features = false, features = ["http"] }
 vgi-rpc-iroh = "0.28.0"
-
