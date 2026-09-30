@@ -52,7 +52,7 @@ vgi-rpc = { workspace = true, features = ["http", "jwt-jsonwebtoken", "otel", "t
 iroh.workspace = true
 vgi-rpc-iroh.workspace = true
 tempfile = "3"
-hmac = "0.12"
+hmac = "0.13"
 sha2 = "0.10"
 rand.workspace = true
 
