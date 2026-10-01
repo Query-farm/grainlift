@@ -1703,10 +1703,13 @@ fn is_timeout_message(message: &str) -> bool {
 }
 
 /// The server no longer has this connection's session: the transport dropped
-/// (which revokes Iroh sessions) or the session idled past its TTL.
+/// (which revokes Iroh sessions), the session idled past its TTL, or the
+/// server restarted (a Cloudflare Durable Object evicted after idling). Servers
+/// word it differently ("session was not found", "Session is unavailable").
 fn is_lost_session(error: &Error) -> bool {
     is_transport_failure(error)
-        || (error.status == Status::NotFound && error.message.contains("session"))
+        || (error.status == Status::NotFound
+            && error.message.to_ascii_lowercase().contains("session"))
 }
 
 fn is_transport_failure(error: &Error) -> bool {
@@ -2869,6 +2872,15 @@ mod tests {
         )));
         assert!(is_lost_session(&Error::with_message_and_status(
             "session was not found",
+            Status::NotFound,
+        )));
+        // The TypeScript SDK's wording, after a restart lost the session.
+        assert!(is_lost_session(&Error::with_message_and_status(
+            "Session is unavailable",
+            Status::NotFound,
+        )));
+        assert!(!is_lost_session(&Error::with_message_and_status(
+            "Statement is unavailable",
             Status::NotFound,
         )));
         // Errors reported by the downstream database are never retried.
