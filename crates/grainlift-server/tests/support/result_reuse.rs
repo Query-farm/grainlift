@@ -300,9 +300,30 @@ fn timeout_and_invalid_output_never_enter_the_idle_pool() {
         let mut connection = server.connection();
         let mut statement = connection.new_statement().unwrap();
         server.fault.store(fault, Ordering::Release);
-        // The faulted result connection (socket 2) is discarded and the read
-        // resumes on a fresh one (socket 3), which completes and is pooled.
-        query(&mut statement);
+        if fault == 1 {
+            // A server slower than the request timeout fails the query at once
+            // (timeouts are not retried) ...
+            statement.set_sql_query("select value from test").unwrap();
+            let error = match statement.execute() {
+                Ok(mut reader) => reader
+                    .next()
+                    .unwrap()
+                    .map(|_| ())
+                    .map_err(|e| e.to_string()),
+                Err(error) => Err(error.message),
+            }
+            .expect_err("a timeout must fail the query");
+            assert!(
+                error.contains("temporarily unavailable") || error.contains("timed out"),
+                "{error}"
+            );
+            // ... and the next query runs on a fresh result connection (socket 3).
+            query(&mut statement);
+        } else {
+            // The faulted result connection (socket 2) is discarded and the read
+            // resumes on a fresh one (socket 3), which completes and is pooled.
+            query(&mut statement);
+        }
         server.wait_active(2);
         query(&mut statement);
         assert_eq!(

@@ -1135,3 +1135,114 @@ async fn tcp_result_stream_resumes_on_a_new_connection() {
     let _ = std::net::TcpStream::connect(("127.0.0.1", port));
     thread.join().unwrap();
 }
+
+/// A TCP proxy that can go silent: while `silent` is set it swallows traffic
+/// in both directions but keeps connections open, like a peer that vanished
+/// without closing (a sleeping laptop, a dropped network).
+struct SilentProxy {
+    port: u16,
+    silent: Arc<AtomicBool>,
+}
+
+impl SilentProxy {
+    fn start(upstream: u16) -> Self {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let silent = Arc::new(AtomicBool::new(false));
+        let gate = Arc::clone(&silent);
+        std::thread::spawn(move || {
+            for client in listener.incoming() {
+                let Ok(client) = client else { break };
+                let Ok(server) = std::net::TcpStream::connect(("127.0.0.1", upstream)) else {
+                    break;
+                };
+                for (mut from, mut to) in [
+                    (client.try_clone().unwrap(), server.try_clone().unwrap()),
+                    (server, client),
+                ] {
+                    let gate = Arc::clone(&gate);
+                    std::thread::spawn(move || {
+                        use std::io::{Read, Write};
+                        let mut buf = [0u8; 65536];
+                        while let Ok(n) = from.read(&mut buf) {
+                            if n == 0 {
+                                break;
+                            }
+                            if !gate.load(Ordering::SeqCst) && to.write_all(&buf[..n]).is_err() {
+                                break;
+                            }
+                        }
+                        let _ = to.shutdown(std::net::Shutdown::Both);
+                    });
+                }
+            }
+        });
+        Self { port, silent }
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn silent_gateway_fails_after_one_timeout_and_recovers() {
+    let server = Arc::new(build_server(fake_manager(false), "silent-worker".into()));
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let serve_shutdown = Arc::clone(&shutdown);
+    let (bound_tx, bound_rx) = mpsc::sync_channel(1);
+    let thread = std::thread::spawn(move || {
+        serve_tcp(
+            server,
+            "127.0.0.1",
+            0,
+            None,
+            serve_shutdown,
+            move |_host, port| bound_tx.send(port).unwrap(),
+        )
+        .unwrap();
+    });
+    let port = bound_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+    let proxy = SilentProxy::start(port);
+    let endpoint = format!("tcp://127.0.0.1:{}", proxy.port);
+    let silent = Arc::clone(&proxy.silent);
+    tokio::task::spawn_blocking(move || {
+        let mut driver = GrainliftDriver;
+        let database = driver
+            .new_database_with_opts([
+                (OptionDatabase::Uri, endpoint.into()),
+                (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+                (
+                    OptionDatabase::Other(adbc_driver_grainlift::OPTION_REQUEST_TIMEOUT_MS.into()),
+                    OptionValue::Int(500),
+                ),
+            ])
+            .unwrap();
+        let mut connection = database.new_connection().unwrap();
+        let mut query = || -> AdbcResult<usize> {
+            let mut statement = connection.new_statement()?;
+            statement.set_sql_query("select value from test")?;
+            let mut rows = 0;
+            for batch in statement.execute()? {
+                rows += batch.map_err(adbc_core::error::Error::from)?.num_rows();
+            }
+            Ok(rows)
+        };
+        assert_eq!(query().unwrap(), 4);
+
+        // The gateway stops answering: one timeout, no retries multiplying it
+        // (each previously waited the full timeout again, plus 0/1/3 s backoff).
+        silent.store(true, Ordering::SeqCst);
+        let started = std::time::Instant::now();
+        let error = query().unwrap_err();
+        let elapsed = started.elapsed();
+        assert_eq!(error.status, Status::Timeout, "{}", error.message);
+        assert!(elapsed < Duration::from_millis(1500), "took {elapsed:?}");
+
+        // Once it answers again the next query reconnects instead of reusing
+        // the timed-out stream (which may still deliver a late reply).
+        silent.store(false, Ordering::SeqCst);
+        assert_eq!(query().unwrap(), 4);
+    })
+    .await
+    .unwrap();
+    shutdown.store(true, Ordering::Release);
+    let _ = std::net::TcpStream::connect(("127.0.0.1", port));
+    thread.join().unwrap();
+}

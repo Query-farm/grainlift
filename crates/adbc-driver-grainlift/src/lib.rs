@@ -878,6 +878,10 @@ struct ByteTransport {
     client: Mutex<RpcClient>,
     _iroh_lease: Mutex<Option<IrohLease>>,
     connector: ByteConnector,
+    /// Set when a call timed out: its stream may still deliver a late reply,
+    /// so the next call reconnects first. Lazily, so the timed-out call fails
+    /// at once instead of also waiting on a reconnect to a gateway that is down.
+    needs_reset: std::sync::atomic::AtomicBool,
 }
 
 #[cfg(feature = "byte-transports")]
@@ -1141,6 +1145,7 @@ impl RemoteTransport {
                 client: Mutex::new(client),
                 _iroh_lease: Mutex::new(lease),
                 connector,
+                needs_reset: std::sync::atomic::AtomicBool::new(false),
             })))
         }
     }
@@ -1169,6 +1174,20 @@ impl RemoteTransport {
                 Ok(())
             }
         }
+    }
+
+    /// Reconnect a byte transport whose previous call timed out (see
+    /// `ByteTransport::needs_reset`) before it is used again.
+    #[cfg(feature = "byte-transports")]
+    fn reset_if_needed(&self, byte: &ByteTransport) -> Result<()> {
+        use std::sync::atomic::Ordering;
+        if byte.needs_reset.swap(false, Ordering::SeqCst)
+            && let Err(error) = self.reset()
+        {
+            byte.needs_reset.store(true, Ordering::SeqCst);
+            return Err(error);
+        }
+        Ok(())
     }
 
     #[cfg(feature = "byte-transports")]
@@ -1214,14 +1233,29 @@ impl RemoteTransport {
                     .map_err(rpc_error)
             }),
             #[cfg(feature = "byte-transports")]
-            Self::Byte(byte) => byte
-                .client
-                .lock()
-                .map_err(|_| internal("VGI byte-stream client is poisoned"))?
-                .call_unary(method, request, None)
-                .map(|(batch, _)| batch)
-                .map_err(rpc_error),
+            Self::Byte(byte) => {
+                self.reset_if_needed(byte)?;
+                let result = byte
+                    .client
+                    .lock()
+                    .map_err(|_| internal("VGI byte-stream client is poisoned"))?
+                    .call_unary(method, request, None)
+                    .map(|(batch, _)| batch)
+                    .map_err(rpc_error);
+                mark_reset_on_timeout(byte, &result);
+                result
+            }
         }
+    }
+}
+
+#[cfg(feature = "byte-transports")]
+fn mark_reset_on_timeout<T>(byte: &ByteTransport, result: &Result<T>) {
+    if let Err(error) = result
+        && error.status == Status::Timeout
+    {
+        byte.needs_reset
+            .store(true, std::sync::atomic::Ordering::SeqCst);
     }
 }
 
@@ -1283,6 +1317,38 @@ fn transport_error(message: impl Into<String>) -> Error {
     let mut error = Error::with_message_and_status(message, Status::IO);
     error.sqlstate = SQLSTATE_CONNECTION_FAILURE;
     error
+}
+
+/// SQLSTATE HYT00: timeout expired.
+const SQLSTATE_TIMEOUT: [std::ffi::c_char; 5] = [
+    b'H' as std::ffi::c_char,
+    b'Y' as std::ffi::c_char,
+    b'T' as std::ffi::c_char,
+    b'0' as std::ffi::c_char,
+    b'0' as std::ffi::c_char,
+];
+
+/// The service did not answer within the request timeout. Deliberately not a
+/// lost session: retrying at once (each attempt waiting the full timeout
+/// again) only multiplied the wait for a gateway that is down. Failures that
+/// arrive quickly, such as a stale connection to a just-restarted peer, still
+/// count as lost sessions and are retried.
+fn timeout_error(message: impl Into<String>) -> Error {
+    let mut error = Error::with_message_and_status(message, Status::Timeout);
+    error.sqlstate = SQLSTATE_TIMEOUT;
+    error
+}
+
+/// vgi-rpc reports I/O failures as `IOError` strings, dropping the
+/// `io::ErrorKind`, so timeouts are recognised by their message. A socket
+/// read timeout (SO_RCVTIMEO) surfaces as EAGAIN / WouldBlock, "Resource
+/// temporarily unavailable", on macOS and Linux.
+fn is_timeout_message(message: &str) -> bool {
+    let message = message.to_ascii_lowercase();
+    message.contains("timed out")
+        || message.contains("deadline exceeded")
+        || message.contains("resource temporarily unavailable")
+        || message.contains("would block")
 }
 
 /// The server no longer has this connection's session: the transport dropped
@@ -1558,6 +1624,7 @@ impl RemoteConnection {
             }),
             #[cfg(feature = "byte-transports")]
             RemoteTransport::Byte(byte) => {
+                self.transport.reset_if_needed(byte)?;
                 let mut client = byte
                     .client
                     .lock()
@@ -1575,6 +1642,7 @@ impl RemoteConnection {
                 if result.is_err() {
                     let _ = stream.cancel();
                 }
+                mark_reset_on_timeout(byte, &result);
                 result
             }
         }
@@ -2299,7 +2367,11 @@ fn rpc_error(error: RpcError) -> Error {
     }
     // Anything that is not a structured ADBC error from the server is a
     // failure of the transport itself.
-    transport_error(error.to_string())
+    let message = error.to_string();
+    if is_timeout_message(&message) {
+        return timeout_error(message);
+    }
+    transport_error(message)
 }
 
 fn is_grainlift_database_option(key: &str) -> bool {

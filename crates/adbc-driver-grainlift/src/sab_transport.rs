@@ -116,6 +116,8 @@ struct SlotReader {
     region: i32,
     slot: i32,
     timeout: Duration,
+    /// The `iroh://<EndpointId>` this slot talks to, for error messages.
+    target: String,
 }
 
 struct SlotWriter {
@@ -142,9 +144,16 @@ impl Read for SlotReader {
                 0 => return Ok(0),
                 WOULD_BLOCK => {
                     if started.elapsed() >= self.timeout {
+                        // The adapter Worker is up (opening the slot proved
+                        // it); the remote endpoint is what did not answer.
                         return Err(io::Error::new(
                             io::ErrorKind::TimedOut,
-                            "timed out waiting for the Iroh adapter Worker",
+                            format!(
+                                "{} did not respond within {}s (timed out); is the Grainlift \
+                                 gateway running and reachable?",
+                                self.target,
+                                self.timeout.as_secs()
+                            ),
                         ));
                     }
                 }
@@ -244,6 +253,7 @@ impl SabTransport {
                 region,
                 slot,
                 timeout,
+                target: target.to_string(),
             },
             writer: SlotWriter { region, slot },
             open: true,
