@@ -28,8 +28,8 @@ use adbc_core::{
 };
 use adbc_driver_grainlift::{
     GrainliftConnection, GrainliftDriver, OPTION_BEARER_TOKEN, OPTION_IROH_DIRECT_ADDRESS,
-    OPTION_OAUTH_REFRESH_TOKEN, OPTION_TARGET, OPTION_TLS_CA, OPTION_TLS_CERT, OPTION_TLS_KEY,
-    OPTION_TLS_SERVER_NAME,
+    OPTION_OAUTH_FLOW, OPTION_OAUTH_REFRESH_TOKEN, OPTION_TARGET, OPTION_TLS_CA, OPTION_TLS_CERT,
+    OPTION_TLS_KEY, OPTION_TLS_SERVER_NAME,
 };
 use arrow_array::{Int64Array, RecordBatch, RecordBatchIterator, RecordBatchReader, StringArray};
 use arrow_schema::{ArrowError, DataType, Field, Schema};
@@ -690,18 +690,61 @@ async fn start_oauth_gateway(
         .build();
     let issued = Arc::new(AtomicUsize::new(0));
     let token_issued = Arc::clone(&issued);
-    let token_endpoint = format!("{base}/idp/token");
+    let device_polls = Arc::new(AtomicUsize::new(0));
+    let (token_endpoint, device_endpoint) =
+        (format!("{base}/idp/token"), format!("{base}/idp/device"));
+    let activate = format!("{base}/idp/activate");
     let idp = axum::Router::new()
         .route(
             "/idp/.well-known/openid-configuration",
             axum::routing::get(move || async move {
-                axum::Json(serde_json::json!({ "token_endpoint": token_endpoint }))
+                axum::Json(serde_json::json!({
+                    "token_endpoint": token_endpoint,
+                    "device_authorization_endpoint": device_endpoint,
+                }))
+            }),
+        )
+        .route(
+            "/idp/device",
+            axum::routing::post(move |body: String| async move {
+                assert_eq!(body, "client_id=cupola&scope=openid");
+                axum::Json(serde_json::json!({
+                    "device_code": "device-1",
+                    "user_code": "ABCD-EFGH",
+                    "verification_uri": activate,
+                    "interval": 1,
+                    "expires_in": 60,
+                }))
             }),
         )
         .route(
             "/idp/token",
             axum::routing::post(move |body: String| async move {
                 let next = token_issued.load(Ordering::SeqCst) + 1;
+                if body.starts_with(
+                    "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code",
+                ) {
+                    // The person has not entered the code yet on the first poll.
+                    if device_polls.fetch_add(1, Ordering::SeqCst) == 0 {
+                        return (
+                            axum::http::StatusCode::BAD_REQUEST,
+                            axum::Json(serde_json::json!({ "error": "authorization_pending" })),
+                        );
+                    }
+                    assert!(
+                        body.contains("device_code=device-1&client_id=cupola"),
+                        "{body}"
+                    );
+                    token_issued.store(next, Ordering::SeqCst);
+                    return (
+                        axum::http::StatusCode::OK,
+                        axum::Json(serde_json::json!({
+                            "access_token": format!("fresh-{next}"),
+                            "expires_in": expires_in,
+                            "refresh_token": format!("r-{}", next + 1),
+                        })),
+                    );
+                }
                 let expected =
                     format!("grant_type=refresh_token&refresh_token=r-{next}&client_id=cupola");
                 if body != expected {
@@ -727,6 +770,51 @@ async fn start_oauth_gateway(
             .unwrap();
     });
     (base, issued, task)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn device_sign_in_runs_once_per_process_and_gateway() {
+    let (endpoint, issued, task) = start_oauth_gateway(3600).await;
+    tokio::task::spawn_blocking(move || {
+        let device = || {
+            vec![(
+                OptionDatabase::Other(OPTION_OAUTH_FLOW.into()),
+                "device_code".into(),
+            )]
+        };
+        assert_eq!(
+            query_values(endpoint.clone(), device()).unwrap(),
+            vec![1, 2, 3, 4]
+        );
+        assert_eq!(issued.load(Ordering::SeqCst), 1);
+        // A second database in the process adopts the sign-in: no new prompt.
+        assert_eq!(query_values(endpoint, device()).unwrap(), vec![1, 2, 3, 4]);
+        assert_eq!(issued.load(Ordering::SeqCst), 1);
+    })
+    .await
+    .unwrap();
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn without_sign_in_a_401_fails_fast() {
+    let (endpoint, issued, task) = start_oauth_gateway(3600).await;
+    let error = tokio::task::spawn_blocking(move || {
+        query_values(
+            endpoint,
+            vec![(
+                OptionDatabase::Other(OPTION_OAUTH_FLOW.into()),
+                "none".into(),
+            )],
+        )
+    })
+    .await
+    .unwrap()
+    .err()
+    .unwrap();
+    assert_eq!(error.status, Status::Unauthenticated, "{}", error.message);
+    assert_eq!(issued.load(Ordering::SeqCst), 0);
+    task.abort();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

@@ -349,18 +349,45 @@ fn oauth_resource_metadata(config: &AuthConfig) -> Option<OAuthResourceMetadata>
     }
     metadata.use_id_token_as_bearer = oauth.use_id_token_as_bearer;
     metadata.client_secret = oauth.client_secret.clone().unwrap_or_default();
+    metadata.device_code_client_id = oauth.device_code_client_id.clone().unwrap_or_default();
+    metadata.device_code_client_secret =
+        oauth.device_code_client_secret.clone().unwrap_or_default();
     Some(metadata)
 }
 
 fn build_authenticator(config: &AuthConfig) -> Authenticate {
     if let Some(jwt) = &config.jwt {
-        let jwt_config = JwtConfig::new(&jwt.issuer)
-            .with_audience(&jwt.audience)
-            .with_jwks_url(&jwt.jwks_url)
-            .with_principal_claim(&jwt.principal_claim)
-            .with_refresh_interval(Duration::from_secs(jwt.refresh_interval_seconds))
-            .with_leeway(Duration::from_secs(jwt.leeway_seconds));
-        return jwt_authenticate(jwt_config);
+        // VGI-RPC checks one audience per authenticator; accept a token any of
+        // the configured audiences (e.g. browser and device-flow clients) accepts.
+        let authenticators = jwt
+            .audience
+            .values()
+            .into_iter()
+            .map(|audience| {
+                jwt_authenticate(
+                    JwtConfig::new(&jwt.issuer)
+                        .with_audience(audience)
+                        .with_jwks_url(&jwt.jwks_url)
+                        .with_principal_claim(&jwt.principal_claim)
+                        .with_refresh_interval(Duration::from_secs(jwt.refresh_interval_seconds))
+                        .with_leeway(Duration::from_secs(jwt.leeway_seconds)),
+                )
+            })
+            .collect::<Vec<_>>();
+        if let [single] = authenticators.as_slice() {
+            return single.clone();
+        }
+        return Arc::new(move |request: &vgi_rpc::AuthRequest<'_>| {
+            let mut last = None;
+            for authenticate in &authenticators {
+                match authenticate(request) {
+                    Ok(auth) if auth.authenticated => return Ok(auth),
+                    Ok(auth) => last = Some(Ok(auth)),
+                    Err(error) => last = Some(Err(error)),
+                }
+            }
+            last.expect("at least one audience is configured")
+        });
     }
 
     let tokens: HashMap<String, AuthContext> = config

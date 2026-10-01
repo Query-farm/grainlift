@@ -11,12 +11,15 @@ dependencies = [
  "arrow-array",
  "arrow-buffer",
  "arrow-schema",
+ "base64 0.23.1",
  "grainlift-protocol",
  "iroh",
+ "rand 0.10.3",
  "rcgen",
  "reqwest 0.12.28",
  "rustls",
  "serde_json",
+ "sha2 0.10.9",
  "tempfile",
  "tokio",
  "url",
@@ -4722,9 +4725,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vgi-iroh-transport"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65966f12cf2c3daf32ed56bc4bad4a26fde8963d73d87b5d234259523be5d75d"
+checksum = "bdfc38f2cd81a51c44f9f71a377ce0f9a0ec6f8aeac0a5ccab58cbde6f9cfb3f"
 dependencies = [
  "bytes",
  "http",
@@ -4739,9 +4742,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63a34a89d8f91baa21df6f382f49bba4bbc08579337acee7942dfef749e76782"
+checksum = "767a1e94234f7a53f7b89d6b123397934c594d95e294f098cd51f19eb2bdd806"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -4782,9 +4785,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-client"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "036ec7d9018758a9d2faf2bc6cc3e07829ff6493f54e3f0cf60abed72f9b02b4"
+checksum = "10afc7f3b9b92dbd252fabf1ad79a752ed8621217498faea595fc4dbaf901daf"
 dependencies = [
  "arrow-array",
  "arrow-ipc",
@@ -4807,9 +4810,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-iroh"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e58f067d6f35abe45dc910ba2fef2ece10238bbb61b0f42aa4454c8f7697e446"
+checksum = "bc41de237753cd67288dcb40046bc1cd45458178823e6298210823bd9bb93240"
 dependencies = [
  "iroh",
  "thiserror 2.0.20",
@@ -4824,9 +4827,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-macros"
-version = "0.28.1"
+version = "0.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6e52b3bcd6905567d633686ec7e9448b42770e6980f8c7a6b77bf12e36b65af"
+checksum = "5b987a8302423dad143f791e2998c17dc48d9521e6a1aaa82882b038092ce4b0"
 dependencies = [
  "proc-macro2",
  "quote",

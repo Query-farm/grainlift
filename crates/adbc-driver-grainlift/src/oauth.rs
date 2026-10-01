@@ -76,11 +76,14 @@ pub(crate) struct Response {
 pub(crate) type Send<'a> = &'a dyn Fn(Request<'_>) -> Result<Response>;
 
 /// Explicit settings; anything missing is discovered from the gateway.
+#[derive(Clone)]
 pub(crate) struct Settings {
     pub refresh_token: String,
     pub token_endpoint: Option<String>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
+    /// Bearer the ID token rather than the access token; discovered when unset.
+    pub use_id_token: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -218,18 +221,11 @@ impl Refresher {
                 token_endpoint: token_endpoint.clone(),
                 client_id: client_id.clone(),
                 client_secret: settings.client_secret.clone(),
-                use_id_token: false,
+                use_id_token: settings.use_id_token.unwrap_or(false),
             });
         }
 
-        let metadata_url = format!("{}/.well-known/oauth-protected-resource", self.gateway);
-        let metadata = get_json(send, &metadata_url)?.ok_or_else(|| {
-            unauthenticated(format!(
-                "{} does not advertise OAuth ({metadata_url} not found); configure \
-                 [auth.oauth] on the gateway or set the OAuth token endpoint and client ID",
-                self.gateway
-            ))
-        })?;
+        let (metadata_url, metadata) = resource_metadata(send, &self.gateway)?;
         let text = |key: &str| {
             metadata
                 .get(key)
@@ -274,32 +270,59 @@ impl Refresher {
                 .client_secret
                 .clone()
                 .or_else(|| text("client_secret")),
-            use_id_token: metadata
-                .get("use_id_token_as_bearer")
-                .and_then(Value::as_bool)
-                .unwrap_or(false),
+            use_id_token: settings
+                .use_id_token
+                .unwrap_or_else(|| uses_id_token(&metadata)),
         })
     }
 }
 
-/// The token endpoint from the issuer's OpenID configuration, falling back
-/// to RFC 8414 authorization server metadata.
-fn issuer_token_endpoint(send: Send<'_>, issuer: &str) -> Result<String> {
+/// The gateway's RFC 9728 protected resource metadata, with its URL.
+pub(crate) fn resource_metadata(send: Send<'_>, gateway: &str) -> Result<(String, Value)> {
+    let gateway = gateway.trim_end_matches('/');
+    let metadata_url = format!("{gateway}/.well-known/oauth-protected-resource");
+    let metadata = get_json(send, &metadata_url)?.ok_or_else(|| {
+        unauthenticated(format!(
+            "{gateway} does not advertise OAuth ({metadata_url} not found); configure \
+             [auth.oauth] on the gateway or set the OAuth token endpoint and client ID"
+        ))
+    })?;
+    Ok((metadata_url, metadata))
+}
+
+pub(crate) fn uses_id_token(metadata: &Value) -> bool {
+    metadata
+        .get("use_id_token_as_bearer")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+}
+
+/// The issuer's OpenID configuration, or its RFC 8414 authorization server
+/// metadata.
+pub(crate) fn issuer_metadata(send: Send<'_>, issuer: &str) -> Result<Value> {
     require_secure(issuer, "OAuth authorization server")?;
     let issuer = issuer.trim_end_matches('/');
     for document in ["openid-configuration", "oauth-authorization-server"] {
-        let url = format!("{issuer}/.well-known/{document}");
-        if let Some(metadata) = get_json(send, &url)? {
-            return metadata
-                .get("token_endpoint")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-                .ok_or_else(|| unauthenticated(format!("{url} has no token_endpoint")));
+        if let Some(metadata) = get_json(send, &format!("{issuer}/.well-known/{document}"))? {
+            return Ok(metadata);
         }
     }
     Err(unauthenticated(format!(
         "authorization server {issuer} publishes no OpenID or OAuth metadata"
     )))
+}
+
+/// The token endpoint of an authorization server.
+fn issuer_token_endpoint(send: Send<'_>, issuer: &str) -> Result<String> {
+    issuer_metadata(send, issuer)?
+        .get("token_endpoint")
+        .and_then(Value::as_str)
+        .map(str::to_string)
+        .ok_or_else(|| {
+            unauthenticated(format!(
+                "authorization server {issuer} has no token_endpoint"
+            ))
+        })
 }
 
 /// GET a JSON document; `None` when it does not exist.
@@ -329,7 +352,7 @@ fn get_json(send: Send<'_>, url: &str) -> Result<Option<Value>> {
 
 /// Refresh tokens and client secrets travel to these URLs: HTTPS only, except
 /// on loopback (local development and tests).
-fn require_secure(raw: &str, what: &str) -> Result<()> {
+pub(crate) fn require_secure(raw: &str, what: &str) -> Result<()> {
     let parsed =
         url::Url::parse(raw).map_err(|_| unauthenticated(format!("invalid {what} URL {raw}")))?;
     let loopback = match parsed.host() {
@@ -405,6 +428,7 @@ mod tests {
             token_endpoint: None,
             client_id: None,
             client_secret: None,
+            use_id_token: None,
         }
     }
 

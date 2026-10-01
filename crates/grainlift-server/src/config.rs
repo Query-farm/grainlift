@@ -193,7 +193,8 @@ pub struct AuthConfig {
 #[serde(deny_unknown_fields)]
 pub struct JwtAuthConfig {
     pub issuer: String,
-    pub audience: String,
+    /// One audience, or several (e.g. a browser and a device-flow OAuth client).
+    pub audience: Audience,
     pub jwks_url: String,
     #[serde(default = "default_principal_claim")]
     pub principal_claim: String,
@@ -227,6 +228,12 @@ pub struct OAuthConfig {
     /// Only for identity providers that require a secret even for public
     /// (browser) clients, such as Google; it is published to every client.
     pub client_secret: Option<String>,
+    /// A separate client for the device flow (command-line sign-in), for
+    /// providers that require one: Google's "TVs and Limited Input devices"
+    /// client. `[auth.jwt]` must accept its tokens too.
+    pub device_code_client_id: Option<String>,
+    /// That client's secret; published to every client like `client_secret`.
+    pub device_code_client_secret: Option<String>,
 }
 
 impl OAuthConfig {
@@ -240,6 +247,22 @@ impl OAuthConfig {
                 .iter()
                 .map(String::as_str)
                 .collect()
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub enum Audience {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl Audience {
+    pub fn values(&self) -> Vec<&str> {
+        match self {
+            Self::One(value) => vec![value.as_str()],
+            Self::Many(values) => values.iter().map(String::as_str).collect(),
         }
     }
 }
@@ -492,7 +515,12 @@ impl Config {
         }
         if let Some(jwt) = &self.auth.jwt {
             if jwt.issuer.trim().is_empty()
-                || jwt.audience.trim().is_empty()
+                || jwt.audience.values().is_empty()
+                || jwt
+                    .audience
+                    .values()
+                    .iter()
+                    .any(|audience| audience.trim().is_empty())
                 || jwt.jwks_url.trim().is_empty()
                 || jwt.principal_claim.trim().is_empty()
             {
@@ -536,6 +564,18 @@ impl Config {
                 .is_some_and(|s| s.trim().is_empty())
             {
                 return Err("auth.oauth.client_secret must not be blank when set".into());
+            }
+            let blank =
+                |value: &Option<String>| value.as_deref().is_some_and(|s| s.trim().is_empty());
+            if blank(&oauth.device_code_client_id) || blank(&oauth.device_code_client_secret) {
+                return Err(
+                    "auth.oauth device-code client settings must not be blank when set".into(),
+                );
+            }
+            if oauth.device_code_client_secret.is_some() && oauth.device_code_client_id.is_none() {
+                return Err(
+                    "auth.oauth.device_code_client_secret requires device_code_client_id".into(),
+                );
             }
         }
 
@@ -827,6 +867,23 @@ driver = "adbc_driver_sqlite"
             "[auth.jwt]\nissuer = \"https://issuer.example/\"\naudience = \"grainlift\"\njwks_url = \"https://issuer.example/.well-known/jwks.json\"\n\n[auth.oauth]\nresource = \"https://gw.example\"\nclient_id = \"cupola\"\n{TARGET}"
         );
         let config = Config::from_toml(&oauth).unwrap();
+        let several = jwt.replace(
+            "audience = \"grainlift\"",
+            "audience = [\"browser-client\", \"device-client\"]",
+        );
+        assert_eq!(
+            Config::from_toml(&several)
+                .unwrap()
+                .auth
+                .jwt
+                .unwrap()
+                .audience
+                .values(),
+            vec!["browser-client", "device-client"]
+        );
+        assert!(
+            Config::from_toml(&jwt.replace("audience = \"grainlift\"", "audience = []")).is_err()
+        );
         let (oauth_config, jwt_config) = (
             config.auth.oauth.as_ref().unwrap(),
             config.auth.jwt.as_ref().unwrap(),

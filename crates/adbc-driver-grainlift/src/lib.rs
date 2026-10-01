@@ -21,6 +21,8 @@ pub mod host_http;
 mod iroh_identity;
 #[cfg(feature = "iroh")]
 mod iroh_pool;
+#[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+mod login;
 mod oauth;
 #[cfg(all(feature = "iroh-browser", target_os = "emscripten"))]
 mod sab_transport;
@@ -68,6 +70,11 @@ pub const OPTION_OAUTH_REFRESH_TOKEN: &str = "grainlift.auth.oauth_refresh_token
 pub const OPTION_OAUTH_TOKEN_ENDPOINT: &str = "grainlift.auth.oauth_token_endpoint";
 pub const OPTION_OAUTH_CLIENT_ID: &str = "grainlift.auth.oauth_client_id";
 pub const OPTION_OAUTH_CLIENT_SECRET: &str = "grainlift.auth.oauth_client_secret";
+/// Interactive sign-in when the gateway answers 401 without a usable token:
+/// `auto` (default: when attached to a terminal), `pkce` (browser),
+/// `device_code` or `none`. Native builds only; one sign-in per process and
+/// gateway is shared by all its connections.
+pub const OPTION_OAUTH_FLOW: &str = "grainlift.auth.oauth_flow";
 pub const OPTION_REQUEST_TIMEOUT_MS: &str = "grainlift.request_timeout_ms";
 pub const OPTION_MAX_RESPONSE_BYTES: &str = "grainlift.max_response_bytes";
 pub const OPTION_MAX_BIND_BYTES: &str = "grainlift.max_bind_bytes";
@@ -260,6 +267,7 @@ impl Database for GrainliftDatabase {
                     token_endpoint: self.optional_string(OPTION_OAUTH_TOKEN_ENDPOINT)?,
                     client_id: self.optional_string(OPTION_OAUTH_CLIENT_ID)?,
                     client_secret: self.optional_string(OPTION_OAUTH_CLIENT_SECRET)?,
+                    use_id_token: None,
                 })
             })
             .transpose()?;
@@ -286,6 +294,7 @@ impl Database for GrainliftDatabase {
                 .or(self.optional_string(OPTION_IROH_SECRET_KEY_FILE)?),
             iroh_direct_address: self.optional_string(OPTION_IROH_DIRECT_ADDRESS)?,
             host_ctx: self.optional_string(OPTION_HOST_CTX)?,
+            oauth_flow: self.optional_string(OPTION_OAUTH_FLOW)?,
         };
         let connection_options = opts
             .into_iter()
@@ -865,6 +874,11 @@ struct TransportOptions {
     iroh_direct_address: Option<String>,
     #[cfg_attr(not(feature = "host-http"), allow(dead_code))]
     host_ctx: Option<String>,
+    #[cfg_attr(
+        not(all(feature = "oauth-login", not(target_os = "emscripten"))),
+        allow(dead_code)
+    )]
+    oauth_flow: Option<String>,
 }
 
 struct RemoteConnectionOptions {
@@ -895,7 +909,13 @@ const MAX_IDLE_HTTP_CLIENTS: usize = 4;
 struct HttpTransport {
     endpoint: String,
     credentials: Mutex<Credentials>,
-    oauth: Option<Box<oauth::Refresher>>,
+    /// Set from options, or after an interactive sign-in.
+    oauth: Mutex<Option<Arc<oauth::Refresher>>>,
+    #[cfg_attr(
+        not(all(feature = "oauth-login", not(target_os = "emscripten"))),
+        allow(dead_code)
+    )]
+    oauth_flow: Option<String>,
     backend: HttpBackendChoice,
     request_timeout: Duration,
     max_response_bytes: usize,
@@ -911,6 +931,25 @@ struct Credentials {
     /// Refresh proactively from here on (shortly before the IdP's expiry).
     refresh_at: Option<Instant>,
 }
+
+/// A completed interactive sign-in, shared by every connection in the process
+/// to the same gateway.
+#[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+#[derive(Clone)]
+struct SignedIn {
+    bearer: String,
+    expires_at: Option<Instant>,
+    refresh: Option<oauth::Settings>,
+}
+
+#[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+static SIGNED_IN: std::sync::LazyLock<Mutex<HashMap<String, SignedIn>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+#[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+static SIGN_IN: Mutex<()> = Mutex::new(());
+/// How long an interactive sign-in may take.
+#[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+const SIGN_IN_TIMEOUT: Duration = Duration::from_secs(300);
 
 impl HttpTransport {
     fn credentials(&self) -> Result<(u64, Option<String>)> {
@@ -969,7 +1008,7 @@ impl HttpTransport {
     /// Exchange the refresh token for a new bearer token, unless another
     /// call already replaced the token generation `seen` was using.
     fn refresh_credentials(&self, seen: u64) -> Result<()> {
-        let Some(refresher) = &self.oauth else {
+        let Some(refresher) = self.refresher()? else {
             return Ok(());
         };
         // Held across the token request so concurrent callers refresh once.
@@ -986,6 +1025,92 @@ impl HttpTransport {
         // A minute early (or halfway, for short-lived tokens) so a call never
         // starts with a token that expires in flight.
         credentials.refresh_at = grant.expires_in.map(|lifetime| {
+            Instant::now() + lifetime.saturating_sub(Duration::from_secs(60).min(lifetime / 2))
+        });
+        Ok(())
+    }
+
+    fn refresher(&self) -> Result<Option<Arc<oauth::Refresher>>> {
+        Ok(self
+            .oauth
+            .lock()
+            .map_err(|_| internal("OAuth refresher is poisoned"))?
+            .clone())
+    }
+
+    /// Whether a 401 may start an interactive sign-in.
+    fn can_sign_in(&self) -> bool {
+        #[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+        {
+            login::Flow::parse(self.oauth_flow.as_deref()).is_ok_and(login::Flow::interactive)
+        }
+        #[cfg(not(all(feature = "oauth-login", not(target_os = "emscripten"))))]
+        false
+    }
+
+    /// Sign in interactively, or adopt the sign-in another connection to the
+    /// same gateway completed while this one waited.
+    #[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+    fn sign_in(&self) -> Result<()> {
+        let flow = login::Flow::parse(self.oauth_flow.as_deref())?;
+        // One prompt at a time per process.
+        let _prompt = SIGN_IN
+            .lock()
+            .map_err(|_| internal("sign-in lock is poisoned"))?;
+        let current = self.credentials()?.1;
+        let cached = SIGNED_IN
+            .lock()
+            .map_err(|_| internal("sign-in cache is poisoned"))?
+            .get(&self.endpoint)
+            .cloned();
+        let session = match cached {
+            Some(session) if Some(&session.bearer) != current.as_ref() => session,
+            _ => {
+                let login = login::sign_in(
+                    &|request| self.plain_request(request),
+                    &self.endpoint,
+                    flow,
+                    SIGN_IN_TIMEOUT,
+                )?;
+                let session = SignedIn {
+                    bearer: login.bearer,
+                    expires_at: login.expires_in.map(|lifetime| Instant::now() + lifetime),
+                    refresh: login.refresh,
+                };
+                SIGNED_IN
+                    .lock()
+                    .map_err(|_| internal("sign-in cache is poisoned"))?
+                    .insert(self.endpoint.clone(), session.clone());
+                session
+            }
+        };
+        self.adopt(session)
+    }
+
+    #[cfg(not(all(feature = "oauth-login", not(target_os = "emscripten"))))]
+    fn sign_in(&self) -> Result<()> {
+        Err(oauth::unauthenticated(
+            "interactive sign-in is not available in this build",
+        ))
+    }
+
+    /// Use a signed-in session's token and refresh settings.
+    #[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+    fn adopt(&self, session: SignedIn) -> Result<()> {
+        *self
+            .oauth
+            .lock()
+            .map_err(|_| internal("OAuth refresher is poisoned"))? = session
+            .refresh
+            .map(|settings| Arc::new(oauth::Refresher::new(&self.endpoint, settings)));
+        let mut credentials = self
+            .credentials
+            .lock()
+            .map_err(|_| internal("HTTP credentials are poisoned"))?;
+        credentials.bearer = Some(session.bearer);
+        credentials.generation += 1;
+        credentials.refresh_at = session.expires_at.map(|at| {
+            let lifetime = at.saturating_duration_since(Instant::now());
             Instant::now() + lifetime.saturating_sub(Duration::from_secs(60).min(lifetime / 2))
         });
         Ok(())
@@ -1215,7 +1340,7 @@ impl ByteConnector {
 }
 
 enum RemoteTransport {
-    Http(HttpTransport),
+    Http(Box<HttpTransport>),
     #[cfg(feature = "byte-transports")]
     Byte(Box<ByteTransport>),
 }
@@ -1276,8 +1401,12 @@ impl RemoteTransport {
         let endpoint = normalize_endpoint(endpoint);
         if endpoint.starts_with("http://") || endpoint.starts_with("https://") {
             let backend = http_backend(&endpoint, request_timeout, &options)?;
+            let interactive = bearer_token.is_none() && oauth.is_none();
             let http = HttpTransport {
-                oauth: oauth.map(|settings| Box::new(oauth::Refresher::new(&endpoint, settings))),
+                oauth: Mutex::new(
+                    oauth.map(|settings| Arc::new(oauth::Refresher::new(&endpoint, settings))),
+                ),
+                oauth_flow: options.oauth_flow.clone(),
                 endpoint,
                 credentials: Mutex::new(Credentials {
                     bearer: bearer_token,
@@ -1291,10 +1420,24 @@ impl RemoteTransport {
             };
             // With only a refresh token, get a bearer token now, so a bad
             // login fails the connection rather than its first query.
-            if http.oauth.is_some() && http.credentials()?.1.is_none() {
+            if http.refresher()?.is_some() && http.credentials()?.1.is_none() {
                 http.refresh_credentials(0)?;
             }
-            return Ok(Self::Http(http));
+            // Without credentials, reuse this process's sign-in to the gateway.
+            #[cfg(all(feature = "oauth-login", not(target_os = "emscripten")))]
+            if interactive {
+                let cached = SIGNED_IN
+                    .lock()
+                    .map_err(|_| internal("sign-in cache is poisoned"))?
+                    .get(&http.endpoint)
+                    .cloned();
+                if let Some(session) = cached {
+                    http.adopt(session)?;
+                }
+            }
+            #[cfg(not(all(feature = "oauth-login", not(target_os = "emscripten"))))]
+            let _ = interactive;
+            return Ok(Self::Http(Box::new(http)));
         }
         if oauth.is_some() {
             return Err(invalid(
@@ -1398,18 +1541,27 @@ impl RemoteTransport {
                 "HTTP stream requested for a byte-stream transport",
             ));
         };
-        let mut refreshed = false;
+        let (mut refreshed, mut signed_in) = (false, false);
         loop {
             let (generation, mut client) = http.checkout()?;
             let result = f(&mut client);
             match result {
-                Err(error)
-                    if !refreshed
-                        && http.oauth.is_some()
-                        && oauth::is_gateway_unauthorized(&error) =>
-                {
-                    refreshed = true;
-                    http.refresh_credentials(generation)?;
+                // The gateway rejected the token: refresh it, else (or when
+                // the refresh token no longer works) sign in once.
+                Err(error) if !signed_in && oauth::is_gateway_unauthorized(&error) => {
+                    if !refreshed && http.refresher()?.is_some() {
+                        refreshed = true;
+                        match http.refresh_credentials(generation) {
+                            Ok(()) => continue,
+                            Err(refresh_error) if !http.can_sign_in() => return Err(refresh_error),
+                            Err(_) => {}
+                        }
+                    }
+                    if !http.can_sign_in() {
+                        return Err(error);
+                    }
+                    signed_in = true;
+                    http.sign_in()?;
                 }
                 result => {
                     // A failed call may leave the client mid-stream; only
@@ -2605,6 +2757,7 @@ fn is_grainlift_database_option(key: &str) -> bool {
             | OPTION_OAUTH_TOKEN_ENDPOINT
             | OPTION_OAUTH_CLIENT_ID
             | OPTION_OAUTH_CLIENT_SECRET
+            | OPTION_OAUTH_FLOW
             | OPTION_REQUEST_TIMEOUT_MS
             | OPTION_MAX_RESPONSE_BYTES
             | OPTION_MAX_BIND_BYTES

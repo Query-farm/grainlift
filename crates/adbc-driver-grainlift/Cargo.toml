@@ -31,9 +31,11 @@ readme = "../../README.md"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
 [features]
-default = ["reqwest-http", "tls-tcp", "iroh"]
+default = ["reqwest-http", "tls-tcp", "iroh", "oauth-login"]
 # HTTP(S) endpoints through reqwest (blocking).
 reqwest-http = ["dep:reqwest", "dep:rustls", "vgi-rpc-client/reqwest"]
+# Interactive OAuth sign-in (browser PKCE or device flow) for native clients.
+oauth-login = ["dep:base64", "dep:rand", "dep:sha2"]
 # HTTP(S) endpoints through an executor registered by the host application
 # (see host_http.rs). Used by the DuckDB extension on every platform.
 host-http = []
@@ -54,6 +56,9 @@ adbc_ffi.workspace = true
 arrow-array.workspace = true
 arrow-buffer.workspace = true
 arrow-schema.workspace = true
+base64 = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+sha2 = { version = "0.10", optional = true }
 reqwest = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 serde_json.workspace = true
