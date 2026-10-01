@@ -117,6 +117,25 @@ pub fn http_authenticator(
     }))
 }
 
+/// Reject requests `inner` leaves unauthenticated (no token, or one it does
+/// not recognise) with an HTTP 401 carrying the OAuth `WWW-Authenticate`
+/// challenge, instead of letting them reach the session manager, whose
+/// rejection is an in-band RPC error clients cannot tell from other failures.
+pub fn require_credentials(inner: Authenticate) -> Authenticate {
+    Arc::new(move |request: &AuthRequest<'_>| {
+        let auth = inner(request)?;
+        if auth.authenticated {
+            return Ok(auth);
+        }
+        let reason = if request.header("authorization").is_none() {
+            AuthReason::MissingCredential
+        } else {
+            AuthReason::InvalidCredential
+        };
+        Err(RpcError::auth_failure(reason, "authentication required"))
+    })
+}
+
 fn valid_principal(principal: &str) -> bool {
     !principal.is_empty() && principal.len() <= MAX_PRINCIPAL_BYTES && !principal.contains('\0')
 }
@@ -236,6 +255,19 @@ mod tests {
 
     fn bearer(token: &str) -> Vec<(String, String)> {
         vec![("Authorization".into(), format!("Bearer {token}"))]
+    }
+
+    #[test]
+    fn require_credentials_rejects_unauthenticated_requests_with_a_reason() {
+        let authenticate = require_credentials(bearer_authenticate_static(HashMap::from([(
+            "alice-token".to_string(),
+            AuthContext::for_principal(BEARER_DOMAIN, "alice"),
+        )])));
+        assert!(authenticate(&request(&bearer("alice-token"))).is_ok());
+        let missing = authenticate(&request(&[])).err().unwrap();
+        assert_eq!(missing.auth_reason, Some(AuthReason::MissingCredential));
+        let invalid = authenticate(&request(&bearer("expired"))).err().unwrap();
+        assert_eq!(invalid.auth_reason, Some(AuthReason::InvalidCredential));
     }
 
     #[test]

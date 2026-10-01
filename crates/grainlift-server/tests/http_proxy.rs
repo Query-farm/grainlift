@@ -28,17 +28,20 @@ use adbc_core::{
 };
 use adbc_driver_grainlift::{
     GrainliftConnection, GrainliftDriver, OPTION_BEARER_TOKEN, OPTION_IROH_DIRECT_ADDRESS,
-    OPTION_TARGET, OPTION_TLS_CA, OPTION_TLS_CERT, OPTION_TLS_KEY, OPTION_TLS_SERVER_NAME,
+    OPTION_OAUTH_REFRESH_TOKEN, OPTION_TARGET, OPTION_TLS_CA, OPTION_TLS_CERT, OPTION_TLS_KEY,
+    OPTION_TLS_SERVER_NAME,
 };
 use arrow_array::{Int64Array, RecordBatch, RecordBatchIterator, RecordBatchReader, StringArray};
 use arrow_schema::{ArrowError, DataType, Field, Schema};
 use grainlift_protocol::{JsonOptionValue, WireOption};
 use grainlift_server::backend::{Backend, BackendConnection, BackendStatement};
 use grainlift_server::config::TargetConfig;
+use grainlift_server::hosting::require_credentials;
 use grainlift_server::service::build_server;
 use grainlift_server::session::SessionManager;
 use vgi_rpc::AuthContext;
 use vgi_rpc::auth::bearer::bearer_authenticate_static;
+use vgi_rpc::auth::oauth::OAuthResourceMetadata;
 use vgi_rpc::http::HttpState;
 use vgi_rpc::tcp::{
     TcpIdentityOptions, TcpMutualTlsConfig, TcpMutualTlsOptions, serve_tcp,
@@ -654,7 +657,173 @@ async fn authentication_is_required() {
     })
     .await
     .unwrap();
-    assert!(matches!(error.status, Status::IO | Status::Unauthorized));
+    // A 401 is not a lost session: no reconnect retries.
+    assert_eq!(error.status, Status::Unauthenticated, "{}", error.message);
+    task.abort();
+}
+
+/// A gateway accepting static tokens `fresh-1`, `fresh-2`, … and advertising
+/// an OAuth issuer on the same listener, whose token endpoint hands out the
+/// next `fresh-N` for refresh token `r-N` (rotating it to `r-N+1`).
+async fn start_oauth_gateway(
+    expires_in: u64,
+) -> (String, Arc<AtomicUsize>, tokio::task::JoinHandle<()>) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let tokens = (1..=5)
+        .map(|n| {
+            (
+                format!("fresh-{n}"),
+                AuthContext::for_principal("bearer", "alice"),
+            )
+        })
+        .collect::<HashMap<_, _>>();
+    let server = Arc::new(build_server(fake_manager(true), "oauth-worker".into()));
+    let state = HttpState::builder()
+        .server(server)
+        .authenticate(require_credentials(bearer_authenticate_static(tokens)))
+        .oauth_resource_metadata(
+            OAuthResourceMetadata::new(&base)
+                .with_authorization_server(format!("{base}/idp"))
+                .with_client_id("cupola"),
+        )
+        .build();
+    let issued = Arc::new(AtomicUsize::new(0));
+    let token_issued = Arc::clone(&issued);
+    let token_endpoint = format!("{base}/idp/token");
+    let idp = axum::Router::new()
+        .route(
+            "/idp/.well-known/openid-configuration",
+            axum::routing::get(move || async move {
+                axum::Json(serde_json::json!({ "token_endpoint": token_endpoint }))
+            }),
+        )
+        .route(
+            "/idp/token",
+            axum::routing::post(move |body: String| async move {
+                let next = token_issued.load(Ordering::SeqCst) + 1;
+                let expected =
+                    format!("grant_type=refresh_token&refresh_token=r-{next}&client_id=cupola");
+                if body != expected {
+                    return (
+                        axum::http::StatusCode::BAD_REQUEST,
+                        axum::Json(serde_json::json!({ "error": "invalid_grant" })),
+                    );
+                }
+                token_issued.store(next, Ordering::SeqCst);
+                (
+                    axum::http::StatusCode::OK,
+                    axum::Json(serde_json::json!({
+                        "access_token": format!("fresh-{next}"),
+                        "expires_in": expires_in,
+                        "refresh_token": format!("r-{}", next + 1),
+                    })),
+                )
+            }),
+        );
+    let task = tokio::spawn(async move {
+        axum::serve(listener, vgi_rpc::http::build_router(state).merge(idp))
+            .await
+            .unwrap();
+    });
+    (base, issued, task)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn oauth_refresh_token_alone_logs_in_through_discovery() {
+    let (endpoint, issued, task) = start_oauth_gateway(3600).await;
+    let values = tokio::task::spawn_blocking(move || {
+        query_values(
+            endpoint,
+            vec![(
+                OptionDatabase::Other(OPTION_OAUTH_REFRESH_TOKEN.into()),
+                "r-1".into(),
+            )],
+        )
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(values, vec![1, 2, 3, 4]);
+    assert_eq!(issued.load(Ordering::SeqCst), 1);
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn expired_bearer_token_is_refreshed_once_and_retried() {
+    let (endpoint, issued, task) = start_oauth_gateway(3600).await;
+    let values = tokio::task::spawn_blocking(move || {
+        query_values(
+            endpoint,
+            vec![
+                (
+                    OptionDatabase::Other(OPTION_BEARER_TOKEN.into()),
+                    "expired".into(),
+                ),
+                (
+                    OptionDatabase::Other(OPTION_OAUTH_REFRESH_TOKEN.into()),
+                    "r-1".into(),
+                ),
+            ],
+        )
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(values, vec![1, 2, 3, 4]);
+    assert_eq!(issued.load(Ordering::SeqCst), 1);
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn token_is_refreshed_before_it_expires() {
+    // A one-second token is refreshed after half its lifetime.
+    let (endpoint, issued, task) = start_oauth_gateway(1).await;
+    tokio::task::spawn_blocking(move || {
+        let mut driver = GrainliftDriver;
+        let database = driver
+            .new_database_with_opts([
+                (OptionDatabase::Uri, endpoint.into()),
+                (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+                (
+                    OptionDatabase::Other(OPTION_OAUTH_REFRESH_TOKEN.into()),
+                    "r-1".into(),
+                ),
+            ])
+            .unwrap();
+        let mut connection = database.new_connection().unwrap();
+        let mut statement = connection.new_statement().unwrap();
+        statement.set_sql_query("select value from test").unwrap();
+        assert_eq!(statement.execute_update().unwrap(), Some(7));
+        assert_eq!(issued.load(Ordering::SeqCst), 1);
+        std::thread::sleep(Duration::from_millis(700));
+        assert_eq!(statement.execute_update().unwrap(), Some(7));
+        assert_eq!(issued.load(Ordering::SeqCst), 2);
+    })
+    .await
+    .unwrap();
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn rejected_refresh_token_fails_the_connection_clearly() {
+    let (endpoint, issued, task) = start_oauth_gateway(3600).await;
+    let error = tokio::task::spawn_blocking(move || {
+        query_values(
+            endpoint,
+            vec![(
+                OptionDatabase::Other(OPTION_OAUTH_REFRESH_TOKEN.into()),
+                "stolen".into(),
+            )],
+        )
+    })
+    .await
+    .unwrap()
+    .err()
+    .unwrap();
+    assert_eq!(error.status, Status::Unauthenticated);
+    assert!(error.message.contains("invalid_grant"), "{}", error.message);
+    assert_eq!(issued.load(Ordering::SeqCst), 0);
     task.abort();
 }
 

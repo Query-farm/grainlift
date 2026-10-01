@@ -29,6 +29,18 @@ Two authentication modes are available and are mutually exclusive:
 - JWT bearer tokens are signature-checked against a configured HTTPS JWKS URL.
   Issuer, audience, expiry, not-before, and a nonblank principal claim are
   validated by VGI-RPC. Unknown key IDs cause a guarded JWKS refresh.
+  `[auth.oauth]` additionally publishes RFC 9728 protected resource metadata
+  (the issuer and a public client ID) so clients can obtain such tokens with
+  OAuth PKCE; it never changes which tokens are accepted. An optional
+  `client_secret` is published to every client, so configure one only for
+  identity providers that require it for public clients.
+
+When authentication is required, the HTTP listener rejects a request without
+an accepted credential with `401 Unauthorized` and, with `[auth.oauth]`, a
+`WWW-Authenticate` challenge naming the metadata. The driver refreshes an
+expired token from `grainlift.auth.oauth_refresh_token` and retries the call
+once; refresh tokens and client secrets are sent only to HTTPS (or loopback)
+token endpoints and are never forwarded to downstream drivers.
 
 The current server executable serves plaintext HTTP. Its default configuration
 therefore refuses to bind outside loopback. Production deployments must put a

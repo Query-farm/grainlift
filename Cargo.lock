@@ -4722,9 +4722,9 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vgi-iroh-transport"
-version = "0.28.0"
+version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61c710bfd32c65f1829037e7b0c58b1a2a90cb1597cf78edfbac95554900ddfc"
+checksum = "65966f12cf2c3daf32ed56bc4bad4a26fde8963d73d87b5d234259523be5d75d"
 dependencies = [
  "bytes",
  "http",
@@ -4739,9 +4739,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc"
-version = "0.28.0"
+version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4176b0e73f5650853d3f812e29098f8291b902b9f61da430e4c360aba7838114"
+checksum = "63a34a89d8f91baa21df6f382f49bba4bbc08579337acee7942dfef749e76782"
 dependencies = [
  "arrow-array",
  "arrow-buffer",
@@ -4782,9 +4782,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-client"
-version = "0.28.0"
+version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2980c8f193ec457f5ae54a71ed5ef82bf4dffb58eb9e98da6ec4dab50a3929be"
+checksum = "036ec7d9018758a9d2faf2bc6cc3e07829ff6493f54e3f0cf60abed72f9b02b4"
 dependencies = [
  "arrow-array",
  "arrow-ipc",
@@ -4807,9 +4807,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-iroh"
-version = "0.28.0"
+version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e51a3cc9822b48ee923d5b429052183d5f91501e0a3c92b6499c9611df20d408"
+checksum = "e58f067d6f35abe45dc910ba2fef2ece10238bbb61b0f42aa4454c8f7697e446"
 dependencies = [
  "iroh",
  "thiserror 2.0.20",
@@ -4824,9 +4824,9 @@ dependencies = [
 
 [[package]]
 name = "vgi-rpc-macros"
-version = "0.28.0"
+version = "0.28.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19cd71fb169cbf81e05125fd525989508fed82522d9b6a547a7510e52290fb88"
+checksum = "b6e52b3bcd6905567d633686ec7e9448b42770e6980f8c7a6b77bf12e36b65af"
 dependencies = [
  "proc-macro2",
  "quote",

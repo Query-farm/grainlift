@@ -309,6 +309,10 @@ Pass Grainlift options as ADBC database options:
 | `grainlift.uri` | Grainlift endpoint using a product or native transport URL | required (`uri` is also accepted) |
 | `grainlift.target` | Server-configured target name | required |
 | `grainlift.auth.bearer_token` | HTTP(S) bearer token | none |
+| `grainlift.auth.oauth_refresh_token` | HTTP(S) OAuth refresh token; the driver exchanges it for bearer tokens before they expire and after a 401 | none |
+| `grainlift.auth.oauth_token_endpoint` | Token endpoint for the refresh grant | discovered from the gateway's `/.well-known/oauth-protected-resource` and the issuer's OpenID configuration |
+| `grainlift.auth.oauth_client_id` | OAuth client ID for the refresh grant | discovered (`client_id` in the gateway's metadata) |
+| `grainlift.auth.oauth_client_secret` | OAuth client secret, for identity providers that require one | discovered when the gateway advertises one |
 | `grainlift.request_timeout_ms` | Timeout for each RPC | `30000` |
 | `grainlift.max_response_bytes` | Maximum accepted HTTP response size | `268435456` |
 | `grainlift.max_bind_bytes` | Cumulative parameter-bind budget | `67108864` |
@@ -466,7 +470,10 @@ execution deadlines are required. See the
 ## Security and observability
 
 For HTTP, development deployments can map static bearer tokens to principals;
-production deployments can use a JWT issuer and JWKS endpoint. Target
+production deployments can use a JWT issuer and JWKS endpoint. With
+`[auth.oauth]` the gateway also advertises its identity provider (RFC 9728
+protected resource metadata), so browser clients such as Cupola can sign users
+in with OAuth PKCE and the driver can refresh their tokens. Target
 permissions bind authenticated principals to an explicit set of routes. mTLS
 and Iroh derive the principal from the transport identity.
 

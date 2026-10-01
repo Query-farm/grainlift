@@ -88,6 +88,18 @@ development-token = "developer@example.com"
 # principal_claim = "sub"
 # refresh_interval_seconds = 600
 # leeway_seconds = 30
+#
+# OAuth login for browser and CLI clients (requires [auth.jwt]). Advertises
+# RFC 9728 metadata at /.well-known/oauth-protected-resource and in the
+# WWW-Authenticate challenge on 401s, so Cupola can run a PKCE login and the
+# driver can refresh tokens from grainlift.auth.oauth_refresh_token.
+# [auth.oauth]
+# resource = "https://grainlift.example.com"   # this gateway's public URL
+# client_id = "grainlift-public-client"        # public (PKCE) client at the IdP
+# scopes = ["openid", "profile", "offline_access"]
+# authorization_servers = ["https://identity.example.com/"]  # default: [auth.jwt] issuer
+# use_id_token_as_bearer = false   # send the OIDC id_token instead of the access token
+# client_secret = "..."            # only for IdPs that require one for public clients (Google); published to clients
 
 [targets.sqlite]
 # Logical driver name from the manifest installed by `dbc install sqlite`.

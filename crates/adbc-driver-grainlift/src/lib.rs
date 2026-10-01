@@ -21,6 +21,7 @@ pub mod host_http;
 mod iroh_identity;
 #[cfg(feature = "iroh")]
 mod iroh_pool;
+mod oauth;
 #[cfg(all(feature = "iroh-browser", target_os = "emscripten"))]
 mod sab_transport;
 
@@ -30,7 +31,7 @@ use std::sync::mpsc::{self, SyncSender};
 use std::sync::{Arc, Mutex};
 #[cfg(all(feature = "byte-transports", not(target_family = "wasm")))]
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use adbc_core::error::{Error, Result, Status};
 use adbc_core::options::{
@@ -60,6 +61,13 @@ pub const DRIVER_ARROW_VERSION: &str = "v59";
 pub const OPTION_GRAINLIFT_URI: &str = "grainlift.uri";
 pub const OPTION_TARGET: &str = "grainlift.target";
 pub const OPTION_BEARER_TOKEN: &str = "grainlift.auth.bearer_token";
+/// An OAuth refresh token the driver exchanges for bearer tokens as they
+/// expire (HTTP only). The token endpoint and client ID are discovered from
+/// the gateway's `/.well-known/oauth-protected-resource` unless set below.
+pub const OPTION_OAUTH_REFRESH_TOKEN: &str = "grainlift.auth.oauth_refresh_token";
+pub const OPTION_OAUTH_TOKEN_ENDPOINT: &str = "grainlift.auth.oauth_token_endpoint";
+pub const OPTION_OAUTH_CLIENT_ID: &str = "grainlift.auth.oauth_client_id";
+pub const OPTION_OAUTH_CLIENT_SECRET: &str = "grainlift.auth.oauth_client_secret";
 pub const OPTION_REQUEST_TIMEOUT_MS: &str = "grainlift.request_timeout_ms";
 pub const OPTION_MAX_RESPONSE_BYTES: &str = "grainlift.max_response_bytes";
 pub const OPTION_MAX_BIND_BYTES: &str = "grainlift.max_bind_bytes";
@@ -115,6 +123,19 @@ impl GrainliftDatabase {
             return Err(invalid(
                 "set only one of grainlift.iroh.secret_key and grainlift.iroh.secret_key_file",
             ));
+        }
+        if !self.options.contains_key(OPTION_OAUTH_REFRESH_TOKEN)
+            && [
+                OPTION_OAUTH_TOKEN_ENDPOINT,
+                OPTION_OAUTH_CLIENT_ID,
+                OPTION_OAUTH_CLIENT_SECRET,
+            ]
+            .iter()
+            .any(|key| self.options.contains_key(*key))
+        {
+            return Err(invalid(format!(
+                "OAuth client options require {OPTION_OAUTH_REFRESH_TOKEN}"
+            )));
         }
         Ok(())
     }
@@ -231,6 +252,17 @@ impl Database for GrainliftDatabase {
             .get(OPTION_BEARER_TOKEN)
             .map(|_| self.string_option(OPTION_BEARER_TOKEN))
             .transpose()?;
+        let oauth = self
+            .optional_string(OPTION_OAUTH_REFRESH_TOKEN)?
+            .map(|refresh_token| -> Result<oauth::Settings> {
+                Ok(oauth::Settings {
+                    refresh_token,
+                    token_endpoint: self.optional_string(OPTION_OAUTH_TOKEN_ENDPOINT)?,
+                    client_id: self.optional_string(OPTION_OAUTH_CLIENT_ID)?,
+                    client_secret: self.optional_string(OPTION_OAUTH_CLIENT_SECRET)?,
+                })
+            })
+            .transpose()?;
         let request_timeout_ms =
             self.positive_int_option(OPTION_REQUEST_TIMEOUT_MS, DEFAULT_REQUEST_TIMEOUT_MS)?;
         let max_response_bytes =
@@ -265,6 +297,7 @@ impl Database for GrainliftDatabase {
         let state = RemoteConnection::open(RemoteConnectionOptions {
             endpoint,
             bearer_token,
+            oauth,
             target,
             database_options: self.remote_options(),
             connection_options,
@@ -837,6 +870,7 @@ struct TransportOptions {
 struct RemoteConnectionOptions {
     endpoint: String,
     bearer_token: Option<String>,
+    oauth: Option<oauth::Settings>,
     target: String,
     database_options: Vec<protocol::NamedOption>,
     connection_options: Vec<protocol::NamedOption>,
@@ -860,11 +894,150 @@ const MAX_IDLE_HTTP_CLIENTS: usize = 4;
 
 struct HttpTransport {
     endpoint: String,
-    bearer_token: Option<String>,
+    credentials: Mutex<Credentials>,
+    oauth: Option<Box<oauth::Refresher>>,
     backend: HttpBackendChoice,
     request_timeout: Duration,
     max_response_bytes: usize,
-    idle_clients: Mutex<Vec<HttpClient>>,
+    /// Idle clients with the credential generation they were built with.
+    idle_clients: Mutex<Vec<(u64, HttpClient)>>,
+}
+
+/// The bearer token HTTP clients send. Each refresh bumps `generation`, so
+/// clients built with an older token are discarded instead of reused.
+struct Credentials {
+    bearer: Option<String>,
+    generation: u64,
+    /// Refresh proactively from here on (shortly before the IdP's expiry).
+    refresh_at: Option<Instant>,
+}
+
+impl HttpTransport {
+    fn credentials(&self) -> Result<(u64, Option<String>)> {
+        let credentials = self
+            .credentials
+            .lock()
+            .map_err(|_| internal("HTTP credentials are poisoned"))?;
+        Ok((credentials.generation, credentials.bearer.clone()))
+    }
+
+    /// An HTTP client carrying the current token, refreshing it first when it
+    /// is about to expire.
+    fn checkout(&self) -> Result<(u64, HttpClient)> {
+        let due = {
+            let credentials = self
+                .credentials
+                .lock()
+                .map_err(|_| internal("HTTP credentials are poisoned"))?;
+            credentials
+                .refresh_at
+                .is_some_and(|at| Instant::now() >= at)
+                .then_some(credentials.generation)
+        };
+        // Best effort: the token is still valid for a while, and a 401 refreshes
+        // (and reports a failure) anyway. Stop refreshing ahead after a failure
+        // so an unreachable identity provider does not slow every call.
+        if let Some(generation) = due
+            && self.refresh_credentials(generation).is_err()
+            && let Ok(mut credentials) = self.credentials.lock()
+            && credentials.generation == generation
+        {
+            credentials.refresh_at = None;
+        }
+        let (generation, bearer) = self.credentials()?;
+        let mut idle = self
+            .idle_clients
+            .lock()
+            .map_err(|_| internal("HTTP client pool is poisoned"))?;
+        while let Some((built_with, client)) = idle.pop() {
+            if built_with == generation {
+                return Ok((generation, client));
+            }
+        }
+        drop(idle);
+        Ok((generation, build_client(self, bearer.as_deref())?))
+    }
+
+    fn checkin(&self, generation: u64, client: HttpClient) {
+        if let Ok(mut idle) = self.idle_clients.lock()
+            && idle.len() < MAX_IDLE_HTTP_CLIENTS
+        {
+            idle.push((generation, client));
+        }
+    }
+
+    /// Exchange the refresh token for a new bearer token, unless another
+    /// call already replaced the token generation `seen` was using.
+    fn refresh_credentials(&self, seen: u64) -> Result<()> {
+        let Some(refresher) = &self.oauth else {
+            return Ok(());
+        };
+        // Held across the token request so concurrent callers refresh once.
+        let mut credentials = self
+            .credentials
+            .lock()
+            .map_err(|_| internal("HTTP credentials are poisoned"))?;
+        if credentials.generation != seen {
+            return Ok(());
+        }
+        let grant = refresher.refresh(&|request| self.plain_request(request))?;
+        credentials.bearer = Some(grant.bearer);
+        credentials.generation += 1;
+        // A minute early (or halfway, for short-lived tokens) so a call never
+        // starts with a token that expires in flight.
+        credentials.refresh_at = grant.expires_in.map(|lifetime| {
+            Instant::now() + lifetime.saturating_sub(Duration::from_secs(60).min(lifetime / 2))
+        });
+        Ok(())
+    }
+
+    /// A plain HTTP request (OAuth discovery and token refresh) through the
+    /// same backend as the RPC calls.
+    fn plain_request(&self, request: oauth::Request<'_>) -> Result<oauth::Response> {
+        match &self.backend {
+            #[cfg(feature = "reqwest-http")]
+            HttpBackendChoice::Reqwest(client) => {
+                let method = reqwest::Method::from_bytes(request.method.as_bytes())
+                    .map_err(|error| internal(error.to_string()))?;
+                let mut builder = client
+                    .request(method, request.url)
+                    .timeout(self.request_timeout)
+                    .body(request.body);
+                for (name, value) in &request.headers {
+                    builder = builder.header(name, value);
+                }
+                let response = builder
+                    .send()
+                    .map_err(|error| transport_error(error.to_string()))?;
+                let status = response.status().as_u16();
+                let body = response
+                    .bytes()
+                    .map_err(|error| transport_error(error.to_string()))?;
+                Ok(oauth::Response {
+                    status,
+                    body: body.to_vec(),
+                })
+            }
+            #[cfg(feature = "host-http")]
+            HttpBackendChoice::Host(executor) => {
+                use vgi_rpc_client::http::{HttpExecutor, HttpRequest};
+                let response = executor
+                    .execute(HttpRequest {
+                        method: request.method,
+                        url: request.url,
+                        headers: &request.headers,
+                        body: &request.body,
+                        timeout: self.request_timeout,
+                        follow_redirects: true,
+                    })
+                    .map_err(|error| transport_error(error.message))?;
+                Ok(oauth::Response {
+                    status: response.status,
+                    body: response.body,
+                })
+            }
+        }
+    }
 }
 
 #[cfg(feature = "iroh")]
@@ -1095,6 +1268,7 @@ impl RemoteTransport {
     fn connect(
         endpoint: String,
         bearer_token: Option<String>,
+        oauth: Option<oauth::Settings>,
         request_timeout: Duration,
         max_response_bytes: usize,
         options: TransportOptions,
@@ -1102,14 +1276,30 @@ impl RemoteTransport {
         let endpoint = normalize_endpoint(endpoint);
         if endpoint.starts_with("http://") || endpoint.starts_with("https://") {
             let backend = http_backend(&endpoint, request_timeout, &options)?;
-            return Ok(Self::Http(HttpTransport {
+            let http = HttpTransport {
+                oauth: oauth.map(|settings| Box::new(oauth::Refresher::new(&endpoint, settings))),
                 endpoint,
-                bearer_token,
+                credentials: Mutex::new(Credentials {
+                    bearer: bearer_token,
+                    generation: 0,
+                    refresh_at: None,
+                }),
                 backend,
                 request_timeout,
                 max_response_bytes,
                 idle_clients: Mutex::new(Vec::new()),
-            }));
+            };
+            // With only a refresh token, get a bearer token now, so a bad
+            // login fails the connection rather than its first query.
+            if http.oauth.is_some() && http.credentials()?.1.is_none() {
+                http.refresh_credentials(0)?;
+            }
+            return Ok(Self::Http(http));
+        }
+        if oauth.is_some() {
+            return Err(invalid(
+                "OAuth authentication is available only for HTTP; use mTLS identity for tls+tcp:// or endpoint identity for iroh://",
+            ));
         }
         if bearer_token.is_some() {
             return Err(invalid(
@@ -1197,31 +1387,40 @@ impl RemoteTransport {
 
     /// Run `f` with a VGI HTTP client, reusing an idle one when available. No
     /// lock is held while `f` performs I/O.
-    fn with_http_client<R>(&self, f: impl FnOnce(&mut HttpClient) -> Result<R>) -> Result<R> {
+    ///
+    /// When the gateway answers 401 and the connection has an OAuth refresh
+    /// token, the token is refreshed and `f` runs once more; `f` must be safe
+    /// to repeat after a 401 (the gateway did not act on the request).
+    fn with_http_client<R>(&self, mut f: impl FnMut(&mut HttpClient) -> Result<R>) -> Result<R> {
         #[allow(irrefutable_let_patterns)]
         let Self::Http(http) = self else {
             return Err(internal(
                 "HTTP stream requested for a byte-stream transport",
             ));
         };
-        let idle = http
-            .idle_clients
-            .lock()
-            .map_err(|_| internal("HTTP client pool is poisoned"))?
-            .pop();
-        let mut client = match idle {
-            Some(client) => client,
-            None => build_client(http)?,
-        };
-        let result = f(&mut client);
-        // A failed call may leave the client mid-stream; only reuse clean ones.
-        if result.is_ok()
-            && let Ok(mut idle) = http.idle_clients.lock()
-            && idle.len() < MAX_IDLE_HTTP_CLIENTS
-        {
-            idle.push(client);
+        let mut refreshed = false;
+        loop {
+            let (generation, mut client) = http.checkout()?;
+            let result = f(&mut client);
+            match result {
+                Err(error)
+                    if !refreshed
+                        && http.oauth.is_some()
+                        && oauth::is_gateway_unauthorized(&error) =>
+                {
+                    refreshed = true;
+                    http.refresh_credentials(generation)?;
+                }
+                result => {
+                    // A failed call may leave the client mid-stream; only
+                    // reuse clean ones.
+                    if result.is_ok() {
+                        http.checkin(generation, client);
+                    }
+                    return result;
+                }
+            }
         }
-        result
     }
 
     fn call(&self, method: &str, request: &RecordBatch) -> Result<RecordBatch> {
@@ -1408,6 +1607,7 @@ impl RemoteConnection {
         let RemoteConnectionOptions {
             endpoint,
             bearer_token,
+            oauth,
             target,
             database_options,
             connection_options,
@@ -1420,6 +1620,7 @@ impl RemoteConnection {
         let transport = RemoteTransport::connect(
             endpoint,
             bearer_token,
+            oauth,
             request_timeout,
             max_response_bytes,
             transport_options,
@@ -1527,7 +1728,7 @@ impl RemoteConnection {
         Ok(())
     }
 
-    fn with_client<R>(&self, f: impl FnOnce(&mut HttpClient) -> Result<R>) -> Result<R> {
+    fn with_client<R>(&self, f: impl FnMut(&mut HttpClient) -> Result<R>) -> Result<R> {
         self.transport.with_http_client(f)
     }
 
@@ -1606,22 +1807,33 @@ impl RemoteConnection {
         };
 
         match &self.transport {
-            RemoteTransport::Http(_) => self.with_client(|client| {
-                let mut stream = client
-                    .open_exchange(method, &init, None, false)
-                    .map_err(rpc_error)?;
-                let result = send(&mut |batch| {
-                    let ack = stream
-                        .exchange(batch, None)
-                        .map_err(rpc_error)?
-                        .ok_or_else(|| internal("bind exchange ended before acknowledgement"))?;
-                    validate_bind_ack(&ack.0)
-                });
-                if result.is_err() {
-                    let _ = stream.cancel();
-                }
-                result
-            }),
+            RemoteTransport::Http(_) => {
+                // The bind stream can be sent only once: a 401 when the
+                // exchange opens (nothing sent yet) is retried after a token
+                // refresh, one after that is not.
+                let mut send = Some(send);
+                self.with_client(|client| {
+                    let mut stream = client
+                        .open_exchange(method, &init, None, false)
+                        .map_err(rpc_error)?;
+                    let Some(send) = send.take() else {
+                        return Err(internal("bind stream was already sent"));
+                    };
+                    let result = send(&mut |batch| {
+                        let ack = stream
+                            .exchange(batch, None)
+                            .map_err(rpc_error)?
+                            .ok_or_else(|| {
+                                internal("bind exchange ended before acknowledgement")
+                            })?;
+                        validate_bind_ack(&ack.0)
+                    });
+                    if result.is_err() {
+                        let _ = stream.cancel();
+                    }
+                    result
+                })
+            }
             #[cfg(feature = "byte-transports")]
             RemoteTransport::Byte(byte) => {
                 self.transport.reset_if_needed(byte)?;
@@ -2233,7 +2445,7 @@ fn decode_option_response(batch: &RecordBatch) -> Result<OptionValue> {
         .map_err(|error| internal(error.to_string()))
 }
 
-fn build_client(http: &HttpTransport) -> Result<HttpClient> {
+fn build_client(http: &HttpTransport, bearer_token: Option<&str>) -> Result<HttpClient> {
     let builder = HttpClient::connect(http.endpoint.clone())
         .protocol(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
@@ -2245,7 +2457,7 @@ fn build_client(http: &HttpTransport) -> Result<HttpClient> {
         #[cfg(feature = "host-http")]
         HttpBackendChoice::Host(executor) => builder.executor(executor.clone()),
     };
-    if let Some(token) = http.bearer_token.as_deref() {
+    if let Some(token) = bearer_token {
         let value = format!("Bearer {token}");
         builder = builder.header("authorization", &value).map_err(rpc_error)?;
     }
@@ -2365,6 +2577,15 @@ fn rpc_error(error: RpcError) -> Error {
     {
         return wire.into_adbc();
     }
+    // The gateway's 401; not a lost session, and fixable by a token refresh.
+    if error.error_type == "AuthenticationError" {
+        return oauth::gateway_unauthorized(error.to_string());
+    }
+    // A gateway that lets unauthenticated requests through to the session
+    // manager (no authenticator, or one predating 401s) rejects them in-band.
+    if error.error_type == "PermissionError" {
+        return oauth::unauthenticated(error.to_string());
+    }
     // Anything that is not a structured ADBC error from the server is a
     // failure of the transport itself.
     let message = error.to_string();
@@ -2380,6 +2601,10 @@ fn is_grainlift_database_option(key: &str) -> bool {
         OPTION_GRAINLIFT_URI
             | OPTION_TARGET
             | OPTION_BEARER_TOKEN
+            | OPTION_OAUTH_REFRESH_TOKEN
+            | OPTION_OAUTH_TOKEN_ENDPOINT
+            | OPTION_OAUTH_CLIENT_ID
+            | OPTION_OAUTH_CLIENT_SECRET
             | OPTION_REQUEST_TIMEOUT_MS
             | OPTION_MAX_RESPONSE_BYTES
             | OPTION_MAX_BIND_BYTES
@@ -2571,6 +2796,7 @@ mod tests {
             let transport = RemoteTransport::connect(
                 endpoint.clone(),
                 None,
+                None,
                 Duration::from_secs(5),
                 1024,
                 TransportOptions {
@@ -2615,6 +2841,7 @@ mod tests {
             assert!(
                 RemoteTransport::connect(
                     "https://localhost:443".into(),
+                    None,
                     None,
                     Duration::from_secs(1),
                     1024,

@@ -41,6 +41,7 @@ use vgi_rpc::AuthContext;
 use vgi_rpc::auth::Authenticate;
 use vgi_rpc::auth::bearer::bearer_authenticate_static;
 use vgi_rpc::auth::jwt::{JwtConfig, jwt_authenticate};
+use vgi_rpc::auth::oauth::OAuthResourceMetadata;
 use vgi_rpc::http::HttpState;
 use vgi_rpc::tcp::{TcpIdentityOptions, TcpMutualTlsConfig, TcpMutualTlsOptions};
 use vgi_rpc_iroh::{CancellationToken, IrohServer, IrohServerOptions, VGI_IROH_ALPN};
@@ -81,7 +82,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut state = HttpState::builder()
         .server(Arc::clone(&server))
-        .authenticate(build_authenticator(&config.auth))
+        .authenticate(if config.server.require_authentication {
+            hosting::require_credentials(build_authenticator(&config.auth))
+        } else {
+            build_authenticator(&config.auth)
+        })
         .max_body_size(config.server.max_request_body_bytes)
         .max_request_bytes(config.server.max_request_body_bytes)
         .request_timeout(Duration::from_secs(config.server.request_timeout_seconds));
@@ -90,6 +95,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(max_age) = config.server.cors_max_age_seconds {
         state = state.cors_max_age(max_age);
+    }
+    if let Some(metadata) = oauth_resource_metadata(&config.auth) {
+        state = state.oauth_resource_metadata(metadata);
     }
     let state = state.build();
     let app = vgi_rpc::http::build_router(state)
@@ -325,6 +333,25 @@ fn build_tcp_tls(
     )
 }
 
+/// RFC 9728 metadata for `[auth.oauth]`; config validation guarantees the
+/// `[auth.jwt]` it depends on.
+fn oauth_resource_metadata(config: &AuthConfig) -> Option<OAuthResourceMetadata> {
+    let (oauth, jwt) = (config.oauth.as_ref()?, config.jwt.as_ref()?);
+    let mut metadata = OAuthResourceMetadata::new(&oauth.resource).with_client_id(&oauth.client_id);
+    for server in oauth.authorization_servers(jwt) {
+        metadata = metadata.with_authorization_server(server);
+    }
+    for scope in &oauth.scopes {
+        metadata = metadata.with_scope(scope);
+    }
+    if let Some(name) = &oauth.resource_name {
+        metadata = metadata.with_resource_name(name);
+    }
+    metadata.use_id_token_as_bearer = oauth.use_id_token_as_bearer;
+    metadata.client_secret = oauth.client_secret.clone().unwrap_or_default();
+    Some(metadata)
+}
+
 fn build_authenticator(config: &AuthConfig) -> Authenticate {
     if let Some(jwt) = &config.jwt {
         let jwt_config = JwtConfig::new(&jwt.issuer)
@@ -398,4 +425,30 @@ fn otlp_enabled() -> bool {
     !disabled
         && (std::env::var_os("OTEL_EXPORTER_OTLP_ENDPOINT").is_some()
             || std::env::var_os("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").is_some())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn oauth_metadata_defaults_to_the_jwt_issuer() {
+        let config = grainlift_server::config::Config::from_toml(
+            "[auth.jwt]\nissuer = \"https://issuer.example/\"\naudience = \"grainlift\"\n\
+             jwks_url = \"https://issuer.example/jwks\"\n\n[auth.oauth]\n\
+             resource = \"https://gw.example\"\nclient_id = \"cupola\"\nscopes = [\"openid\"]\n\n\
+             [targets.sqlite]\ndriver = \"adbc_driver_sqlite\"\n",
+        )
+        .unwrap();
+        let metadata = oauth_resource_metadata(&config.auth).unwrap();
+        let json = metadata.to_json();
+        assert!(
+            json.contains("\"authorization_servers\":[\"https://issuer.example/\"]"),
+            "{json}"
+        );
+        assert!(json.contains("\"client_id\":\"cupola\""), "{json}");
+        assert!(!json.contains("client_secret"), "{json}");
+        assert!(metadata.www_authenticate().contains("client_id=\"cupola\""));
+        assert!(oauth_resource_metadata(&AuthConfig::default()).is_none());
+    }
 }

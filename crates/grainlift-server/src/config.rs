@@ -180,6 +180,9 @@ impl ServerConfig {
 pub struct AuthConfig {
     pub static_bearer_tokens: HashMap<String, String>,
     pub jwt: Option<JwtAuthConfig>,
+    /// OAuth discovery for browser and CLI clients (RFC 9728 protected
+    /// resource metadata). Requires `jwt`, which validates the tokens.
+    pub oauth: Option<OAuthConfig>,
     /// Principal-to-target allowlist. If omitted, all principals may use all
     /// targets. Once any rule is present, an unlisted principal is denied. A
     /// target value of `"*"` grants every configured target.
@@ -198,6 +201,47 @@ pub struct JwtAuthConfig {
     pub refresh_interval_seconds: u64,
     #[serde(default = "default_jwt_leeway_seconds")]
     pub leeway_seconds: u64,
+}
+
+/// What the gateway advertises at `/.well-known/oauth-protected-resource` and
+/// in `WWW-Authenticate` on 401s, so clients such as Cupola can run a PKCE
+/// login against the identity provider that issues the JWTs `[auth.jwt]`
+/// accepts.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OAuthConfig {
+    /// This gateway's public URL (absolute http(s)); the resource identifier.
+    pub resource: String,
+    /// The OAuth client ID clients log in with.
+    pub client_id: String,
+    /// Authorization server issuers. Defaults to `[auth.jwt] issuer`.
+    #[serde(default)]
+    pub authorization_servers: Vec<String>,
+    #[serde(default)]
+    pub scopes: Vec<String>,
+    pub resource_name: Option<String>,
+    /// Clients send the OIDC `id_token` instead of the access token (for
+    /// identity providers whose access tokens are not JWTs for this API).
+    #[serde(default)]
+    pub use_id_token_as_bearer: bool,
+    /// Only for identity providers that require a secret even for public
+    /// (browser) clients, such as Google; it is published to every client.
+    pub client_secret: Option<String>,
+}
+
+impl OAuthConfig {
+    /// The authorization servers to advertise: the configured ones, or the
+    /// JWT issuer whose tokens the gateway accepts.
+    pub fn authorization_servers<'a>(&'a self, jwt: &'a JwtAuthConfig) -> Vec<&'a str> {
+        if self.authorization_servers.is_empty() {
+            vec![jwt.issuer.as_str()]
+        } else {
+            self.authorization_servers
+                .iter()
+                .map(String::as_str)
+                .collect()
+        }
+    }
 }
 
 fn default_principal_claim() -> String {
@@ -463,6 +507,37 @@ impl Config {
                 return Err("JWT refresh interval must be positive".into());
             }
         }
+        if let Some(oauth) = &self.auth.oauth {
+            let Some(jwt) = &self.auth.jwt else {
+                return Err(
+                    "auth.oauth requires auth.jwt to validate the tokens it advertises".into(),
+                );
+            };
+            let resource = url::Url::parse(&oauth.resource).ok();
+            if !resource
+                .as_ref()
+                .is_some_and(|url| matches!(url.scheme(), "http" | "https") && url.has_host())
+            {
+                return Err("auth.oauth.resource must be an absolute http(s) URL".into());
+            }
+            if oauth.client_id.trim().is_empty() {
+                return Err("auth.oauth.client_id must not be blank".into());
+            }
+            if oauth
+                .authorization_servers(jwt)
+                .iter()
+                .any(|server| !server.starts_with("https://"))
+            {
+                return Err("auth.oauth authorization servers must use HTTPS".into());
+            }
+            if oauth
+                .client_secret
+                .as_deref()
+                .is_some_and(|s| s.trim().is_empty())
+            {
+                return Err("auth.oauth.client_secret must not be blank when set".into());
+            }
+        }
 
         let target_names: HashSet<&str> = self.targets.keys().map(String::as_str).collect();
         for (principal, targets) in &self.auth.target_permissions {
@@ -630,6 +705,35 @@ driver = "adbc_driver_sqlite"
     }
 
     #[test]
+    fn rejects_unusable_oauth_configurations() {
+        let jwt = "[auth.jwt]\nissuer = \"https://issuer.example/\"\naudience = \"grainlift\"\njwks_url = \"https://issuer.example/.well-known/jwks.json\"\n\n";
+        let parse = |prefix: &str, oauth: &str| {
+            Config::from_toml(&format!("{prefix}[auth.oauth]\n{oauth}{TARGET}"))
+        };
+        let valid = "resource = \"https://gw.example\"\nclient_id = \"cupola\"\n";
+        assert!(parse(jwt, valid).is_ok());
+        // Advertising a login whose tokens nothing validates.
+        let tokens = "[auth.static_bearer_tokens]\ntoken = \"alice\"\n\n";
+        assert!(parse(tokens, valid).is_err());
+        assert!(parse(jwt, "resource = \"gw.example\"\nclient_id = \"cupola\"\n").is_err());
+        assert!(
+            parse(
+                jwt,
+                "resource = \"https://gw.example\"\nclient_id = \" \"\n"
+            )
+            .is_err()
+        );
+        assert!(
+            parse(
+                jwt,
+                &format!("{valid}authorization_servers = [\"http://issuer.example\"]\n")
+            )
+            .is_err()
+        );
+        assert!(parse(jwt, &format!("{valid}client_secret = \"\"\n")).is_err());
+    }
+
+    #[test]
     fn rejects_unknown_fields_and_missing_authentication() {
         let unknown = format!("[server]\nunknown = true\n{TARGET}");
         assert!(Config::from_toml(&unknown).is_err());
@@ -718,6 +822,19 @@ driver = "adbc_driver_sqlite"
             "[auth.jwt]\nissuer = \"https://issuer.example/\"\naudience = \"grainlift\"\njwks_url = \"https://issuer.example/.well-known/jwks.json\"\n{TARGET}"
         );
         assert!(Config::from_toml(&jwt).is_ok());
+
+        let oauth = format!(
+            "[auth.jwt]\nissuer = \"https://issuer.example/\"\naudience = \"grainlift\"\njwks_url = \"https://issuer.example/.well-known/jwks.json\"\n\n[auth.oauth]\nresource = \"https://gw.example\"\nclient_id = \"cupola\"\n{TARGET}"
+        );
+        let config = Config::from_toml(&oauth).unwrap();
+        let (oauth_config, jwt_config) = (
+            config.auth.oauth.as_ref().unwrap(),
+            config.auth.jwt.as_ref().unwrap(),
+        );
+        assert_eq!(
+            oauth_config.authorization_servers(jwt_config),
+            vec!["https://issuer.example/"]
+        );
     }
 
     #[test]
