@@ -30,7 +30,7 @@ def sqlite_driver() -> Path:
 def main() -> None:
     """Replace the launcher with the installed Rust executable."""
     suffix = ".exe" if os.name == "nt" else ""
-    package = distribution("grainlift")
+    package = distribution("grainlift-adbc-gateway")
     # uv run --with can overlay a cached package onto another environment.
     # RECORD locates our own binary there without relying on PATH or assuming
     # that the active interpreter and distribution share a scripts directory.

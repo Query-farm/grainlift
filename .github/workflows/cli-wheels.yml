@@ -30,8 +30,8 @@ jobs:
           version: 0.11.7
       - run: uvx ruff check python setup.py
       - run: uvx ruff format --check python setup.py
-      - run: uvx mypy python/grainlift_cli
-      - run: uvx pydoclint --config pyproject.toml python/grainlift_cli
+      - run: uvx mypy python/grainlift_adbc_gateway
+      - run: uvx pydoclint --config pyproject.toml python/grainlift_adbc_gateway
 
   wheel:
     needs: quality
@@ -78,7 +78,7 @@ jobs:
           assert driver.is_file(), driver
           os.environ["GRAINLIFT_TEST_DRIVER"] = str(driver)
           raise SystemExit(pytest.main(["python/tests", "-q"]))'
-          uvx --from "$wheel" grainlift --version
+          uvx --from "$wheel" grainlift-adbc-gateway --version
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cli-wheel-${{ matrix.target }}

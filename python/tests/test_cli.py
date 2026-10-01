@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from grainlift_cli import sqlite_driver
+from grainlift_adbc_gateway import sqlite_driver
 
 
 def command() -> str:
@@ -26,7 +26,7 @@ def command() -> str:
     Returns:
         The command path.
     """
-    executable = shutil.which("grainlift")
+    executable = shutil.which("grainlift-adbc-gateway")
     assert executable is not None, "install the built wheel before running these tests"
     return executable
 

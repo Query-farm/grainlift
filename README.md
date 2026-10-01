@@ -136,9 +136,11 @@ server process; see the [known downstream limitations](validation/e2e/KNOWN_FAIL
 ## Quick start
 
 For the packaged command-line service, see [the CLI guide](docs/cli.md).
-The `grainlift` Python distribution packages the Rust server together with an
-automatic dependency on the SQLite ADBC wheel, enabling `uvx grainlift serve
-sqlite ./database.sqlite` after publication. The source-build workflow follows.
+The `grainlift-adbc-gateway` Python distribution packages the Rust server
+together with an automatic dependency on the SQLite ADBC wheel, enabling
+`uvx grainlift-adbc-gateway serve sqlite ./database.sqlite`. (The `grainlift`
+package on PyPI is the separate Python toolkit for writing workers.) The
+source-build workflow follows.
 The separate [`adbc-driver-grainlift` client wheel](docs/python-driver.md)
 packages the native ADBC shared library for Python applications without
 installing the server or a downstream database driver. Its installed-wheel

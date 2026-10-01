@@ -4,28 +4,32 @@ Copyright (c) 2026 Query Farm LLC
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Grainlift command-line service
+# Grainlift ADBC gateway
 
-Grainlift exposes a database through the standard ADBC client API. Its PyPI
-distribution contains the Rust server executable and depends on Apache's SQLite
+The Grainlift ADBC gateway exposes a database through the standard ADBC client
+API. Its PyPI distribution, `grainlift-adbc-gateway`, contains the Rust server executable and depends on Apache's SQLite
 ADBC wheel. Python locates that library and launches the native server; query
 execution stays in Rust and the downstream driver.
 On Unix the launcher replaces itself with the server. On Windows it waits for
 the native child and lets console Ctrl-C initiate the server's graceful
 shutdown; service managers that forcibly stop it must terminate the process tree.
 
+This is not the [`grainlift`](https://pypi.org/project/grainlift/) package on
+PyPI, which is the Python toolkit for writing your own Grainlift workers. Clients
+of either connect through the [`adbc-driver-grainlift`](python-driver.md) driver.
+
 ## Serve a SQLite file
 
-After the platform wheels have been published to PyPI:
+Run it straight from PyPI with uv:
 
 ```console
-uvx grainlift serve sqlite ./database.sqlite
+uvx grainlift-adbc-gateway serve sqlite ./database.sqlite
 ```
 
 To create a database intentionally:
 
 ```console
-uvx grainlift serve sqlite ./database.sqlite --create
+uvx grainlift-adbc-gateway serve sqlite ./database.sqlite --create
 ```
 
 The service listens on `127.0.0.1:8080` and exposes target `sqlite`. It creates
@@ -38,7 +42,7 @@ and contain at least 32 non-whitespace ASCII characters (a final newline is OK).
 Keep token files out of source control.
 
 ```console
-uvx grainlift serve sqlite ./database.sqlite \
+uvx grainlift-adbc-gateway serve sqlite ./database.sqlite \
   --listen 127.0.0.1:9400 --token-file ./private/service-token
 ```
 
@@ -64,8 +68,8 @@ TLS termination, mTLS, Iroh, multiple targets, JWT authentication, and quotas.
 The Rust CLI creates identities for both servers and clients:
 
 ```console
-grainlift identity create alice.key > alice.id
-grainlift identity show alice.key
+grainlift-adbc-gateway identity create alice.key > alice.id
+grainlift-adbc-gateway identity show alice.key
 ```
 
 `create` writes a new 32-byte Ed25519 private key as 64 hexadecimal characters
@@ -74,8 +78,8 @@ redirection above saves that shareable ID in `alice.id`. `show` derives the same
 ID from an existing key, including keys created by the earlier Python helper.
 These commands do not read server configuration, load a database driver, or
 start a listener. The native `grainlift-server` accepts the same commands.
-Use a build or wheel containing these commands; after publication they are
-also available through `uvx grainlift identity create alice.key`.
+They are also available without installing through
+`uvx grainlift-adbc-gateway identity create alice.key`.
 
 Creation refuses to overwrite an existing file or symlink. It writes and syncs
 a private temporary file before publishing the completed key without replacing
@@ -114,10 +118,10 @@ The connection path is DuckDB → ADBC scanner → Grainlift client driver →
 Grainlift server → SQLite ADBC driver. The server wheel contains the server;
 the client also needs the separate Grainlift ADBC shared library.
 
-Start the service as above. Before PyPI publication, use the platform wheel:
+Start the service as above, or from a locally built platform wheel:
 
 ```console
-uvx --from /path/to/grainlift-0.4.0-py3-none-<platform>.whl grainlift \
+uvx --from /path/to/grainlift_adbc_gateway-0.4.0-py3-none-<platform>.whl grainlift-adbc-gateway \
   serve sqlite ./database.sqlite --create
 ```
 
@@ -168,9 +172,9 @@ extension fix; it disables query optimizations in that DuckDB session.
 ## Configuration and persistent installation
 
 ```console
-uv tool install grainlift
-grainlift serve --config grainlift.toml
-grainlift check --config grainlift.toml
+uv tool install grainlift-adbc-gateway
+grainlift-adbc-gateway serve --config grainlift.toml
+grainlift-adbc-gateway check --config grainlift.toml
 ```
 
 `check` validates configuration and policy; it does not load drivers, connect to
@@ -195,11 +199,11 @@ platform wheel do not need a Rust toolchain.
 
 ```console
 uv build --wheel --out-dir dist
-uvx --from ./dist/grainlift-0.4.0-py3-none-<platform>.whl grainlift --help
+uvx --from ./dist/grainlift_adbc_gateway-0.4.0-py3-none-<platform>.whl grainlift-adbc-gateway --help
 ```
 
-Use the actual wheel filename. A local wheel can be used to serve a database
-before publication; `uvx grainlift` resolves the published PyPI package.
+Use the actual wheel filename. Without `--from`, `uvx grainlift-adbc-gateway`
+resolves the published PyPI package.
 CI builds platform wheels, installs each wheel in an isolated environment,
 and tests the CLI. Publishing requires a configured PyPI trusted publisher and
 the explicit release workflow; building wheels does not publish them.
