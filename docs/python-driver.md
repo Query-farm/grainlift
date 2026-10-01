@@ -8,12 +8,19 @@ SPDX-License-Identifier: Apache-2.0
 
 The `adbc-driver-grainlift` distribution is the **client** of a running
 Grainlift service. It contains the Rust ADBC shared library and a thin Python
-loader. The `grainlift` distribution is the separate service CLI; installing
-the client does not install the server or a downstream SQLite driver.
+loader. The service is the separate
+[`grainlift-adbc-gateway`](cli.md) distribution (and `grainlift` on PyPI is the
+Python toolkit for writing workers); installing the client does not install
+the server or a downstream SQLite driver.
 
-After publication, install `adbc-driver-grainlift` and `pyarrow` alongside the
-Python ADBC driver manager. The client wheel depends on the manager; PyArrow is
-needed for DBAPI Arrow result methods.
+Install it from PyPI with `pyarrow`:
+
+```console
+pip install adbc-driver-grainlift pyarrow
+```
+
+The client wheel depends on the ADBC driver manager; PyArrow is needed for
+DBAPI Arrow result methods.
 
 ```python
 import adbc_driver_grainlift.dbapi
@@ -50,5 +57,4 @@ artifacts. It installs each wheel in isolated Python 3.13 and 3.14 environments,
 locates the library inside that installation, and exercises authentication,
 a query, and a write through a real Grainlift service. The workflow's explicit
 `publish` dispatch requires a configured `pypi-driver` environment and PyPI
-trusted publisher. Until that succeeds, use the tested wheel artifacts rather
-than `pip install adbc-driver-grainlift`.
+trusted publisher.
