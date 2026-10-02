@@ -339,7 +339,11 @@ def check(bundle: Path, python: str, driver: Path, evidence: Path) -> None:
         installed = subprocess.check_output(["uv", "pip", "freeze", "--python", str(executable)], text=True)
         (evidence / "installed.txt").write_text(installed)
         toolkit = candidate / "toolkit"
-        sdk_wheels = list((candidate / "wheels").glob("grainlift_python-*.whl"))
+        # The SDK is published as `grainlift` (`grainlift_python` before 0.2).
+        sdk_wheels = [
+            *(candidate / "wheels").glob("grainlift-*.whl"),
+            *(candidate / "wheels").glob("grainlift_python-*.whl"),
+        ]
         if len(sdk_wheels) != 1:
             raise ValueError("Candidate must contain exactly one toolkit wheel")
         with zipfile.ZipFile(sdk_wheels[0]) as archive:
