@@ -10,15 +10,17 @@ build-backend = "setuptools.build_meta"
 name = "grainlift-adbc-gateway"
 dynamic = ["version"]
 description = "Grainlift ADBC gateway: serve SQLite and other ADBC databases to remote ADBC clients"
-readme = "docs/cli.md"
+readme = "packaging/gateway/README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 authors = [{ name = "Query Farm LLC" }]
 dependencies = ["adbc-driver-sqlite>=1.12.0,<2"]
 
 [project.urls]
+Homepage = "https://query.farm/products/grainlift/"
 Repository = "https://github.com/Query-farm/grainlift"
 Documentation = "https://github.com/Query-farm/grainlift/blob/main/docs/cli.md"
+Issues = "https://github.com/Query-farm/grainlift/issues"
 
 [project.scripts]
 grainlift-adbc-gateway = "grainlift_adbc_gateway:main"

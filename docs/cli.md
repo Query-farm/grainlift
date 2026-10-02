@@ -194,6 +194,10 @@ For SQLite shorthand outside the Python package, install the driver with
 
 ## Build and validate a wheel
 
+The PyPI package description comes from
+[`packaging/gateway/README.md`](../packaging/gateway/README.md); this guide
+contains the detailed CLI reference.
+
 Building from source requires Rust 1.97 or newer. End users of a supported
 platform wheel do not need a Rust toolchain.
 

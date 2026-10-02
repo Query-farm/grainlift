@@ -16,14 +16,18 @@
 -->
 
 <p align="center">
-  <img src=".github/assets/grainlift-grain-elevator-logo.svg" alt="Grainlift" width="620">
+  <a href="https://query.farm/products/grainlift/"><img src="https://query.farm/grainlift/grainlift-mark.svg" alt="Grainlift" width="96" height="96"></a>
 </p>
+
+# Grainlift
 
 <p align="center">
   <strong>One ADBC driver on the client. Any authorized ADBC driver on the server.</strong>
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/grainlift-adbc-gateway/"><img src="https://img.shields.io/pypi/v/grainlift-adbc-gateway" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/grainlift-adbc-gateway/"><img src="https://img.shields.io/pypi/pyversions/grainlift-adbc-gateway" alt="Python versions"></a>
   <a href="https://github.com/Query-farm/grainlift/actions/workflows/ci.yml"><img src="https://github.com/Query-farm/grainlift/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="https://arrow.apache.org/adbc/current/"><img src="https://img.shields.io/badge/Apache%20Arrow-ADBC-00A4E4?logo=apachearrow&amp;logoColor=white" alt="Apache Arrow ADBC"></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.97%2B-000000?logo=rust&amp;logoColor=white" alt="Rust 1.97 or newer"></a>
