@@ -321,3 +321,80 @@ fn storage_needs_valid_settings() {
             .is_err()
     );
 }
+
+/// Without storage, a gateway with a small request limit still takes small
+/// binds, and splits a stream of many rows across requests.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn small_request_limits_split_binds_without_storage() {
+    let received = Received::default();
+    let service = Arc::new(
+        Service::new(BlobBackend(Arc::clone(&received)), "default")
+            .with_max_request_bytes(REQUEST_LIMIT),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let endpoint = format!("http://{}", listener.local_addr().unwrap());
+    let authenticate =
+        http_authenticator(HashMap::from([("secret".into(), "alice".into())]), None).unwrap();
+    let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+    let server = {
+        let service = Arc::clone(&service);
+        tokio::spawn(async move {
+            service
+                .serve_http(listener, authenticate, async {
+                    let _ = stopped.await;
+                })
+                .await
+        })
+    };
+    tokio::task::spawn_blocking(move || {
+        let mut connection = GrainliftDriver
+            .new_database_with_opts([
+                (OptionDatabase::Uri, endpoint.as_str().into()),
+                (
+                    OptionDatabase::Other(OPTION_TARGET.into()),
+                    "default".into(),
+                ),
+                (
+                    OptionDatabase::Other(OPTION_BEARER_TOKEN.into()),
+                    "secret".into(),
+                ),
+            ])
+            .unwrap()
+            .new_connection()
+            .unwrap();
+        let batch = |rows: &[Vec<u8>]| {
+            RecordBatch::try_new(
+                schema(),
+                vec![Arc::new(BinaryArray::from_vec(
+                    rows.iter().map(Vec::as_slice).collect(),
+                ))],
+            )
+            .unwrap()
+        };
+
+        let tiny = vec![blob(1, 3720)];
+        let mut statement = connection.new_statement().unwrap();
+        statement.set_sql_query("INSERT").unwrap();
+        statement.bind(batch(&tiny)).unwrap();
+        assert_eq!(statement.execute_update().unwrap(), Some(1));
+
+        // 3 MB in 64 KiB rows: three times the request limit, one batch.
+        let many = (0..48)
+            .map(|seed| blob(seed, 64 * 1024))
+            .collect::<Vec<_>>();
+        let mut statement = connection.new_statement().unwrap();
+        statement.set_sql_query("INSERT").unwrap();
+        statement
+            .bind_stream(Box::new(RecordBatchIterator::new(
+                [Ok(batch(&many))],
+                schema(),
+            )))
+            .unwrap();
+        assert_eq!(statement.execute_update().unwrap(), Some(48));
+        assert_eq!(*received.lock().unwrap(), [tiny, many].concat());
+    })
+    .await
+    .unwrap();
+    let _ = stop.send(());
+    server.await.unwrap().unwrap();
+}

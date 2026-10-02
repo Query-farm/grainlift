@@ -2604,12 +2604,20 @@ impl TurnBudget {
         if capabilities.upload_url_support {
             return None;
         }
-        let request = capabilities.max_request_bytes?;
-        let payload = usize::try_from(request)
-            .unwrap_or(usize::MAX)
-            .saturating_sub(protocol::BIND_ENVELOPE_HEADROOM_BYTES)
-            .max(1);
-        Some(Self { payload, request })
+        Some(Self::for_request(capabilities.max_request_bytes?))
+    }
+
+    /// The batch payload one request of `request` bytes can carry. The rest
+    /// is reserved for the envelope (schema, session and state metadata):
+    /// [`protocol::BIND_ENVELOPE_HEADROOM_BYTES`], but at most an eighth of
+    /// the request, or a 1 MiB limit would leave no room for any row.
+    fn for_request(request: u64) -> Self {
+        let limit = usize::try_from(request).unwrap_or(usize::MAX);
+        let headroom = protocol::BIND_ENVELOPE_HEADROOM_BYTES.min(limit / 8);
+        Self {
+            payload: limit.saturating_sub(headroom).max(1),
+            request,
+        }
     }
 }
 
@@ -3367,6 +3375,21 @@ mod tests {
         for (type_id, _) in fields.iter() {
             assert_eq!(values.child(type_id).len(), batch.num_rows());
         }
+    }
+}
+
+#[cfg(test)]
+mod turn_budget_tests {
+    use super::TurnBudget;
+
+    #[test]
+    fn the_envelope_reserve_scales_with_small_request_limits() {
+        // A 1 MiB gateway leaves 896 KiB for rows, not one byte.
+        assert_eq!(TurnBudget::for_request(1 << 20).payload, 7 << 17);
+        assert_eq!(TurnBudget::for_request(64 << 10).payload, 56 << 10);
+        // Large limits reserve the full 1 MiB.
+        assert_eq!(TurnBudget::for_request(64 << 20).payload, 63 << 20);
+        assert_eq!(TurnBudget::for_request(0).payload, 1);
     }
 }
 
