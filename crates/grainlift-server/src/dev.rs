@@ -55,9 +55,10 @@ use vgi_rpc::tcp::{TcpIdentityOptions, TcpMutualTlsOptions};
 use vgi_rpc::{Authenticate, PeerAuthenticationPolicy, RpcError, RpcServer};
 
 use crate::backend::Backend;
-use crate::config::{ServerConfig, TargetConfig};
+use crate::config::{ExternalStorageConfig, ServerConfig, TargetConfig};
+use crate::external_storage::ExternalStorage;
 use crate::hosting::{http_authenticator, load_mtls_config, shutdown_signal, start_tcp_listener};
-use crate::service::build_server;
+use crate::service::{build_server, build_server_with_storage};
 use crate::session::SessionManager;
 
 /// Environment variable holding the development bearer token.
@@ -131,6 +132,28 @@ struct Args {
     /// Authorized client certificate URI SAN (a SPIFFE ID).
     #[arg(long, help_heading = "mTLS (--host mtls)")]
     client_uri: Option<String>,
+    /// S3 API endpoint of a bucket for large requests and results, e.g.
+    /// https://<account>.r2.cloudflarestorage.com. Credentials come from
+    /// AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    #[arg(
+        long,
+        requires = "storage_bucket",
+        help_heading = "Object storage (HTTP)"
+    )]
+    storage_endpoint: Option<String>,
+    /// The bucket.
+    #[arg(
+        long,
+        requires = "storage_endpoint",
+        help_heading = "Object storage (HTTP)"
+    )]
+    storage_bucket: Option<String>,
+    /// The signing region ("auto" for R2).
+    #[arg(long, default_value = "auto", help_heading = "Object storage (HTTP)")]
+    storage_region: String,
+    /// Key prefix for the service's objects.
+    #[arg(long, default_value = "", help_heading = "Object storage (HTTP)")]
+    storage_prefix: String,
 }
 
 /// Serve `backend` as `target` on loopback, choosing the host from the
@@ -194,7 +217,19 @@ where
                 .exit(),
         },
     };
-    let service = Service::new(backend, target);
+    let mut service = Service::new(backend, target);
+    if let (Some(endpoint), Some(bucket)) = (args.storage_endpoint, args.storage_bucket) {
+        if mtls.is_some() {
+            return Err("object storage applies to --host http only".into());
+        }
+        service = service.with_external_storage(&ExternalStorageConfig::new(
+            endpoint,
+            bucket,
+            args.storage_region,
+            args.storage_prefix,
+        ))?;
+        println!("Large requests and results go through object storage");
+    }
     let runtime = tokio::runtime::Runtime::new()?;
     runtime.block_on(async move {
         match mtls {
@@ -298,7 +333,13 @@ fn single_client_policy(client_uri: String) -> PeerAuthenticationPolicy {
 /// One backend target with default limits, ready to serve over HTTP or TCP.
 pub struct Service {
     manager: Arc<SessionManager>,
+    target: String,
     server: Arc<RpcServer>,
+    /// The server HTTP uses: [`Self::server`], or one that stores large
+    /// results in object storage.
+    http_server: Arc<RpcServer>,
+    upload_urls: Option<(Arc<dyn vgi_rpc::external::UploadUrlProvider>, usize)>,
+    max_request_bytes: usize,
 }
 
 impl Service {
@@ -324,7 +365,43 @@ impl Service {
             true,
         ));
         let server = Arc::new(build_server(Arc::clone(&manager), target.to_string()));
-        Self { manager, server }
+        Self {
+            manager,
+            target: target.to_string(),
+            http_server: Arc::clone(&server),
+            server,
+            upload_urls: None,
+            max_request_bytes: defaults.max_request_body_bytes,
+        }
+    }
+
+    /// Send large HTTP requests and results through an S3-compatible bucket
+    /// (VGI-RPC external locations): clients get presigned upload URLs for
+    /// requests over the request limit, and result batches over
+    /// `threshold_bytes` are stored in the bucket for clients to fetch. Other
+    /// transports ([`Self::rpc_server`]) are unaffected.
+    pub fn with_external_storage(
+        mut self,
+        config: &ExternalStorageConfig,
+    ) -> Result<Self, Box<dyn Error>> {
+        config.validate()?;
+        let storage = ExternalStorage::from_config(config)?;
+        self.http_server = Arc::new(build_server_with_storage(
+            Arc::clone(&self.manager),
+            self.target.clone(),
+            grainlift_protocol::MAX_BIND_STREAM_BYTES,
+            Some(storage.location),
+        ));
+        self.upload_urls = Some((storage.upload_urls, storage.max_upload_bytes));
+        Ok(self)
+    }
+
+    /// The largest HTTP request body accepted (default 16 MiB); with object
+    /// storage, larger requests are uploaded to the bucket instead.
+    pub fn with_max_request_bytes(mut self, bytes: usize) -> Self {
+        assert!(bytes > 0, "the request limit must be positive");
+        self.max_request_bytes = bytes;
+        self
     }
 
     /// The session manager, for resource counts and shutdown.
@@ -347,13 +424,18 @@ impl Service {
         shutdown: impl Future<Output = ()> + Send + 'static,
     ) -> std::io::Result<()> {
         let defaults = ServerConfig::default();
-        let state = HttpState::builder()
-            .server(Arc::clone(&self.server))
+        let mut state = HttpState::builder()
+            .server(Arc::clone(&self.http_server))
             .authenticate(authenticate)
-            .max_body_size(defaults.max_request_body_bytes)
-            .max_request_bytes(defaults.max_request_body_bytes)
-            .request_timeout(Duration::from_secs(defaults.request_timeout_seconds))
-            .build();
+            .max_body_size(self.max_request_bytes)
+            .max_request_bytes(self.max_request_bytes)
+            .request_timeout(Duration::from_secs(defaults.request_timeout_seconds));
+        if let Some((provider, max_upload_bytes)) = &self.upload_urls {
+            state = state
+                .upload_url_provider(Arc::clone(provider))
+                .max_upload_bytes(*max_upload_bytes);
+        }
+        let state = state.build();
         let reaper = self.spawn_reaper(Duration::from_secs(defaults.session_reap_interval_seconds));
         let served = axum::serve(listener, vgi_rpc::http::build_router(state))
             .with_graceful_shutdown(shutdown)

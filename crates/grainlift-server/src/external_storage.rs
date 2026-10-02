@@ -181,14 +181,25 @@ impl ExternalStorage {
             config.virtual_hosted_style,
         );
         let validator = presigner.validator();
-        let storage = Arc::new(PresignedS3Storage::new(
-            config.bucket.clone(),
-            config.prefix.clone(),
-            url_pair(presigner, Duration::from_secs(config.url_ttl_seconds)),
-        ));
-        let mut location =
-            ExternalLocationConfig::new(storage.clone(), Arc::new(HttpFetcher::new()))
-                .with_threshold_bytes(config.threshold_bytes);
+        let (bucket, prefix) = (config.bucket.clone(), config.prefix.clone());
+        let ttl = Duration::from_secs(config.url_ttl_seconds);
+        // Both hold blocking reqwest clients, which cannot be built inside an
+        // async runtime; build them on a thread of their own so this works
+        // from any context.
+        let (storage, fetcher) = std::thread::spawn(move || {
+            (
+                Arc::new(PresignedS3Storage::new(
+                    bucket,
+                    prefix,
+                    url_pair(presigner, ttl),
+                )),
+                Arc::new(HttpFetcher::new()),
+            )
+        })
+        .join()
+        .map_err(|_| "could not build the object storage HTTP clients")?;
+        let mut location = ExternalLocationConfig::new(storage.clone(), fetcher)
+            .with_threshold_bytes(config.threshold_bytes);
         location.url_validator = validator;
         // A client upload is fetched whole before it is decoded.
         location.max_encoded_bytes = config.max_upload_bytes;

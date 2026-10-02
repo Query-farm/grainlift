@@ -492,6 +492,15 @@ downgraded. See
 [grainlift-rust-hello-world](https://github.com/Query-farm/grainlift-rust-hello-world)
 for a complete example.
 
+Large requests and results can go through object storage here too
+([see above](#large-requests-and-results-object-storage)): pass
+`--storage-endpoint` and `--storage-bucket` (with `--storage-region` and
+`--storage-prefix`, credentials from `AWS_ACCESS_KEY_ID` and
+`AWS_SECRET_ACCESS_KEY`), or call
+`dev::Service::with_external_storage(&config::ExternalStorageConfig::new(endpoint, bucket, region, prefix))`
+when hosting the `Service` yourself. `Service::with_max_request_bytes` sets the
+HTTP request limit above which clients upload.
+
 ## Stateful sessions and deployment
 
 ADBC is stateful. One Grainlift server process owns each downstream database,

@@ -97,6 +97,29 @@ impl std::fmt::Debug for ExternalStorageConfig {
 }
 
 impl ExternalStorageConfig {
+    /// A bucket with the default region-independent settings: credentials
+    /// from the AWS environment variables, 15-minute URLs, a 1 MiB result
+    /// threshold and 256 MiB uploads.
+    pub fn new(
+        endpoint: impl Into<String>,
+        bucket: impl Into<String>,
+        region: impl Into<String>,
+        prefix: impl Into<String>,
+    ) -> Self {
+        Self {
+            endpoint: endpoint.into(),
+            bucket: bucket.into(),
+            region: region.into(),
+            prefix: prefix.into(),
+            access_key_id: None,
+            secret_access_key: None,
+            virtual_hosted_style: false,
+            url_ttl_seconds: default_storage_url_ttl_seconds(),
+            threshold_bytes: default_storage_threshold_bytes(),
+            max_upload_bytes: default_storage_max_upload_bytes(),
+        }
+    }
+
     /// The configured credentials, or the AWS environment variables.
     pub fn credentials(&self) -> Result<(String, String), Box<dyn std::error::Error>> {
         let pick = |configured: &Option<String>, variable: &str| {
@@ -114,7 +137,7 @@ impl ExternalStorageConfig {
         ))
     }
 
-    fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
         let endpoint = url::Url::parse(&self.endpoint)
             .map_err(|_| "external_storage.endpoint must be an absolute http(s) URL")?;
         if !matches!(endpoint.scheme(), "http" | "https") || endpoint.host_str().is_none() {
