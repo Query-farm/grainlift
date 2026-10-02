@@ -232,6 +232,8 @@ def build(output: Path, python: str) -> None:
     for package, directory in (("grainlift-python", "toolkit"), ("grainlift-hello-world-python", "hello")):
         shutil.copytree(ROOT.parent / package / "tests", bundle / directory / "tests", ignore=ignored)
     shutil.copy(ROOT.parent / "grainlift-python/pyproject.toml", bundle / "toolkit/pyproject.toml")
+    # The hello-world suite runs its shipped SQL example.
+    shutil.copytree(ROOT.parent / "grainlift-hello-world-python/examples", bundle / "hello/examples", ignore=ignored)
     for directory in ("tests", "soak", "deployment"):
         shutil.copytree(ROOT / "validation/regression" / directory, bundle / "regression" / directory, ignore=ignored)
     shutil.copy(ROOT / "validation/regression/pyproject.toml", bundle / "regression/pyproject.toml")
