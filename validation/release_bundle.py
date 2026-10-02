@@ -36,7 +36,8 @@ from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = ("grainlift-python", "grainlift-hello-world-python")
-TRANSPORT_REQUIREMENT = "vgi-rpc[http]==0.47.1"
+# `external` brings aiohttp, which the toolkit's object storage (grainlift[storage]) needs.
+TRANSPORT_REQUIREMENT = "vgi-rpc[http,external]==0.47.1"
 MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 
@@ -208,6 +209,8 @@ def build(output: Path, python: str) -> None:
             "granian==2.8.3",
             # The hello-world suite runs its SQL example in the Haybarn CLI.
             "haybarn-cli==1.5.5rc1",
+            # The toolkit's object storage test runs against a local S3 emulator.
+            "moto[server]==5.2.3",
         )
     )
     (bundle / "requirements.in").write_text("\n".join(requirements) + "\n")
