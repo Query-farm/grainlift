@@ -997,7 +997,7 @@ impl HttpTransport {
         Ok((generation, build_client(self, bearer.as_deref())?))
     }
 
-    fn checkin(&self, generation: u64, client: HttpClient) {
+    fn check_in(&self, generation: u64, client: HttpClient) {
         if let Ok(mut idle) = self.idle_clients.lock()
             && idle.len() < MAX_IDLE_HTTP_CLIENTS
         {
@@ -1567,7 +1567,7 @@ impl RemoteTransport {
                     // A failed call may leave the client mid-stream; only
                     // reuse clean ones.
                     if result.is_ok() {
-                        http.checkin(generation, client);
+                        http.check_in(generation, client);
                     }
                     return result;
                 }
