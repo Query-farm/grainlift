@@ -129,7 +129,19 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 ## Reviewable release artifact
 
-[Candidate v7](../validation/release-results/candidate-v7/README.md) is the
+The [candidate v11 prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v11)
+is the configured candidate (archive SHA-256
+`c9c84bb3bf2d15461421cdfeb1ae0a5d1bea6887628296686ad26029384901d8`). It is
+built from grainlift-python 0.2.1, now published as `grainlift`, and from
+grainlift-hello-world-python `7dcf2d8`. It carries the current regression
+tests: driver 0.4.2 reports a rejected credential as `UNAUTHENTICATED`. It also
+installs haybarn-cli and ships the hello-world examples, so the Haybarn SQL
+example test runs rather than skipping. It passed the
+[wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/36966418442)
+on Linux and macOS with Python 3.13 and 3.14 without failures or skips.
+Candidates v8–v10 were intermediate builds that each lacked one of these.
+
+Historical [candidate v7](../validation/release-results/candidate-v7/README.md) was the
 configured [prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v7).
 It includes the supported Python hosts and current regression tests, with
 archive SHA-256 `1a2fc4e154f4549b5027290fe9555afd23f207b23d27e52d0731b381cae106ab`.
@@ -142,7 +154,7 @@ the initial protocol 0.4 in fresh environments: 609 tests per interpreter, no
 failures or skips, with both local wheels reproduced from their sdists. Archive
 SHA-256: `63692d5a6fb81208fdf468dd9e225e04646b33bf2dd5fee4978ccac3da8c3f3e`.
 The [prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v6)
-remains available; repository variables now select candidate v7. The
+remains available. The
 [combined runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/36246917438)
 passed its quality job and all four runtime jobs. The matching
 [native CI](https://github.com/Query-farm/grainlift/actions/runs/36246917417) and
