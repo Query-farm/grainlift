@@ -129,17 +129,18 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 ## Reviewable release artifact
 
-The [candidate v11 prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v11)
+The [candidate v12 prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v12)
 is the configured candidate (archive SHA-256
-`c9c84bb3bf2d15461421cdfeb1ae0a5d1bea6887628296686ad26029384901d8`). It is
-built from grainlift-python 0.2.1, now published as `grainlift`, and from
-grainlift-hello-world-python `7dcf2d8`. It carries the current regression
-tests: driver 0.4.2 reports a rejected credential as `UNAUTHENTICATED`. It also
-installs haybarn-cli and ships the hello-world examples, so the Haybarn SQL
-example test runs rather than skipping. It passed the
-[wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/36966418442)
+`8008b3634576003b01fcc3efcfce3506bc7f959ef3fed1d98926122d4d8e1861`). It is
+built from grainlift-python 0.3.0 (published as `grainlift`, with object
+storage) and grainlift-hello-world-python `7dcf2d8`, with the current
+regression tests. It installs haybarn-cli, vgi-rpc's `external` extra and
+moto, so the Haybarn SQL example and the toolkit's object storage test run
+rather than skipping. It passed the
+[wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/37013356724)
 on Linux and macOS with Python 3.13 and 3.14 without failures or skips.
-Candidates v8–v10 were intermediate builds that each lacked one of these.
+[Candidate v11](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v11)
+covered grainlift-python 0.2.1; v8–v10 were intermediate builds.
 
 Historical [candidate v7](../validation/release-results/candidate-v7/README.md) was the
 configured [prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v7).
