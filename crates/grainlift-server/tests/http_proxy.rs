@@ -1503,3 +1503,82 @@ async fn silent_gateway_fails_after_one_timeout_and_recovers() {
     let _ = std::net::TcpStream::connect(("127.0.0.1", port));
     thread.join().unwrap();
 }
+
+/// A gateway that advertises a small per-request limit (`VGI-Max-Request-Bytes`)
+/// and offers no upload URLs: the driver must split large bind batches.
+async fn start_small_request_gateway(limit: usize) -> (String, tokio::task::JoinHandle<()>) {
+    let server = Arc::new(build_server(fake_manager(false), "small-requests".into()));
+    let state = HttpState::builder()
+        .server(server)
+        .max_body_size(limit)
+        .max_request_bytes(limit)
+        .build();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let endpoint = format!("http://{}", listener.local_addr().unwrap());
+    let task = tokio::spawn(async move {
+        axum::serve(listener, vgi_rpc::http::build_router(state))
+            .await
+            .unwrap();
+    });
+    (endpoint, task)
+}
+
+fn wide_rows(rows: usize, width: usize) -> (Arc<Schema>, RecordBatch) {
+    let schema = Arc::new(Schema::new(vec![Field::new(
+        "payload",
+        DataType::Utf8,
+        false,
+    )]));
+    let value = "x".repeat(width);
+    let batch = RecordBatch::try_new(
+        schema.clone(),
+        vec![Arc::new(StringArray::from(vec![value.as_str(); rows]))],
+    )
+    .unwrap();
+    (schema, batch)
+}
+
+fn bind_wide(endpoint: String, batch: RecordBatch, schema: Arc<Schema>) -> AdbcResult<Option<i64>> {
+    let mut driver = GrainliftDriver;
+    let database = driver.new_database_with_opts([
+        (OptionDatabase::Uri, endpoint.into()),
+        (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+    ])?;
+    let mut connection = database.new_connection()?;
+    let mut statement = connection.new_statement()?;
+    statement.set_sql_query("insert into test values (?)")?;
+    statement.bind_stream(Box::new(RecordBatchIterator::new(vec![Ok(batch)], schema)))?;
+    statement.execute_update()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bind_batches_larger_than_a_request_are_split_by_rows() {
+    let (endpoint, task) = start_small_request_gateway(2 * 1024 * 1024).await;
+    // About 3 MB in one Arrow batch, under a 2 MiB request limit.
+    let (schema, batch) = wide_rows(3_000, 1_000);
+    let rows = tokio::task::spawn_blocking(move || bind_wide(endpoint, batch, schema))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(rows, Some(3_000));
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_row_larger_than_a_request_is_refused_before_sending() {
+    let (endpoint, task) = start_small_request_gateway(2 * 1024 * 1024).await;
+    let (schema, batch) = wide_rows(1, 1_500_000);
+    let error = tokio::task::spawn_blocking(move || bind_wide(endpoint, batch, schema))
+        .await
+        .unwrap()
+        .err()
+        .unwrap();
+    assert_eq!(error.status, Status::InvalidArguments, "{}", error.message);
+    assert!(
+        error.message.contains("a bound row is")
+            && error.message.contains("2097152 bytes per request"),
+        "{}",
+        error.message
+    );
+    task.abort();
+}

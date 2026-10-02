@@ -1930,7 +1930,11 @@ impl RemoteConnection {
         let mut logical_bytes = 0usize;
         let mut encoded_bytes = 0usize;
         let turn_limit = self.max_bind_bytes.min(protocol::MAX_CONTROL_BYTES);
-        let send = |exchange: &mut dyn FnMut(&RecordBatch) -> Result<()>| {
+        let streamed = method == protocol::method::BIND_STREAM;
+        // `budget`: the most batch IPC one turn (one request) may carry, when
+        // the transport limits it; larger batches are split by rows.
+        let send = |budget: Option<TurnBudget>,
+                    exchange: &mut dyn FnMut(&RecordBatch) -> Result<()>| {
             for batch in batches {
                 let batch = batch?;
                 logical_bytes = logical_bytes
@@ -1942,19 +1946,33 @@ impl RemoteConnection {
                         self.max_bind_bytes
                     )));
                 }
-                let turn = protocol::encode_bind_turn(Some(&batch), turn_limit)
-                    .map_err(|error| invalid(error.to_string()))?;
-                let payload = protocol::binary_value(&turn, "batch_ipc")
-                    .map_err(|error| invalid(error.to_string()))?;
-                encoded_bytes = encoded_bytes
-                    .checked_add(payload.len())
-                    .ok_or_else(|| invalid("bind stream size overflow"))?;
-                if encoded_bytes > self.max_bind_bytes {
-                    return Err(invalid(
-                        "serialized bind stream exceeds configured byte limit",
-                    ));
+                let mut pending = VecDeque::from([batch]);
+                while let Some(piece) = pending.pop_front() {
+                    let turn = protocol::encode_bind_turn(Some(&piece), turn_limit)
+                        .map_err(|error| invalid(error.to_string()))?;
+                    let payload = protocol::binary_value(&turn, "batch_ipc")
+                        .map_err(|error| invalid(error.to_string()))?;
+                    if let Some(budget) = budget
+                        && payload.len() > budget.payload
+                    {
+                        for part in split_turn(&piece, payload.len(), budget, streamed)?
+                            .into_iter()
+                            .rev()
+                        {
+                            pending.push_front(part);
+                        }
+                        continue;
+                    }
+                    encoded_bytes = encoded_bytes
+                        .checked_add(payload.len())
+                        .ok_or_else(|| invalid("bind stream size overflow"))?;
+                    if encoded_bytes > self.max_bind_bytes {
+                        return Err(invalid(
+                            "serialized bind stream exceeds configured byte limit",
+                        ));
+                    }
+                    exchange(&turn)?;
                 }
-                exchange(&turn)?;
             }
             let finish = protocol::encode_bind_turn(None, turn_limit)
                 .map_err(|error| invalid(error.to_string()))?;
@@ -1968,13 +1986,14 @@ impl RemoteConnection {
                 // refresh, one after that is not.
                 let mut send = Some(send);
                 self.with_client(|client| {
+                    let budget = TurnBudget::from_capabilities(client);
                     let mut stream = client
                         .open_exchange(method, &init, None, false)
                         .map_err(rpc_error)?;
                     let Some(send) = send.take() else {
                         return Err(internal("bind stream was already sent"));
                     };
-                    let result = send(&mut |batch| {
+                    let result = send(budget, &mut |batch| {
                         let ack = stream
                             .exchange(batch, None)
                             .map_err(rpc_error)?
@@ -1999,7 +2018,8 @@ impl RemoteConnection {
                 let mut stream = client
                     .open_exchange(method, &init, None, false)
                     .map_err(rpc_error)?;
-                let result = send(&mut |batch| {
+                // Raw streams carry turns up to the protocol's control limit.
+                let result = send(None, &mut |batch| {
                     let ack = stream
                         .exchange(batch, None)
                         .map_err(rpc_error)?
@@ -2564,6 +2584,68 @@ fn result_request(session_id: &str, result_id: &str) -> Result<RecordBatch> {
             Arc::new(StringArray::from(vec![result_id.to_string()])),
         ],
     )?)
+}
+
+/// How much bind data one HTTP request may carry, from the limit the gateway
+/// advertises (`VGI-Max-Request-Bytes`), less headroom for the turn's
+/// envelope. `None` when the gateway sets no limit or vends upload URLs, which
+/// the VGI client then uses for oversized requests by itself.
+#[derive(Clone, Copy)]
+struct TurnBudget {
+    /// Largest batch IPC payload per turn.
+    payload: usize,
+    /// The gateway's advertised request limit, for messages.
+    request: u64,
+}
+
+impl TurnBudget {
+    fn from_capabilities(client: &HttpClient) -> Option<Self> {
+        let capabilities = client.capabilities().ok()?;
+        if capabilities.upload_url_support {
+            return None;
+        }
+        let request = capabilities.max_request_bytes?;
+        let payload = usize::try_from(request)
+            .unwrap_or(usize::MAX)
+            .saturating_sub(protocol::BIND_ENVELOPE_HEADROOM_BYTES)
+            .max(1);
+        Some(Self { payload, request })
+    }
+}
+
+/// Split a batch whose encoded turn is `encoded` bytes into row ranges that
+/// should each fit `budget` (zero-copy slices; a piece still too large is split
+/// again). A single row that alone exceeds the budget cannot be sent; neither
+/// can a non-stream bind, which the protocol limits to one batch.
+fn split_turn(
+    batch: &RecordBatch,
+    encoded: usize,
+    budget: TurnBudget,
+    streamed: bool,
+) -> Result<Vec<RecordBatch>> {
+    let too_large = |what: &str| {
+        invalid(format!(
+            "{what} is {encoded} bytes once encoded; the gateway accepts at most {} bytes per \
+             request",
+            budget.request
+        ))
+    };
+    if batch.num_rows() <= 1 {
+        return Err(too_large("a bound row"));
+    }
+    if !streamed {
+        return Err(too_large(
+            "the bound batch (a single bind cannot be split; bind a stream)",
+        ));
+    }
+    let rows = batch.num_rows();
+    // Aim below the budget: rows vary in size and the IPC framing is shared.
+    let per_piece = (rows as u128 * budget.payload as u128 * 9 / 10 / encoded as u128)
+        .clamp(1, rows as u128 - 1) as usize;
+    Ok((0..rows)
+        .step_by(per_piece)
+        .map(|start| batch.slice(start, per_piece.min(rows - start)))
+        .collect())
 }
 
 fn decode_response<T: protocol::ResponseRecord>(batch: &RecordBatch) -> Result<T> {
