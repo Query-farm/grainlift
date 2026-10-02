@@ -1543,6 +1543,7 @@ dependencies = [
  "vgi-rpc",
  "vgi-rpc-client",
  "vgi-rpc-iroh",
+ "vgi-rpc-s3",
 ]
 
 [[package]]
@@ -4834,6 +4835,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "vgi-rpc-s3"
+version = "0.28.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa85ae402d11afe7128e275b9bd5e825fd607d3305ad513828b1f34957723f9"
+dependencies = [
+ "reqwest 0.12.28",
+ "uuid",
+ "vgi-rpc",
 ]
 
 [[package]]

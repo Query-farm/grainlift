@@ -25,8 +25,9 @@ use clap::Parser;
 use grainlift_server::backend::DriverManagerBackend;
 use grainlift_server::cli::{Args, Launch};
 use grainlift_server::config::{AuthConfig, IrohConfig, TcpTlsConfig};
+use grainlift_server::external_storage::ExternalStorage;
 use grainlift_server::hosting::{self, load_mtls_config, start_tcp_listener};
-use grainlift_server::service::build_server_with_max_bind;
+use grainlift_server::service::{build_server_with_max_bind, build_server_with_storage};
 use grainlift_server::session::SessionManager;
 use opentelemetry::global;
 use opentelemetry::trace::TracerProvider as _;
@@ -74,11 +75,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Duration::from_secs(config.server.driver_operation_timeout_seconds),
     ));
     let server_id = server_id.unwrap_or_else(|| format!("grainlift-{}", std::process::id()));
-    let server = Arc::new(build_server_with_max_bind(
+    let storage = config
+        .external_storage
+        .as_ref()
+        .map(ExternalStorage::from_config)
+        .transpose()?;
+    // Object storage serves HTTP only. The tcp and Iroh streams have no
+    // request limit to get around, and the browser's Iroh client cannot fetch
+    // a result from storage, so they get a server without it.
+    let stream_server = Arc::new(build_server_with_max_bind(
         manager.clone(),
-        server_id,
+        server_id.clone(),
         config.server.max_bind_bytes,
     ));
+    let (server, upload_urls) = match storage {
+        Some(storage) => (
+            Arc::new(build_server_with_storage(
+                manager.clone(),
+                server_id,
+                config.server.max_bind_bytes,
+                Some(storage.location),
+            )),
+            Some((storage.upload_urls, storage.max_upload_bytes)),
+        ),
+        None => (Arc::clone(&stream_server), None),
+    };
 
     let mut state = HttpState::builder()
         .server(Arc::clone(&server))
@@ -90,6 +111,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .max_body_size(config.server.max_request_body_bytes)
         .max_request_bytes(config.server.max_request_body_bytes)
         .request_timeout(Duration::from_secs(config.server.request_timeout_seconds));
+    if let Some((provider, max_upload_bytes)) = upload_urls {
+        state = state
+            .upload_url_provider(provider)
+            .max_upload_bytes(max_upload_bytes);
+    }
     if let Some(origins) = &config.server.cors_origins {
         state = state.cors_origins(origins.clone());
     }
@@ -119,7 +145,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             None => None,
         };
         let listener = start_tcp_listener(
-            Arc::clone(&server),
+            Arc::clone(&stream_server),
             tcp.listen,
             tls,
             Arc::clone(&tcp_shutdown),
@@ -132,7 +158,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut iroh_task = if let Some(iroh) = config.iroh.clone() {
         match start_iroh_listener(
-            Arc::clone(&server),
+            Arc::clone(&stream_server),
             Arc::clone(&manager),
             iroh,
             Duration::from_secs(config.server.session_ttl_seconds),

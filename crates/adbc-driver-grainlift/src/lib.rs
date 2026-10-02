@@ -2702,29 +2702,28 @@ fn build_client(http: &HttpTransport, bearer_token: Option<&str>) -> Result<Http
     builder.build().map_err(rpc_error)
 }
 
-/// Which URLs a gateway may hand back for a result it stored elsewhere (a
-/// large response is sent as a pointer to object storage): any `https://`
-/// URL, or one on the gateway's own origin, which covers a plain-HTTP
-/// gateway serving its own results. The check does no DNS lookups, which
-/// DuckDB-WASM cannot make.
 /// The validator `external_resolution` takes (`vgi_rpc::external::UrlValidator`).
 type UrlValidator = Arc<dyn Fn(&str) -> vgi_rpc_client::Result<()> + Send + Sync>;
 
+/// Which URLs a gateway may hand back for a result it stored elsewhere (a
+/// large response is sent as a pointer to object storage): any `https://`
+/// URL, or a plain `http://` one on the gateway's own host (any port), which
+/// covers a local gateway with local storage such as MinIO. The check does no
+/// DNS lookups, which DuckDB-WASM cannot make.
 fn external_location_validator(endpoint: &str) -> UrlValidator {
-    let origin = url::Url::parse(endpoint).ok().map(|url| url.origin());
+    let host = url::Url::parse(endpoint)
+        .ok()
+        .and_then(|url| url.host_str().map(str::to_ascii_lowercase));
     Arc::new(move |raw: &str| {
         let url = url::Url::parse(raw).map_err(|error| {
             RpcError::value_error(format!("invalid external location URL: {error}"))
         })?;
-        if url.scheme() == "https"
-            || origin
-                .as_ref()
-                .is_some_and(|origin| *origin == url.origin())
-        {
+        let same_host = host.is_some() && url.host_str().map(str::to_ascii_lowercase) == host;
+        if url.scheme() == "https" || (url.scheme() == "http" && same_host) {
             Ok(())
         } else {
             Err(RpcError::value_error(
-                "external location URL must be https:// or on the gateway's own origin",
+                "external location URL must be https://, or http:// on the gateway's own host",
             ))
         }
     })
@@ -3376,11 +3375,12 @@ mod external_location_tests {
     use super::external_location_validator;
 
     #[test]
-    fn external_locations_must_be_https_or_the_gateway_origin() {
+    fn external_locations_must_be_https_or_on_the_gateway_host() {
         let local = external_location_validator("http://127.0.0.1:8787");
         assert!(local("https://bucket.example.com/key?sig=1").is_ok());
         assert!(local("http://127.0.0.1:8787/_uploads/key").is_ok());
-        assert!(local("http://127.0.0.1:9000/key").is_err());
+        assert!(local("http://127.0.0.1:9000/key").is_ok());
+        assert!(local("http://localhost:9000/key").is_err());
         assert!(local("http://example.com/key").is_err());
         assert!(local("file:///etc/passwd").is_err());
         assert!(local("not a url").is_err());

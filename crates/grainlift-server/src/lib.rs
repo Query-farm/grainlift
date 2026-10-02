@@ -18,6 +18,7 @@ mod bind_upload;
 pub mod cli;
 pub mod config;
 pub mod dev;
+pub mod external_storage;
 pub mod hosting;
 mod identity;
 pub mod iroh_lifecycle;

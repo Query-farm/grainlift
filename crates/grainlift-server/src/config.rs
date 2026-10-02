@@ -31,8 +31,131 @@ pub struct Config {
     pub auth: AuthConfig,
     pub tcp: Option<TcpConfig>,
     pub iroh: Option<IrohConfig>,
+    /// Large requests and results through S3-compatible object storage
+    /// (HTTP only).
+    pub external_storage: Option<ExternalStorageConfig>,
     #[serde(default)]
     pub targets: HashMap<String, TargetConfig>,
+}
+
+/// An S3-compatible bucket (AWS S3, Cloudflare R2, MinIO, ...) for VGI-RPC
+/// external locations. The gateway hands clients presigned URLs: a request
+/// over `server.max_request_body_bytes` is uploaded to the bucket, and a
+/// result batch over `threshold_bytes` is stored there for the client to
+/// fetch. Browser clients need a CORS rule on the bucket allowing PUT and GET
+/// from their origin. Objects are never deleted by the gateway; give the
+/// bucket a lifecycle rule that expires them.
+#[derive(Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExternalStorageConfig {
+    /// The S3 API endpoint, e.g. `https://<account>.r2.cloudflarestorage.com`
+    /// or `https://s3.us-east-1.amazonaws.com`.
+    pub endpoint: String,
+    pub bucket: String,
+    /// The signing region (`auto` for R2).
+    #[serde(default = "default_storage_region")]
+    pub region: String,
+    /// Key prefix for the gateway's objects.
+    #[serde(default)]
+    pub prefix: String,
+    /// Credentials; default to the `AWS_ACCESS_KEY_ID` and
+    /// `AWS_SECRET_ACCESS_KEY` environment variables.
+    pub access_key_id: Option<String>,
+    pub secret_access_key: Option<String>,
+    /// `https://<bucket>.<endpoint host>/` instead of `<endpoint>/<bucket>/`.
+    #[serde(default)]
+    pub virtual_hosted_style: bool,
+    /// How long presigned URLs stay valid.
+    #[serde(default = "default_storage_url_ttl_seconds")]
+    pub url_ttl_seconds: u64,
+    /// Result batches at least this large go to the bucket.
+    #[serde(default = "default_storage_threshold_bytes")]
+    pub threshold_bytes: usize,
+    /// Largest request a client may upload (advertised; enforced on fetch).
+    #[serde(default = "default_storage_max_upload_bytes")]
+    pub max_upload_bytes: usize,
+}
+
+impl std::fmt::Debug for ExternalStorageConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ExternalStorageConfig")
+            .field("endpoint", &self.endpoint)
+            .field("bucket", &self.bucket)
+            .field("region", &self.region)
+            .field("prefix", &self.prefix)
+            .field("access_key_id", &self.access_key_id)
+            .field(
+                "secret_access_key",
+                &self.secret_access_key.as_ref().map(|_| "<redacted>"),
+            )
+            .field("virtual_hosted_style", &self.virtual_hosted_style)
+            .field("url_ttl_seconds", &self.url_ttl_seconds)
+            .field("threshold_bytes", &self.threshold_bytes)
+            .field("max_upload_bytes", &self.max_upload_bytes)
+            .finish()
+    }
+}
+
+impl ExternalStorageConfig {
+    /// The configured credentials, or the AWS environment variables.
+    pub fn credentials(&self) -> Result<(String, String), Box<dyn std::error::Error>> {
+        let pick = |configured: &Option<String>, variable: &str| {
+            configured
+                .clone()
+                .or_else(|| std::env::var(variable).ok())
+                .filter(|value| !value.is_empty())
+                .ok_or_else(|| {
+                    format!("external_storage needs credentials: set them in the configuration or {variable}")
+                })
+        };
+        Ok((
+            pick(&self.access_key_id, "AWS_ACCESS_KEY_ID")?,
+            pick(&self.secret_access_key, "AWS_SECRET_ACCESS_KEY")?,
+        ))
+    }
+
+    fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let endpoint = url::Url::parse(&self.endpoint)
+            .map_err(|_| "external_storage.endpoint must be an absolute http(s) URL")?;
+        if !matches!(endpoint.scheme(), "http" | "https") || endpoint.host_str().is_none() {
+            return Err("external_storage.endpoint must be an absolute http(s) URL".into());
+        }
+        if endpoint.query().is_some() || endpoint.fragment().is_some() {
+            return Err("external_storage.endpoint must not have a query or fragment".into());
+        }
+        if self.bucket.trim().is_empty() {
+            return Err("external_storage.bucket must not be empty".into());
+        }
+        if self.region.trim().is_empty() {
+            return Err("external_storage.region must not be empty".into());
+        }
+        // SigV4 presigned URLs are valid for at most seven days.
+        if !(1..=604_800).contains(&self.url_ttl_seconds) {
+            return Err("external_storage.url_ttl_seconds must be between 1 and 604800".into());
+        }
+        if self.threshold_bytes == 0 || self.max_upload_bytes == 0 {
+            return Err(
+                "external_storage.threshold_bytes and max_upload_bytes must be positive".into(),
+            );
+        }
+        Ok(())
+    }
+}
+
+fn default_storage_region() -> String {
+    "auto".to_string()
+}
+
+fn default_storage_url_ttl_seconds() -> u64 {
+    900
+}
+
+fn default_storage_threshold_bytes() -> usize {
+    1024 * 1024
+}
+
+fn default_storage_max_upload_bytes() -> usize {
+    256 * 1024 * 1024
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -401,6 +524,9 @@ impl Config {
                 grainlift_protocol::MAX_CONFIGURABLE_BIND_BYTES
             )
             .into());
+        }
+        if let Some(storage) = &self.external_storage {
+            storage.validate()?;
         }
         self.server
             .session_limits()

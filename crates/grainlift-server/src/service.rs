@@ -167,6 +167,17 @@ pub fn build_server_with_max_bind(
     server_id: String,
     max_bind_bytes: usize,
 ) -> RpcServer {
+    build_server_with_storage(manager, server_id, max_bind_bytes, None)
+}
+
+/// The server, storing result batches over the threshold in `external`
+/// (VGI-RPC external locations) when given.
+pub fn build_server_with_storage(
+    manager: Arc<SessionManager>,
+    server_id: String,
+    max_bind_bytes: usize,
+    external: Option<vgi_rpc::external::ExternalLocationConfig>,
+) -> RpcServer {
     let hook = vgi_rpc::OtelHook::new(vgi_rpc::OtelConfig {
         service_name: "grainlift".to_string(),
         record_exceptions: false,
@@ -176,8 +187,11 @@ pub fn build_server_with_max_bind(
         .server_version(env!("CARGO_PKG_VERSION"))
         .protocol_name(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
-        .with_hook(hook)
-        .build();
+        .with_hook(hook);
+    if let Some(external) = external {
+        server = server.with_external_location(external);
+    }
+    let mut server = server.build();
 
     register_open_connection(&mut server, manager.clone());
     register_session_operations(&mut server, manager.clone());

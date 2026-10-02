@@ -186,6 +186,7 @@ impl SqliteArgs {
             targets: HashMap::from([("sqlite".into(), target)]),
             tcp: None,
             iroh: None,
+            external_storage: None,
         };
         config.validate()?;
         Ok(config)
