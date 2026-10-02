@@ -850,6 +850,35 @@ driver = "adbc_driver_sqlite"
     }
 
     #[test]
+    fn external_storage_defaults_validation_and_redaction() {
+        let storage = |extra: &str| {
+            format!(
+                "[server]\nrequire_authentication = false\n{TARGET}\n[external_storage]\nendpoint = \"https://acct.r2.cloudflarestorage.com\"\nbucket = \"b\"\naccess_key_id = \"AK\"\nsecret_access_key = \"secret-canary\"\n{extra}"
+            )
+        };
+        let config = Config::from_toml(&storage("")).unwrap();
+        let external = config.external_storage.as_ref().unwrap();
+        assert_eq!(external.region, "auto");
+        assert_eq!(external.url_ttl_seconds, 900);
+        assert_eq!(external.threshold_bytes, 1024 * 1024);
+        assert_eq!(
+            external.credentials().unwrap(),
+            ("AK".into(), "secret-canary".into())
+        );
+        assert!(!format!("{config:?}").contains("secret-canary"));
+
+        for extra in [
+            "url_ttl_seconds = 0",
+            "url_ttl_seconds = 604801",
+            "threshold_bytes = 0",
+        ] {
+            assert!(Config::from_toml(&storage(extra)).is_err(), "{extra}");
+        }
+        let bad_endpoint = storage("").replace("https://acct.r2.cloudflarestorage.com", "ftp://x");
+        assert!(Config::from_toml(&bad_endpoint).is_err());
+    }
+
+    #[test]
     fn validates_independent_stream_and_http_turn_limits() {
         let valid = format!(
             "[server]\nrequire_authentication = false\nmax_bind_bytes = 1048576\nmax_request_body_bytes = 1024\n{TARGET}"
