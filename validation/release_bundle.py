@@ -206,6 +206,8 @@ def build(output: Path, python: str) -> None:
             "pyarrow-stubs==20.0.0.20260819",
             "cryptography==50.0.1",
             "granian==2.8.3",
+            # The hello-world suite runs its SQL example in the Haybarn CLI.
+            "haybarn-cli==1.5.5rc1",
         )
     )
     (bundle / "requirements.in").write_text("\n".join(requirements) + "\n")
