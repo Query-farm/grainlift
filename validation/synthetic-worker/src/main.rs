@@ -14,8 +14,9 @@
 // limitations under the License.
 
 use clap::{Parser, ValueEnum};
-use grainlift_server::config::TargetConfig;
-use grainlift_server::service::build_server_with_max_bind;
+use grainlift_server::config::{ExternalStorageConfig, TargetConfig};
+use grainlift_server::external_storage::ExternalStorage;
+use grainlift_server::service::build_server_with_storage;
 use grainlift_server::session::{SessionLimits, SessionManager, TargetAuthorizer};
 use grainlift_synthetic_worker::{Counters, SyntheticBackend, Workload};
 use rustls::pki_types::pem::PemObject;
@@ -56,6 +57,21 @@ struct Args {
     payload_bytes: usize,
     #[arg(long)]
     report: PathBuf,
+    /// HTTP request body limit.
+    #[arg(long, default_value_t = 2 * 1024 * 1024)]
+    max_request_bytes: usize,
+    /// S3 API endpoint of a bucket for large requests and results (HTTP);
+    /// credentials from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    #[arg(long, requires = "storage_bucket")]
+    storage_endpoint: Option<String>,
+    #[arg(long, requires = "storage_endpoint")]
+    storage_bucket: Option<String>,
+    #[arg(long, default_value = "auto")]
+    storage_region: String,
+    #[arg(long, default_value = "")]
+    storage_prefix: String,
+    #[arg(long, default_value_t = 1024 * 1024)]
+    storage_threshold_bytes: usize,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -117,10 +133,33 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         TargetAuthorizer::new(authorized_targets),
         Duration::from_secs(5),
     ));
-    let rpc = Arc::new(build_server_with_max_bind(
+    let storage = match (&args.storage_endpoint, &args.storage_bucket) {
+        (Some(endpoint), Some(bucket)) if !mtls => {
+            let mut config = ExternalStorageConfig::new(
+                endpoint.clone(),
+                bucket.clone(),
+                args.storage_region.clone(),
+                args.storage_prefix.clone(),
+            );
+            config.threshold_bytes = args.storage_threshold_bytes;
+            config.validate()?;
+            Some(ExternalStorage::from_config(&config)?)
+        }
+        (Some(_), _) => return Err("object storage applies to HTTP only".into()),
+        _ => None,
+    };
+    let (external, upload_urls) = match storage {
+        Some(storage) => (
+            Some(storage.location),
+            Some((storage.upload_urls, storage.max_upload_bytes)),
+        ),
+        None => (None, None),
+    };
+    let rpc = Arc::new(build_server_with_storage(
         manager.clone(),
         "synthetic-rust".into(),
         64 * 1024 * 1024,
+        external,
     ));
     let reaper_manager = manager.clone();
     let reaper = tokio::spawn(async move {
@@ -174,13 +213,18 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         shutdown.store(true, Ordering::Release);
         tokio::time::timeout(Duration::from_secs(10), task).await???;
     } else {
-        let state = HttpState::builder()
+        let mut state = HttpState::builder()
             .server(rpc)
             .authenticate(bearer_authenticate_static(bearer_credentials))
-            .max_body_size(2 * 1024 * 1024)
-            .max_request_bytes(2 * 1024 * 1024)
-            .request_timeout(Duration::from_secs(10))
-            .build();
+            .max_body_size(args.max_request_bytes)
+            .max_request_bytes(args.max_request_bytes)
+            .request_timeout(Duration::from_secs(10));
+        if let Some((provider, max_upload_bytes)) = upload_urls {
+            state = state
+                .upload_url_provider(provider)
+                .max_upload_bytes(max_upload_bytes);
+        }
+        let state = state.build();
         let listener = tokio::net::TcpListener::bind(("127.0.0.1", args.port)).await?;
         ready(&format!("http://{}", listener.local_addr()?), "http")?;
         axum::serve(listener, vgi_rpc::http::build_router(state))

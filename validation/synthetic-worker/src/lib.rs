@@ -22,11 +22,15 @@ use grainlift_server::backend::{Backend, BackendConnection, BackendStatement};
 use grainlift_server::config::TargetConfig;
 use std::collections::HashSet;
 use std::sync::{
-    Arc,
+    Arc, Mutex,
     atomic::{AtomicUsize, Ordering},
 };
 
 type Reader = Box<dyn RecordBatchReader + Send>;
+
+/// The rows last bound to `STORE` (the storage contract), shared by every
+/// connection of the process and returned by `STORED`.
+static STORED: Mutex<Option<(SchemaRef, Vec<RecordBatch>)>> = Mutex::new(None);
 
 /// Dimensions identical to the Python soak worker.
 #[derive(Clone, Copy, Debug)]
@@ -162,13 +166,30 @@ struct SyntheticStatement {
     workload: Workload,
     counters: Arc<Counters>,
     command: Command,
+    bound: Option<(SchemaRef, Vec<RecordBatch>)>,
 }
 #[derive(Clone, Copy)]
 enum Command {
     Unset,
     Query,
     Fail,
+    Store,
+    Stored,
     Unknown,
+}
+
+impl SyntheticStatement {
+    fn store(&mut self) -> Result<i64> {
+        let (schema, batches) = self
+            .bound
+            .take()
+            .ok_or_else(|| error("STORE needs bound parameters", Status::InvalidState))?;
+        let rows = batches.iter().map(|batch| batch.num_rows() as i64).sum();
+        *STORED
+            .lock()
+            .map_err(|_| error("Store unavailable", Status::Internal))? = Some((schema, batches));
+        Ok(rows)
+    }
 }
 struct UnsupportedCancel;
 impl CancelHandle for UnsupportedCancel {
@@ -193,6 +214,7 @@ impl BackendConnection for SyntheticConnection {
             workload: self.workload,
             counters: self.counters.clone(),
             command: Command::Unset,
+            bound: None,
         }))
     }
     fn set_option(&mut self, key: &str, value: OptionValue) -> Result<()> {
@@ -294,11 +316,15 @@ impl BackendStatement for SyntheticStatement {
         Arc::new(UnsupportedCancel)
     }
 
-    fn bind(&mut self, _batch: RecordBatch) -> Result<()> {
-        unsupported()
+    fn bind(&mut self, batch: RecordBatch) -> Result<()> {
+        self.bound = Some((batch.schema(), vec![batch]));
+        Ok(())
     }
-    fn bind_stream(&mut self, _reader: Reader) -> Result<()> {
-        unsupported()
+    fn bind_stream(&mut self, reader: Reader) -> Result<()> {
+        let schema = reader.schema();
+        let batches = reader.collect::<std::result::Result<Vec<_>, _>>()?;
+        self.bound = Some((schema, batches));
+        Ok(())
     }
     fn set_sql_query(&mut self, query: &str) -> Result<()> {
         if query.len() > 64 * 1024 {
@@ -307,6 +333,8 @@ impl BackendStatement for SyntheticStatement {
         self.command = match query {
             "QUERY" => Command::Query,
             "FAIL" => Command::Fail,
+            "STORE" => Command::Store,
+            "STORED" => Command::Stored,
             _ => Command::Unknown,
         };
         Ok(())
@@ -329,12 +357,33 @@ impl BackendStatement for SyntheticStatement {
                 error.sqlstate = [50, 50, 48, 48, 48];
                 Err(error)
             }
+            Command::Store => {
+                self.store()?;
+                Ok(Box::new(arrow_array::RecordBatchIterator::new(
+                    Vec::<std::result::Result<RecordBatch, ArrowError>>::new(),
+                    Arc::new(Schema::empty()),
+                )))
+            }
+            Command::Stored => {
+                let (schema, batches) = STORED
+                    .lock()
+                    .map_err(|_| error("Store unavailable", Status::Internal))?
+                    .clone()
+                    .unwrap_or_else(|| (self.workload.schema(), Vec::new()));
+                Ok(Box::new(arrow_array::RecordBatchIterator::new(
+                    batches.into_iter().map(Ok),
+                    schema,
+                )))
+            }
             Command::Unset => Err(error("Set a query before execution", Status::InvalidState)),
             Command::Unknown => Err(error("Unknown workload command", Status::InvalidArguments)),
         }
     }
     fn execute_update(&mut self) -> Result<Option<i64>> {
-        unsupported()
+        match self.command {
+            Command::Store => self.store().map(Some),
+            _ => unsupported(),
+        }
     }
     fn execute_schema(&mut self) -> Result<Schema> {
         unsupported()

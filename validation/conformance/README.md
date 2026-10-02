@@ -90,6 +90,27 @@ The other transport adapters are provided by the Go and TypeScript examples.
 The fixture enforces readiness and shutdown deadlines and captures diagnostics
 in pytest's private temporary directory. Each test owns its worker process.
 
+### Request limits and object storage
+
+`test_storage.py` (HTTP only) checks binds against the request limit and large
+requests and results through object storage. Workers also accept:
+
+- `--max-request-bytes N`: the HTTP request body limit they advertise
+  (`VGI-Max-Request-Bytes`). A worker must accept any bound batch whose bind
+  turn fits that limit; no smaller per-batch cap may refuse it.
+- `--storage-endpoint URL --storage-bucket NAME [--storage-region R]
+  [--storage-prefix P] [--storage-threshold-bytes N]`: serve HTTP with the
+  SDK's S3-compatible object storage, credentials from `AWS_ACCESS_KEY_ID` and
+  `AWS_SECRET_ACCESS_KEY`. Region defaults to `auto`, prefix to empty, the
+  threshold to 1 MiB.
+- `STORE`: keeps the bound parameters (bind or bind stream; the suite binds
+  nullable `number: int64, payload: binary`) in process memory, replacing the
+  previous ones; `execute_update` returns the row count. `STORED` returns those
+  rows exactly, in order, with the bound schema.
+
+The suite's bucket ([`bucket.py`](bucket.py)) verifies every presigned URL's
+SigV4 signature and expiry, so a worker whose signer is wrong fails.
+
 ## Other transports
 
 Go and TypeScript examples also accept `--transport https|tcp|mtls|iroh`.

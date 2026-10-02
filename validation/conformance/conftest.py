@@ -133,6 +133,28 @@ def worker(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Worker]:
     Yields:
         Independent native and wire client configuration.
     """
+    with launch_worker(request, tmp_path) as running:
+        yield running
+
+
+@contextmanager
+def launch_worker(
+    request: pytest.FixtureRequest,
+    tmp_path: Path,
+    extra_arguments: list[str] | None = None,
+    extra_environment: dict[str, str] | None = None,
+) -> Iterator[Worker]:
+    """Start the configured worker with optional contract extensions.
+
+    Args:
+        request: Pytest configuration and optional synthetic row count.
+        tmp_path: Per-test private report directory.
+        extra_arguments: Additional worker arguments (for example storage).
+        extra_environment: Additional worker environment variables.
+
+    Yields:
+        Independent native and wire client configuration.
+    """
     command = request.config.getoption("--worker-command")
     driver = request.config.getoption("--native-driver")
     if not command or not driver:
@@ -145,8 +167,13 @@ def worker(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Worker]:
     transport = str(request.config.getoption("--worker-transport"))
     tls_directory = request.config.getoption("--worker-tls-dir")
     tls_dir = Path(tls_directory).resolve(strict=True) if tls_directory else None
-    arguments: list[str] = []
-    environment = {**os.environ, "GRAINLIFT_HELLO_TOKEN": token, "GRAINLIFT_HELLO_OTHER_TOKEN": other}
+    arguments: list[str] = list(extra_arguments or [])
+    environment = {
+        **os.environ,
+        **(extra_environment or {}),
+        "GRAINLIFT_HELLO_TOKEN": token,
+        "GRAINLIFT_HELLO_OTHER_TOKEN": other,
+    }
     native_options: dict[str, dict[str, str]] = {}
     if transport != "http":
         arguments += ["--transport", transport]
