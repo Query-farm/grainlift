@@ -103,6 +103,23 @@ development-token = "developer@example.com"
 # device_code_client_id = "..."    # separate device-flow client for command-line sign-in (Google: "TVs and Limited Input devices")
 # device_code_client_secret = "..." # its secret; published to clients
 
+# Large requests and results through an S3-compatible bucket (HTTP only): the
+# gateway hands clients presigned upload URLs for requests over
+# max_request_body_bytes and stores result batches over threshold_bytes there.
+# Give the bucket a lifecycle rule that expires objects, and a CORS rule for
+# browser clients.
+# [external_storage]
+# endpoint = "https://<account-id>.r2.cloudflarestorage.com"
+# bucket = "grainlift-exchange"
+# region = "auto"                 # signing region; "auto" for R2
+# prefix = "grainlift/"
+# access_key_id = "..."           # default: AWS_ACCESS_KEY_ID
+# secret_access_key = "..."       # default: AWS_SECRET_ACCESS_KEY
+# virtual_hosted_style = false    # https://<bucket>.<endpoint host>/ instead of <endpoint>/<bucket>/
+# url_ttl_seconds = 900
+# threshold_bytes = 1048576
+# max_upload_bytes = 268435456
+
 [targets.sqlite]
 # Logical driver name from the manifest installed by `dbc install sqlite`.
 driver = "sqlite"

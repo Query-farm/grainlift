@@ -419,6 +419,41 @@ For Iroh, the page owns one browser Iroh node (relay only) in an adapter Worker
 from `@query-farm/vgi-rpc-iroh-browser`; map that node's endpoint ID to a
 principal in `iroh.principals` like any other client.
 
+### Large requests and results: object storage
+
+Over HTTP, a request is limited to `server.max_request_body_bytes` and the
+driver splits parameter uploads to fit, so one row larger than the limit cannot
+be sent. With `[external_storage]` the gateway uses an S3-compatible bucket
+(AWS S3, Cloudflare R2, MinIO) for
+[VGI-RPC external locations](https://vgi-rpc.query.farm/):
+
+- A client whose request is over the limit asks the gateway for an upload URL
+  (`POST /__upload_url__/init`), PUTs the request to the bucket, and sends only
+  a pointer, up to `max_upload_bytes`.
+- A result batch of at least `threshold_bytes` is stored in the bucket and the
+  client is sent a URL to fetch it.
+
+The gateway presigns the URLs itself (AWS Signature Version 4), so clients
+need no storage credentials, and it fetches only objects in its own bucket.
+tcp and Iroh are unaffected: they have no request limit.
+
+```toml
+[external_storage]
+endpoint = "https://<account-id>.r2.cloudflarestorage.com"  # or https://s3.<region>.amazonaws.com
+bucket = "grainlift-exchange"
+region = "auto"              # the signing region; "auto" for R2
+prefix = "grainlift/"
+# access_key_id / secret_access_key, or AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+url_ttl_seconds = 900
+threshold_bytes = 1048576
+max_upload_bytes = 268435456
+```
+
+The gateway never deletes objects; give the bucket a lifecycle rule that
+expires them (a day is plenty). Browser clients PUT and GET the bucket
+directly, so the bucket also needs a CORS rule allowing `PUT` and `GET` (with
+the `Content-Type` and `Content-Encoding` headers) from the page's origin.
+
 ### Embedding the driver
 
 The driver crate also builds as a `staticlib` for hosts that cannot load an
