@@ -75,8 +75,11 @@ def test_rust_example_native_errors_partial_close_and_shutdown(monkeypatch: pyte
             ),
         ):
             pytest.fail("Invalid credentials were accepted")
+        # A rejected credential is UNAUTHENTICATED (ADBC 13) since 0.4.2;
+        # earlier drivers reported UNAUTHORIZED or IO.
         assert unauthorized.value.status_code in (
             manager.AdbcStatusCode.IO,
+            manager.AdbcStatusCode.UNAUTHENTICATED,
             manager.AdbcStatusCode.UNAUTHORIZED,
         )
         with (

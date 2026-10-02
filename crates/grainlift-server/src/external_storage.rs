@@ -1,3 +1,4 @@
+// Copyright (c) 2026 ADBC Drivers Contributors
 // Copyright (c) 2026 Query Farm LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
