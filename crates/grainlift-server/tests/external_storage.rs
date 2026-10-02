@@ -181,6 +181,28 @@ async fn large_binds_and_results_go_through_the_bucket() {
         ExternalStorageConfig::new(storage_endpoint, "test-bucket", "auto", "grainlift/");
     storage.access_key_id = Some("test".into());
     storage.secret_access_key = Some("test".into());
+    exercise(storage, Some(bucket)).await;
+}
+
+/// The same against a real bucket: set GRAINLIFT_TEST_STORAGE_ENDPOINT,
+/// GRAINLIFT_TEST_STORAGE_BUCKET and the AWS credential variables, then run
+/// with `--ignored`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "needs a real bucket and credentials"]
+async fn large_binds_and_results_go_through_a_real_bucket() {
+    let variable = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("set {name}"));
+    let storage = ExternalStorageConfig::new(
+        variable("GRAINLIFT_TEST_STORAGE_ENDPOINT"),
+        variable("GRAINLIFT_TEST_STORAGE_BUCKET"),
+        std::env::var("GRAINLIFT_TEST_STORAGE_REGION").unwrap_or_else(|_| "auto".into()),
+        "grainlift-test/",
+    );
+    exercise(storage, None).await;
+}
+
+/// Bind rows over the request limit and read results over the threshold;
+/// with the in-process `bucket`, also check that both went through it.
+async fn exercise(storage: ExternalStorageConfig, bucket: Option<Bucket>) {
     let received = Received::default();
     let service = Arc::new(
         Service::new(BlobBackend(Arc::clone(&received)), "default")
@@ -239,7 +261,9 @@ async fn large_binds_and_results_go_through_the_bucket() {
             .unwrap();
         assert_eq!(statement.execute_update().unwrap(), Some(2));
         assert_eq!(*received.lock().unwrap(), rows);
-        let uploads = bucket.objects.lock().unwrap().len();
+        let uploads = bucket
+            .as_ref()
+            .map_or(1, |bucket| bucket.objects.lock().unwrap().len());
         assert!(uploads >= 1, "the bind was not uploaded");
 
         // Each result batch is over the 1 MiB threshold, so it is stored in
@@ -267,15 +291,17 @@ async fn large_binds_and_results_go_through_the_bucket() {
             values,
             (0..3).map(|seed| blob(seed, ROW_BYTES)).collect::<Vec<_>>()
         );
-        assert!(
-            bucket.objects.lock().unwrap().len() >= uploads + 3,
-            "results were not stored"
-        );
-        // The gateway reads the uploaded bind; the driver reads three results.
-        assert!(
-            *bucket.gets.lock().unwrap() >= 4,
-            "results were not fetched from the bucket"
-        );
+        if let Some(bucket) = bucket {
+            assert!(
+                bucket.objects.lock().unwrap().len() >= uploads + 3,
+                "results were not stored"
+            );
+            // The gateway reads the uploaded bind; the driver reads three results.
+            assert!(
+                *bucket.gets.lock().unwrap() >= 4,
+                "results were not fetched from the bucket"
+            );
+        }
     })
     .await
     .unwrap();
