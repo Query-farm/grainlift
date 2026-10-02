@@ -58,7 +58,7 @@ arrow-buffer.workspace = true
 arrow-schema.workspace = true
 base64 = { workspace = true, optional = true }
 rand = { workspace = true, optional = true }
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 reqwest = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 serde_json.workspace = true
