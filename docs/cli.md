@@ -146,7 +146,7 @@ SET VARIABLE gl = (
 
 SELECT * FROM adbc_scan(getvariable('gl')::BIGINT, 'SELECT 42 AS answer');
 SELECT * FROM adbc_tables(getvariable('gl')::BIGINT);
-SELECT adbc_disconnect(getvariable('gl')::BIGINT);
+CALL adbc_disconnect(getvariable('gl')::BIGINT);
 ```
 
 Pass driver-specific options directly in the `adbc_connect` struct.
@@ -154,7 +154,9 @@ Pass driver-specific options directly in the `adbc_connect` struct.
 an option container for `adbc_connect`.
 The token is read from the file instead of embedded in SQL history. The SQL
 string given to `adbc_scan` runs on the server; its result can be joined to local
-DuckDB tables or files. Use `adbc_execute` for server-side DDL and DML.
+DuckDB tables or files. Use `CALL adbc_execute(...)` for server-side DDL and DML;
+adbc_scanner runs connection commands (`adbc_execute`, `adbc_disconnect`, ...)
+as `CALL` table functions.
 
 Validated on EC2 Linux AArch64 with DuckDB 1.5.5, community extension `7a21dda`,
 and the CLI wheel from commit `4b3ac43`: a 10,000-row scan, local join, table
