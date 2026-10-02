@@ -1567,7 +1567,7 @@ async fn bind_batches_larger_than_a_request_are_split_by_rows() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_row_larger_than_a_request_is_refused_before_sending() {
     let (endpoint, task) = start_small_request_gateway(2 * 1024 * 1024).await;
-    let (schema, batch) = wide_rows(1, 1_500_000);
+    let (schema, batch) = wide_rows(1, 2_500_000);
     let error = tokio::task::spawn_blocking(move || bind_wide(endpoint, batch, schema))
         .await
         .unwrap()
