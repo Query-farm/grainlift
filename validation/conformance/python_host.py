@@ -13,7 +13,7 @@ from socketserver import ThreadingMixIn
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
 
 import pyarrow as pa
-from grainlift import AdbcError, Connection, QueryResult, Service, Statement
+from grainlift import AdbcError, Connection, ExternalStorageConfig, Limits, QueryResult, Service, Statement
 
 
 class QuietHandler(WSGIRequestHandler):
@@ -125,27 +125,23 @@ def main() -> None:
             return StoringConnection(self.rows, self.batch_rows, self.payload_bytes)
 
     worker = StoringWorker(args.rows, args.batch_rows, args.payload_bytes)
-    service_options: dict[str, object] = {}
-    if args.max_request_bytes is not None:
-        from grainlift import Limits
-
-        service_options["limits"] = Limits(request_bytes=args.max_request_bytes)
-    app_options: dict[str, object] = {}
-    if args.storage_endpoint:
-        from grainlift import ExternalStorageConfig
-
-        app_options["external_storage"] = ExternalStorageConfig(
+    limits = Limits(request_bytes=args.max_request_bytes) if args.max_request_bytes is not None else None
+    external_storage = (
+        ExternalStorageConfig(
             endpoint=args.storage_endpoint,
             bucket=args.storage_bucket,
             region=args.storage_region,
             prefix=args.storage_prefix,
             threshold_bytes=args.storage_threshold_bytes,
         )
-    with Service(worker, **service_options) as service:
+        if args.storage_endpoint
+        else None
+    )
+    with Service(worker, limits=limits) as service:
         server = make_server(
             "127.0.0.1",
             args.port,
-            service.app(tokens={token: "alice", other: "bob"}, **app_options),
+            service.app(tokens={token: "alice", other: "bob"}, external_storage=external_storage),
             server_class=ThreadedServer,
             handler_class=QuietHandler,
         )

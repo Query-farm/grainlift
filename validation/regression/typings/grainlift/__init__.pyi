@@ -160,7 +160,38 @@ class Service:
         traceback: TracebackType | None,
     ) -> None: ...
     def close(self) -> None: ...
-    def app(self, *, tokens: dict[str, str] | TokenStore) -> WSGIApplication: ...
+    def app(
+        self,
+        *,
+        tokens: dict[str, str] | TokenStore | None = ...,
+        anonymous_principal: str | None = ...,
+        external_storage: ExternalStorageConfig | None = ...,
+    ) -> WSGIApplication: ...
+
+class ExternalStorageConfig:
+    endpoint: str
+    bucket: str
+    region: str
+    prefix: str
+    access_key_id: str | None
+    secret_access_key: str | None
+    virtual_hosted_style: bool
+    url_ttl_seconds: int
+    threshold_bytes: int
+    max_upload_bytes: int
+    def __init__(
+        self,
+        endpoint: str,
+        bucket: str,
+        region: str = ...,
+        prefix: str = ...,
+        access_key_id: str | None = ...,
+        secret_access_key: str | None = ...,
+        virtual_hosted_style: bool = ...,
+        url_ttl_seconds: int = ...,
+        threshold_bytes: int = ...,
+        max_upload_bytes: int = ...,
+    ) -> None: ...
 
 class TokenStore:
     def __init__(self, tokens: Mapping[str, str]) -> None: ...

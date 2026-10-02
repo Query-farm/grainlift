@@ -66,7 +66,7 @@ def assert_same(table: pa.Table, *batches: pa.RecordBatch) -> None:
 
     Args:
         table: What STORED returned.
-        batches: What was bound.
+        *batches: What was bound.
     """
     expected = pa.Table.from_batches(batches, SCHEMA)
     assert table.num_rows == expected.num_rows

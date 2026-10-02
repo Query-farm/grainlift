@@ -72,6 +72,12 @@ class Bucket:
         refused: Requests refused for authentication.
     """
 
+    endpoint: str
+    objects: dict[str, bytes]
+    puts: int
+    gets: int
+    refused: int
+
     def __init__(self) -> None:
         """Start serving on an ephemeral loopback port."""
         self.objects: dict[str, bytes] = {}
