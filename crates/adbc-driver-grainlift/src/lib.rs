@@ -1269,7 +1269,7 @@ impl ByteConnector {
         } else {
             return Err(not_implemented("unsupported Grainlift byte-stream URI"));
         };
-        Ok((configure_rpc_client(client), None))
+        Ok((configure_rpc_client(client)?, None))
     }
 
     /// `iroh://` from inside Haybarn DuckDB-WASM: one SharedArrayBuffer ring
@@ -1306,7 +1306,7 @@ impl ByteConnector {
         )
         .map_err(|error| transport_error(error.to_string()))?;
         Ok((
-            configure_rpc_client(RpcClient::from_transport(Box::new(transport))),
+            configure_rpc_client(RpcClient::from_transport(Box::new(transport)))?,
             None,
         ))
     }
@@ -1335,7 +1335,7 @@ impl ByteConnector {
         })
         .map_err(|error| Error::with_message_and_status(error.to_string(), Status::IO))?;
         let (client, lease) = pooled.into_parts();
-        Ok((configure_rpc_client(client), Some(lease)))
+        Ok((configure_rpc_client(client)?, Some(lease)))
     }
 }
 
@@ -2687,7 +2687,8 @@ fn build_client(http: &HttpTransport, bearer_token: Option<&str>) -> Result<Http
         .protocol(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
         .timeout(Some(http.request_timeout))
-        .accepted_max_response_bytes(http.max_response_bytes);
+        .accepted_max_response_bytes(http.max_response_bytes)
+        .external_resolution(external_location_validator(&http.endpoint));
     let mut builder = match &http.backend {
         #[cfg(feature = "reqwest-http")]
         HttpBackendChoice::Reqwest(client) => builder.client(client.clone()),
@@ -2701,11 +2702,46 @@ fn build_client(http: &HttpTransport, bearer_token: Option<&str>) -> Result<Http
     builder.build().map_err(rpc_error)
 }
 
+/// Which URLs a gateway may hand back for a result it stored elsewhere (a
+/// large response is sent as a pointer to object storage): any `https://`
+/// URL, or one on the gateway's own origin, which covers a plain-HTTP
+/// gateway serving its own results. The check does no DNS lookups, which
+/// DuckDB-WASM cannot make.
+/// The validator `external_resolution` takes (`vgi_rpc::external::UrlValidator`).
+type UrlValidator = Arc<dyn Fn(&str) -> vgi_rpc_client::Result<()> + Send + Sync>;
+
+fn external_location_validator(endpoint: &str) -> UrlValidator {
+    let origin = url::Url::parse(endpoint).ok().map(|url| url.origin());
+    Arc::new(move |raw: &str| {
+        let url = url::Url::parse(raw).map_err(|error| {
+            RpcError::value_error(format!("invalid external location URL: {error}"))
+        })?;
+        if url.scheme() == "https"
+            || origin
+                .as_ref()
+                .is_some_and(|origin| *origin == url.origin())
+        {
+            Ok(())
+        } else {
+            Err(RpcError::value_error(
+                "external location URL must be https:// or on the gateway's own origin",
+            ))
+        }
+    })
+}
+
 #[cfg(feature = "byte-transports")]
-fn configure_rpc_client(client: RpcClient) -> RpcClient {
-    client
+fn configure_rpc_client(client: RpcClient) -> Result<RpcClient> {
+    let client = client
         .protocol(protocol::PROTOCOL_NAME)
-        .protocol_version(protocol::PROTOCOL_VERSION)
+        .protocol_version(protocol::PROTOCOL_VERSION);
+    // Fetching an externalized result needs an HTTP client; a byte-stream
+    // endpoint has no origin of its own, so only `https://` URLs pass.
+    #[cfg(feature = "reqwest-http")]
+    let client = client
+        .external_resolution(external_location_validator(""))
+        .map_err(rpc_error)?;
+    Ok(client)
 }
 
 #[cfg(feature = "byte-transports")]
@@ -3332,5 +3368,25 @@ mod tests {
         for (type_id, _) in fields.iter() {
             assert_eq!(values.child(type_id).len(), batch.num_rows());
         }
+    }
+}
+
+#[cfg(test)]
+mod external_location_tests {
+    use super::external_location_validator;
+
+    #[test]
+    fn external_locations_must_be_https_or_the_gateway_origin() {
+        let local = external_location_validator("http://127.0.0.1:8787");
+        assert!(local("https://bucket.example.com/key?sig=1").is_ok());
+        assert!(local("http://127.0.0.1:8787/_uploads/key").is_ok());
+        assert!(local("http://127.0.0.1:9000/key").is_err());
+        assert!(local("http://example.com/key").is_err());
+        assert!(local("file:///etc/passwd").is_err());
+        assert!(local("not a url").is_err());
+
+        let stream = external_location_validator("");
+        assert!(stream("https://bucket.example.com/key").is_ok());
+        assert!(stream("http://bucket.example.com/key").is_err());
     }
 }
