@@ -45,12 +45,12 @@ the native driver. From the Grainlift checkout:
 ```console
 python -m pytest validation/conformance \
   --native-driver /absolute/path/libadbc_driver_grainlift.so \
-  --worker-command '["/absolute/path/grainlift-hello-world-go"]' \
+  --worker-command '["/absolute/path/conformance-worker"]' \
   --junitxml=go-conformance.xml
 
 python -m pytest validation/conformance \
   --native-driver /absolute/path/libadbc_driver_grainlift.so \
-  --worker-command '["/absolute/path/node","/absolute/path/grainlift-hello-world-typescript/dist/main.js"]' \
+  --worker-command '["/absolute/path/node","/absolute/path/grainlift-hello-world-typescript/dist/src/conformance.js"]' \
   --junitxml=typescript-conformance.xml
 ```
 
@@ -71,7 +71,9 @@ Rust [synthetic worker](../synthetic-worker/README.md) accepts the same
 command-line contract for HTTP and mTLS; build it with
 `cargo build --locked -p grainlift-synthetic-worker` and pass
 `--worker-command '["/absolute/path/target/debug/grainlift-synthetic-worker"]'`.
-The other transport adapters are provided by the Go and TypeScript examples.
+The other transport adapters are provided by the Go and TypeScript examples:
+`go build ./cmd/conformance-worker` in grainlift-hello-world-go, and
+`dist/src/conformance.js` in grainlift-hello-world-typescript (after `npm run build`).
 
 ## Worker process contract
 
@@ -137,12 +139,12 @@ raw `vgi-rpc/arrow-mux/1` ALPN, not HTTP forwarding over Iroh.
 ```console
 python -m pytest validation/conformance -q \
   --native-driver /absolute/path/libadbc_driver_grainlift.so \
-  --worker-command '["/absolute/path/grainlift-hello-world-go"]' \
+  --worker-command '["/absolute/path/conformance-worker"]' \
   --worker-transport mtls --worker-tls-dir /absolute/path/test-tls
 
 python -m pytest validation/conformance -q \
   --native-driver /absolute/path/libadbc_driver_grainlift.so \
-  --worker-command '["/absolute/path/grainlift-hello-world-go"]' \
+  --worker-command '["/absolute/path/conformance-worker"]' \
   --worker-transport iroh --iroh-bridge /absolute/path/vgi-iroh-bridge
 ```
 
