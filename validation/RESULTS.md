@@ -17,6 +17,33 @@
 
 # Validation results
 
+## HTTP connection handshake and backend statistics — 2026-10-07
+
+Protocol 0.5.0 negotiates HTTP capabilities on the first RPC and reports
+per-session statistics support. The local Cloudflare demo regression uses
+Chromium, Haybarn WASM EH, and real workerd Durable Object SQLite with six
+products and twelve orders. Its sequential warm join makes **21 HTTP requests**,
+including two fresh `get_table_schema` calls, with no `/health` or
+`get_statistics` calls. Cold initialization also makes no health probe.
+Direct table scans and catalog refresh still fetch schemas. Expected query
+results pass. [Measurements and environment](load-results/2026-10-07-http-handshake/local-summary.json)
+and [request timings](load-results/2026-10-07-http-handshake/local-browser.json)
+are retained. Local timing includes Playwright routing overhead; this is a
+functional regression, not a WAN or sustained-load result. RSS was not measured.
+
+The release driver loaded through native `adbc_scanner`, with one DuckDB thread
+and the same local HTTP worker, returns the seeded join correctly in 20 warm
+runs: median **32.5 ms**, range **28–47 ms**; the first query takes 97 ms.
+[Native measurements](load-results/2026-10-07-http-handshake/native-local.json)
+record the environment and individual samples.
+
+The Rust workspace passes 159 tests and warning-free clippy. The HTTP regression
+covers false/true/unknown declarations, independent sessions, refresh after
+expiry, preserved ordinary ADBC errors, and fresh schemas. VGI-RPC passes 723
+workspace tests, all CI jobs, and 1,000,000 wire-reader fuzz cases. The updated
+SDKs pass 67 TypeScript tests, the Go race suite, and Python's 540-test suite plus
+the new declaration checks and nine native-driver integration tests.
+
 ## Multi-transport real-driver end-to-end coverage — 2026-09-27
 
 The [combined EC2 run](conformance/results/ec2-20260927-multitransport-e2e/README.md)

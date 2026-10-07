@@ -1,0 +1,108 @@
+{
+  "environment": {
+    "os": "Darwin",
+    "architecture": "arm64",
+    "client": "Chromium, Haybarn WASM EH",
+    "worker": "Wrangler local workerd, public environment",
+    "transport": "HTTP via Playwright routing",
+    "grainlift_protocol": "0.5.0",
+    "vgi_rpc": "0.31.1"
+  },
+  "workload": {
+    "products": 6,
+    "orders": 12,
+    "concurrent_queries": 1,
+    "warm_repetitions": 2,
+    "result_check": "expected seeded revenue and product names"
+  },
+  "errors": 0,
+  "peak_rss_bytes": null,
+  "notes": [
+    "Functional request-count regression; local timing includes Playwright routing overhead.",
+    "Not a sustained load test; peak RSS was not measured."
+  ],
+  "measurements": [
+    {
+      "name": "join-warm-1",
+      "elapsed_ms": 164.9758750000001,
+      "request_count": 21,
+      "network_ms": 127.514,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 2,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_result": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    },
+    {
+      "name": "join-warm-2",
+      "elapsed_ms": 199.74608399999988,
+      "request_count": 21,
+      "network_ms": 129.1,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 2,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_result": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    },
+    {
+      "name": "direct-scan-table",
+      "elapsed_ms": 94.64279200000055,
+      "request_count": 9,
+      "network_ms": 50.156000000000006,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 1,
+        "/org.queryfarm.Grainlift.v1/new_statement": 1,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 1,
+        "/org.queryfarm.Grainlift.v1/prepare": 1,
+        "/org.queryfarm.Grainlift.v1/execute": 1,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 1,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 1,
+        "/org.queryfarm.Grainlift.v1/close_result": 1,
+        "/org.queryfarm.Grainlift.v1/close_statement": 1
+      }
+    },
+    {
+      "name": "refresh-catalog",
+      "elapsed_ms": 31.523208000000523,
+      "request_count": 0,
+      "network_ms": 0,
+      "methods": {}
+    },
+    {
+      "name": "after-refresh",
+      "elapsed_ms": 216.87575000000015,
+      "request_count": 33,
+      "network_ms": 183.02000000000004,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_objects": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 4,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 4,
+        "/org.queryfarm.Grainlift.v1/close_result": 4,
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 6,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    }
+  ]
+}

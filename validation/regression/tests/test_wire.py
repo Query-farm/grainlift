@@ -176,7 +176,7 @@ class Wire:
                 custom_metadata={
                     "vgi_rpc.method": method,
                     "vgi_rpc.protocol": PROTOCOL,
-                    "vgi_rpc.protocol_version": "0.4.0",
+                    "vgi_rpc.protocol_version": "0.5.0",
                     "vgi_rpc.request_version": "1",
                 },
             )

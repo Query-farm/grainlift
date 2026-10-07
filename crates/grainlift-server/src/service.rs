@@ -223,9 +223,26 @@ fn register_open_connection(server: &mut RpcServer, manager: Arc<SessionManager>
                         crate::iroh_lifecycle::transport_id(ctx),
                     )
                     .map_err(adbc_rpc_error)?;
+                let capabilities = manager.get(&session_id, &principal).and_then(|session| {
+                    session.with_connection(|connection| {
+                        Ok((
+                            connection.statistics_supported(),
+                            connection.statistic_names_supported(),
+                        ))
+                    })
+                });
+                let (statistics_supported, statistic_names_supported) = match capabilities {
+                    Ok(capabilities) => capabilities,
+                    Err(error) => {
+                        let _ = manager.close(&session_id, &principal);
+                        return Err(adbc_rpc_error(error));
+                    }
+                };
                 Ok(Some(handle_response(
                     protocol::SessionResponse {
                         session_id: session_id.clone(),
+                        statistics_supported,
+                        statistic_names_supported,
                     },
                     response_limit(ctx),
                     || {
@@ -985,13 +1002,13 @@ fn validate_protocol_version(request: &Request) -> vgi_rpc::Result<()> {
     let compatible = request
         .metadata
         .get("vgi_rpc.protocol_version")
-        .and_then(|version| version.strip_prefix("0.4."))
+        .and_then(|version| version.strip_prefix("0.5."))
         .is_some_and(|patch| !patch.is_empty() && patch.bytes().all(|byte| byte.is_ascii_digit()));
     if compatible {
         Ok(())
     } else {
         Err(RpcError::version_error(
-            "Grainlift requires an explicit 0.4.x protocol version",
+            "Grainlift requires an explicit 0.5.x protocol version",
         ))
     }
 }
@@ -1068,6 +1085,8 @@ mod response_tests {
     fn session_and_statement_encoding_failures_reclaim_only_failed_handles() {
         assert_cleanup_boundaries(protocol::SessionResponse {
             session_id: "session".into(),
+            statistics_supported: None,
+            statistic_names_supported: None,
         });
         assert_cleanup_boundaries(protocol::StatementResponse {
             session_id: "session".into(),

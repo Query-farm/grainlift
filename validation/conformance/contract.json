@@ -1082,7 +1082,7 @@
     }
   ],
   "protocol_name": "org.queryfarm.Grainlift.v1",
-  "protocol_version": "0.4.0",
+  "protocol_version": "0.5.0",
   "records": {
     "ExecuteResponse": {
       "fields": [
@@ -1520,6 +1520,18 @@
           "name": "session_id",
           "nullable": false,
           "type": "string"
+        },
+        {
+          "metadata": {},
+          "name": "statistics_supported",
+          "nullable": true,
+          "type": "bool"
+        },
+        {
+          "metadata": {},
+          "name": "statistic_names_supported",
+          "nullable": true,
+          "type": "bool"
         }
       ],
       "metadata": {}

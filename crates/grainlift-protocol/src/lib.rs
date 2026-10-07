@@ -36,7 +36,7 @@ pub use requests::*;
 pub mod contract;
 
 pub const PROTOCOL_NAME: &str = "org.queryfarm.Grainlift.v1";
-pub const PROTOCOL_VERSION: &str = "0.4.0";
+pub const PROTOCOL_VERSION: &str = "0.5.0";
 /// Default cumulative native parameter-stream budget.
 pub const MAX_BIND_STREAM_BYTES: usize = 64 * 1024 * 1024;
 /// Current deployed VGI Rust implementation's message compatibility ceiling.

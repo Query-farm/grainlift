@@ -37,6 +37,9 @@ pub struct OkResponse {
 #[derive(Debug, Clone, PartialEq, VgiArrow)]
 pub struct SessionResponse {
     pub session_id: String,
+    /// Explicit backend support; null means unknown, never inferred from an error.
+    pub statistics_supported: Option<bool>,
+    pub statistic_names_supported: Option<bool>,
 }
 #[derive(Debug, Clone, PartialEq, VgiArrow)]
 pub struct StatementResponse {

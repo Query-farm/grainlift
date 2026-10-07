@@ -55,6 +55,16 @@ pub trait Backend: Send + Sync {
 pub trait BackendConnection: Send {
     fn new_statement(&mut self) -> AdbcResult<Box<dyn BackendStatement>>;
 
+    /// Declare support for this connection. Unknown keeps remote dispatch;
+    /// false lets clients return NOT_IMPLEMENTED without a network request.
+    fn statistics_supported(&self) -> Option<bool> {
+        None
+    }
+
+    fn statistic_names_supported(&self) -> Option<bool> {
+        None
+    }
+
     fn cancel_handle(&self) -> Arc<dyn CancelHandle> {
         Arc::new(NotImplementedCancel)
     }

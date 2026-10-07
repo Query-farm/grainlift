@@ -403,6 +403,19 @@ TCP, Iroh, authentication, target, and resource-limit configuration.
 
 ### Browser clients
 
+HTTP connections negotiate transport capabilities on `open_connection` and
+do not probe `/health`. The initial uncompressed request is limited to 64 KiB;
+response budgets are enforced from the first reply. Negotiated capabilities
+are reused by the connection's HTTP client pool. Completed ordinary ADBC
+errors do not discard those clients.
+
+Protocol 0.5.0 adds nullable `statistics_supported` and
+`statistic_names_supported` flags to `SessionResponse`. An explicit `false`
+returns ADBC `NOT_IMPLEMENTED` locally; `true` or unknown (`null`) keeps remote
+dispatch. These declarations belong to the selected backend connection and
+refresh when its session is reopened. Table schemas are still fetched when
+requested. Upgrade clients and servers together for this protocol change.
+
 Browsers can reach Grainlift over HTTP(S) and, from a cross-origin-isolated
 page, over Iroh. The grainlift DuckDB extension
 does both from DuckDB-WASM (Haybarn). For HTTP, allow the page's origin with
@@ -559,7 +572,7 @@ mTLS TCP and raw Iroh QUIC. The [coverage matrix](validation/conformance/COVERAG
 maps shared requirements to SDK tests and records transport-specific gaps;
 equal test counts alone do not establish equal coverage.
 
-Protocol 0.4.0 uses [typed request and response records](docs/typed-protocol.md)
+Protocol 0.5.0 uses [typed request and response records](docs/typed-protocol.md)
 with standard VGI-RPC envelopes, typed options and explicit metadata filters.
 Upgrade native drivers, servers and the Python toolkit together; older wire
 versions are incompatible. Nested IPC is uncompressed; compression belongs to

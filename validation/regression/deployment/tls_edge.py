@@ -122,7 +122,7 @@ class Grainlift(Protocol):
     """Declare the independently checked subset of the public wire contract."""
 
     protocol_name: ClassVar[str] = "org.queryfarm.Grainlift.v1"
-    protocol_version: ClassVar[str] = "0.4.0"
+    protocol_version: ClassVar[str] = "0.5.0"
 
     def open_connection(self, request: OpenConnectionRequest) -> OpenResult:
         """Allocate an authenticated session."""

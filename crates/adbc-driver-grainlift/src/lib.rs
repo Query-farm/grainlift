@@ -53,7 +53,7 @@ use grainlift_protocol as protocol;
 use rustls::pki_types::pem::PemObject;
 #[cfg(feature = "byte-transports")]
 use vgi_rpc_client::RpcClient;
-use vgi_rpc_client::{HttpClient, RpcError};
+use vgi_rpc_client::{HttpClient, HttpServerCapabilities, RpcError};
 #[cfg(feature = "iroh")]
 use vgi_rpc_iroh::IrohTarget;
 
@@ -456,6 +456,7 @@ impl Connection for GrainliftConnection {
     }
 
     fn get_statistic_names(&self) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
+        self.remote.require_statistics_support(true)?;
         self.remote
             .session_stream_call(protocol::method::GET_STATISTIC_NAMES)
     }
@@ -467,6 +468,7 @@ impl Connection for GrainliftConnection {
         table_name: Option<&str>,
         approximate: bool,
     ) -> Result<Box<dyn RecordBatchReader + Send + 'static>> {
+        self.remote.require_statistics_support(false)?;
         self.remote
             .connection_stream_call(protocol::method::GET_STATISTICS, |id| {
                 protocol::GetStatisticsRequest {
@@ -921,6 +923,8 @@ struct HttpTransport {
     max_response_bytes: usize,
     /// Idle clients with the credential generation they were built with.
     idle_clients: Mutex<Vec<(u64, HttpClient)>>,
+    /// Transport negotiation shared by clients of this connection and identity.
+    capabilities: Mutex<Option<(u64, HttpServerCapabilities)>>,
 }
 
 /// The bearer token HTTP clients send. Each refresh bumps `generation`, so
@@ -994,10 +998,18 @@ impl HttpTransport {
             }
         }
         drop(idle);
-        Ok((generation, build_client(self, bearer.as_deref())?))
+        Ok((
+            generation,
+            build_client(self, bearer.as_deref(), generation)?,
+        ))
     }
 
     fn check_in(&self, generation: u64, client: HttpClient) {
+        if let Ok(capabilities) = client.capabilities()
+            && let Ok(mut cached) = self.capabilities.lock()
+        {
+            *cached = Some((generation, capabilities));
+        }
         if let Ok(mut idle) = self.idle_clients.lock()
             && idle.len() < MAX_IDLE_HTTP_CLIENTS
         {
@@ -1417,6 +1429,7 @@ impl RemoteTransport {
                 request_timeout,
                 max_response_bytes,
                 idle_clients: Mutex::new(Vec::new()),
+                capabilities: Mutex::new(None),
             };
             // With only a refresh token, get a bearer token now, so a bad
             // login fails the connection rather than its first query.
@@ -1490,6 +1503,9 @@ impl RemoteTransport {
             Self::Http(http) => {
                 if let Ok(mut idle) = http.idle_clients.lock() {
                     idle.clear();
+                }
+                if let Ok(mut capabilities) = http.capabilities.lock() {
+                    *capabilities = None;
                 }
                 Ok(())
             }
@@ -1578,11 +1594,21 @@ impl RemoteTransport {
     fn call(&self, method: &str, request: &RecordBatch) -> Result<RecordBatch> {
         match self {
             Self::Http(_) => self.with_http_client(|client| {
-                client
-                    .call_unary(method, request, None)
-                    .map(|(batch, _)| batch)
-                    .map_err(rpc_error)
-            }),
+                match client.call_unary(method, request, None) {
+                    Ok((batch, _)) => Ok(Ok(batch)),
+                    Err(error) => match remote_adbc_error(&error) {
+                        // A decoded unary ADBC error is a complete response,
+                        // not a broken HTTP client. Preserve its cached
+                        // capabilities (notably after optional metadata returns
+                        // NOT_IMPLEMENTED), and return the error to the caller.
+                        // Keep authentication refresh and transport failures on
+                        // the outer error path; stream calls still discard a
+                        // client after any failure.
+                        Some(error) if !oauth::is_gateway_unauthorized(&error) => Ok(Err(error)),
+                        _ => Err(rpc_error(error)),
+                    },
+                }
+            })?,
             #[cfg(feature = "byte-transports")]
             Self::Byte(byte) => {
                 self.reset_if_needed(byte)?;
@@ -1638,6 +1664,8 @@ struct RemoteConnection {
 
 struct SessionState {
     id: String,
+    statistics_supported: Option<bool>,
+    statistic_names_supported: Option<bool>,
     /// ADBC connections start in autocommit mode. Only then can a lost
     /// session be replaced without losing transaction state.
     autocommit: bool,
@@ -1787,11 +1815,13 @@ impl RemoteConnection {
         };
         let request = typed_request(open_request.clone())?;
         let response = transport.call(protocol::method::OPEN_CONNECTION, &request)?;
-        let session_id = decode_response::<protocol::SessionResponse>(&response)?.session_id;
+        let opened = decode_response::<protocol::SessionResponse>(&response)?;
         Ok(Self {
             transport,
             session: Mutex::new(SessionState {
-                id: session_id,
+                id: opened.session_id,
+                statistics_supported: opened.statistics_supported,
+                statistic_names_supported: opened.statistic_names_supported,
                 autocommit: true,
                 options: Vec::new(),
             }),
@@ -1855,12 +1885,38 @@ impl RemoteConnection {
         let response = self
             .transport
             .call(protocol::method::OPEN_CONNECTION, &request)?;
-        let id = decode_response::<protocol::SessionResponse>(&response)?.session_id;
+        let opened = decode_response::<protocol::SessionResponse>(&response)?;
+        let id = opened.session_id;
         for (key, value) in &session.options {
             let request = connection_option_request(&id, key, value)?;
             self.call(protocol::method::SET_CONNECTION_OPTION, &request)?;
         }
         session.id = id;
+        session.statistics_supported = opened.statistics_supported;
+        session.statistic_names_supported = opened.statistic_names_supported;
+        Ok(())
+    }
+
+    fn require_statistics_support(&self, names: bool) -> Result<()> {
+        let session = self
+            .session
+            .lock()
+            .map_err(|_| internal("session state is poisoned"))?;
+        let supported = if names {
+            session.statistic_names_supported
+        } else {
+            session.statistics_supported
+        };
+        if supported == Some(false) {
+            return Err(Error::with_message_and_status(
+                if names {
+                    "backend does not support statistic names"
+                } else {
+                    "backend does not support statistics"
+                },
+                Status::NotImplemented,
+            ));
+        }
         Ok(())
     }
 
@@ -2690,13 +2746,27 @@ fn decode_option_response(batch: &RecordBatch) -> Result<OptionValue> {
         .map_err(|error| internal(error.to_string()))
 }
 
-fn build_client(http: &HttpTransport, bearer_token: Option<&str>) -> Result<HttpClient> {
-    let builder = HttpClient::connect(http.endpoint.clone())
+fn build_client(
+    http: &HttpTransport,
+    bearer_token: Option<&str>,
+    generation: u64,
+) -> Result<HttpClient> {
+    let mut builder = HttpClient::connect(http.endpoint.clone())
         .protocol(protocol::PROTOCOL_NAME)
         .protocol_version(protocol::PROTOCOL_VERSION)
         .timeout(Some(http.request_timeout))
         .accepted_max_response_bytes(http.max_response_bytes)
+        .capabilities_from_response(64 * 1024)
         .external_resolution(external_location_validator(&http.endpoint));
+    if let Some((cached_generation, capabilities)) = http
+        .capabilities
+        .lock()
+        .map_err(|_| internal("HTTP capability cache is poisoned"))?
+        .as_ref()
+        && *cached_generation == generation
+    {
+        builder = builder.server_capabilities(capabilities.clone());
+    }
     let mut builder = match &http.backend {
         #[cfg(feature = "reqwest-http")]
         HttpBackendChoice::Reqwest(client) => builder.client(client.clone()),
@@ -2846,16 +2916,23 @@ fn read_private_key(path: &str) -> Result<rustls::pki_types::PrivateKeyDer<'stat
         .map_err(|error| invalid(format!("could not load TLS private key {path:?}: {error}")))
 }
 
+fn remote_adbc_error(error: &RpcError) -> Option<Error> {
+    if error.error_type != "AdbcError" {
+        return None;
+    }
+    serde_json::from_str::<protocol::WireAdbcError>(
+        error
+            .message
+            .strip_prefix("AdbcError: ")
+            .unwrap_or(&error.message),
+    )
+    .ok()
+    .map(protocol::WireAdbcError::into_adbc)
+}
+
 fn rpc_error(error: RpcError) -> Error {
-    if error.error_type == "AdbcError"
-        && let Ok(wire) = serde_json::from_str::<protocol::WireAdbcError>(
-            error
-                .message
-                .strip_prefix("AdbcError: ")
-                .unwrap_or(&error.message),
-        )
-    {
-        return wire.into_adbc();
+    if let Some(error) = remote_adbc_error(&error) {
+        return error;
     }
     // The gateway's 401; not a lost session, and fixable by a token refresh.
     if error.error_type == "AuthenticationError" {

@@ -28,7 +28,7 @@ native driver identity, and remaining release gates. The
 which checks must be shared across implementations.
 
 The checked `contract.json` contains all 31 methods and 18 named records for
-Grainlift 0.4.0. It preserves Arrow field order, types, nullability, list children,
+Grainlift 0.5.0. It preserves Arrow field order, types, nullability, list children,
 and metadata. Dynamic database result schemas remain runtime values. Regenerate
 it with `cargo run -p grainlift-protocol --example export_contract`; protocol tests
 check the snapshot, and a server test compares it with the actual method

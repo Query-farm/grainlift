@@ -1,0 +1,2025 @@
+{
+  "local_extension": true,
+  "measurements": [
+    {
+      "name": "join-warm-1",
+      "elapsed_ms": 164.9758750000001,
+      "request_count": 21,
+      "network_ms": 127.514,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 2,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_result": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    },
+    {
+      "name": "join-warm-2",
+      "elapsed_ms": 199.74608399999988,
+      "request_count": 21,
+      "network_ms": 129.1,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 2,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_result": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    },
+    {
+      "name": "direct-scan-table",
+      "elapsed_ms": 94.64279200000055,
+      "request_count": 9,
+      "network_ms": 50.156000000000006,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 1,
+        "/org.queryfarm.Grainlift.v1/new_statement": 1,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 1,
+        "/org.queryfarm.Grainlift.v1/prepare": 1,
+        "/org.queryfarm.Grainlift.v1/execute": 1,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 1,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 1,
+        "/org.queryfarm.Grainlift.v1/close_result": 1,
+        "/org.queryfarm.Grainlift.v1/close_statement": 1
+      }
+    },
+    {
+      "name": "refresh-catalog",
+      "elapsed_ms": 31.523208000000523,
+      "request_count": 0,
+      "network_ms": 0,
+      "methods": {}
+    },
+    {
+      "name": "after-refresh",
+      "elapsed_ms": 216.87575000000015,
+      "request_count": 33,
+      "network_ms": 183.02000000000004,
+      "methods": {
+        "/org.queryfarm.Grainlift.v1/get_objects": 2,
+        "/org.queryfarm.Grainlift.v1/read_result/init": 4,
+        "/org.queryfarm.Grainlift.v1/read_result/exchange": 4,
+        "/org.queryfarm.Grainlift.v1/close_result": 4,
+        "/org.queryfarm.Grainlift.v1/get_table_schema": 6,
+        "/org.queryfarm.Grainlift.v1/new_statement": 2,
+        "/org.queryfarm.Grainlift.v1/set_sql_query": 2,
+        "/org.queryfarm.Grainlift.v1/prepare": 2,
+        "/org.queryfarm.Grainlift.v1/execute": 2,
+        "/org.queryfarm.Grainlift.v1/bind/init": 1,
+        "/org.queryfarm.Grainlift.v1/bind/exchange": 2,
+        "/org.queryfarm.Grainlift.v1/close_statement": 2
+      }
+    }
+  ],
+  "requests": [
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/open_connection",
+      "timing": {
+        "startTime": 1791347335172.66,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 14.594,
+        "responseEnd": 16.243
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_info",
+      "timing": {
+        "startTime": 1791347335197.5452,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 7.409,
+        "responseEnd": 9.042
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/open_connection",
+      "timing": {
+        "startTime": 1791347335213.5579,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.722,
+        "responseEnd": 7.368
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_objects",
+      "timing": {
+        "startTime": 1791347335221.782,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 17.298,
+        "responseEnd": 18.729
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335242.42,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.69,
+        "responseEnd": 7.12
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335251.684,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.61,
+        "responseEnd": 6.031
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335258.2332,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.62,
+        "responseEnd": 7.115
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_objects",
+      "timing": {
+        "startTime": 1791347335266.468,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 12.433,
+        "responseEnd": 13.875
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335280.495,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.043,
+        "responseEnd": 7.337
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335288.45,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.048,
+        "responseEnd": 6.409
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335295.485,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.83,
+        "responseEnd": 8.349
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/open_connection",
+      "timing": {
+        "startTime": 1791347335304.4688,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 7.87,
+        "responseEnd": 9.287
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335314.5818,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.221,
+        "responseEnd": 7.684
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335323.632,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.313,
+        "responseEnd": 5.303
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335329.437,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.898,
+        "responseEnd": 5.913
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335335.831,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.102,
+        "responseEnd": 5.148
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335342.072,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.917,
+        "responseEnd": 5.973
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335349.247,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.987,
+        "responseEnd": 6.012
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335370.6619,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.83,
+        "responseEnd": 4.929
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335376.127,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.063,
+        "responseEnd": 5.133
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335381.733,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.213,
+        "responseEnd": 4.141
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335386.385,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.09,
+        "responseEnd": 5.069
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335392.031,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.476,
+        "responseEnd": 5.522
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335399.753,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.327,
+        "responseEnd": 4.207
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335406.764,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.259,
+        "responseEnd": 5.187
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335412.415,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.432,
+        "responseEnd": 5.404
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335418.2969,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.148,
+        "responseEnd": 7.192
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/init",
+      "timing": {
+        "startTime": 1791347335426.775,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 7.811,
+        "responseEnd": 8.544
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335436.1318,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.694,
+        "responseEnd": 4.567
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335441.339,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.585,
+        "responseEnd": 4.703
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335446.0508,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.879,
+        "responseEnd": 5.714
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335452.208,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.861,
+        "responseEnd": 4.722
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335458.437,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.006,
+        "responseEnd": 3.994
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335468.328,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.271,
+        "responseEnd": 4.356
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335473.052,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.288,
+        "responseEnd": 4.145
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335477.542,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.548,
+        "responseEnd": 4.514
+      }
+    },
+    {
+      "phase": "initial",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335482.754,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.767,
+        "responseEnd": 4.927
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335520.2698,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.622,
+        "responseEnd": 8.762
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335529.291,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.387,
+        "responseEnd": 7.332
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335537.116,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.207,
+        "responseEnd": 5.386
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335543.442,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.959,
+        "responseEnd": 6.627
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335549.85,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.092,
+        "responseEnd": 7.071
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335557.182,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 8.739,
+        "responseEnd": 9.641
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335567.3389,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.281,
+        "responseEnd": 5.277
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335572.9329,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.562,
+        "responseEnd": 5.475
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335578.991,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.619,
+        "responseEnd": 4.569
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335583.92,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.867,
+        "responseEnd": 4.891
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335589.2183,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.198,
+        "responseEnd": 5.182
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/init",
+      "timing": {
+        "startTime": 1791347335594.882,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.293,
+        "responseEnd": 4.286
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335599.408,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.216,
+        "responseEnd": 4.18
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335603.7878,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.777,
+        "responseEnd": 4.786
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335609.176,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.56,
+        "responseEnd": 5.593
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335614.98,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.168,
+        "responseEnd": 4.056
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335619.6711,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 12.23,
+        "responseEnd": 13.296
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335633.885,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.985,
+        "responseEnd": 5.169
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335639.5479,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.083,
+        "responseEnd": 7.341
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335646.998,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.152,
+        "responseEnd": 4.099
+      }
+    },
+    {
+      "phase": "join-warm-1",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335651.398,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.601,
+        "responseEnd": 4.495
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335708.1611,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 7.222,
+        "responseEnd": 9.09
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335717.197,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.842,
+        "responseEnd": 7.011
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335727.326,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 8.349,
+        "responseEnd": 10.367
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335737.28,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.925,
+        "responseEnd": 5.266
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335743.052,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.437,
+        "responseEnd": 6.852
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335750.192,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.632,
+        "responseEnd": 5.858
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335756.083,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.066,
+        "responseEnd": 7.015
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335763.697,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.151,
+        "responseEnd": 5.576
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335769.9119,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.239,
+        "responseEnd": 4.323
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335775.0051,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.999,
+        "responseEnd": 6.409
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335781.57,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.255,
+        "responseEnd": 4.385
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/init",
+      "timing": {
+        "startTime": 1791347335786.086,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.22,
+        "responseEnd": 4.087
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335790.6958,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.598,
+        "responseEnd": 6.75
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347335797.732,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.157,
+        "responseEnd": 6.235
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335804.199,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.673,
+        "responseEnd": 5.563
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335810.674,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.507,
+        "responseEnd": 8.152
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335818.851,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.922,
+        "responseEnd": 5.956
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335826.094,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.819,
+        "responseEnd": 5.195
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335831.236,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.639,
+        "responseEnd": 4.558
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335836.298,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.353,
+        "responseEnd": 5.519
+      }
+    },
+    {
+      "phase": "join-warm-2",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335842.272,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.817,
+        "responseEnd": 4.933
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347335890.384,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.685,
+        "responseEnd": 6.608
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347335898.293,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.972,
+        "responseEnd": 5.038
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347335903.67,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.466,
+        "responseEnd": 5.594
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347335909.7139,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.436,
+        "responseEnd": 4.521
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347335914.4731,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.545,
+        "responseEnd": 5.623
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347335920.5808,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.478,
+        "responseEnd": 5.644
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347335926.9841,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.163,
+        "responseEnd": 6.134
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347335934.8298,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.451,
+        "responseEnd": 6.74
+      }
+    },
+    {
+      "phase": "direct-scan-table",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347335941.8228,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.211,
+        "responseEnd": 4.254
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_objects",
+      "timing": {
+        "startTime": 1791347336006.2202,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.233,
+        "responseEnd": 6.359
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347336012.917,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.354,
+        "responseEnd": 6.401
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347336019.758,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.461,
+        "responseEnd": 4.445
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347336025.332,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.865,
+        "responseEnd": 5.607
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_objects",
+      "timing": {
+        "startTime": 1791347336030.698,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 6.318,
+        "responseEnd": 7.394
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347336038.744,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.337,
+        "responseEnd": 6.63
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347336045.838,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.045,
+        "responseEnd": 5.228
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347336051.4312,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.262,
+        "responseEnd": 4.423
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336056.0862,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.913,
+        "responseEnd": 4.894
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336061.442,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.306,
+        "responseEnd": 5.322
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336067.2458,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.196,
+        "responseEnd": 5.24
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336072.782,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.184,
+        "responseEnd": 5.131
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336078.433,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 9.34,
+        "responseEnd": 10.335
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/get_table_schema",
+      "timing": {
+        "startTime": 1791347336089.824,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.318,
+        "responseEnd": 6.715
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347336097.439,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.918,
+        "responseEnd": 4.9
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347336102.751,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.486,
+        "responseEnd": 4.472
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347336107.6091,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.196,
+        "responseEnd": 6.292
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347336115.566,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 5.498,
+        "responseEnd": 6.519
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347336122.435,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.918,
+        "responseEnd": 4.897
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347336127.684,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.018,
+        "responseEnd": 3.846
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/new_statement",
+      "timing": {
+        "startTime": 1791347336132.063,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.235,
+        "responseEnd": 4.143
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/set_sql_query",
+      "timing": {
+        "startTime": 1791347336136.9373,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.297,
+        "responseEnd": 4.484
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/prepare",
+      "timing": {
+        "startTime": 1791347336141.5378,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.012,
+        "responseEnd": 3.945
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/init",
+      "timing": {
+        "startTime": 1791347336145.835,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.83,
+        "responseEnd": 4.786
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347336151.0762,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.718,
+        "responseEnd": 5.745
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/bind/exchange",
+      "timing": {
+        "startTime": 1791347336157.0952,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 8.939,
+        "responseEnd": 9.962
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/execute",
+      "timing": {
+        "startTime": 1791347336167.5042,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.665,
+        "responseEnd": 5.699
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/init",
+      "timing": {
+        "startTime": 1791347336173.6501,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.815,
+        "responseEnd": 4.945
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/read_result/exchange",
+      "timing": {
+        "startTime": 1791347336178.936,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.322,
+        "responseEnd": 4.275
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347336184.065,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.398,
+        "responseEnd": 4.375
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347336188.6648,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.171,
+        "responseEnd": 5.03
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_result",
+      "timing": {
+        "startTime": 1791347336194.2659,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4.999,
+        "responseEnd": 6.211
+      }
+    },
+    {
+      "phase": "after-refresh",
+      "method": "POST",
+      "path": "/org.queryfarm.Grainlift.v1/close_statement",
+      "timing": {
+        "startTime": 1791347336200.9768,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3.177,
+        "responseEnd": 4.37
+      }
+    }
+  ]
+}

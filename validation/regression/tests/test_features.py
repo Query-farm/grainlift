@@ -99,7 +99,7 @@ class BindingOracle(Grainlift, Protocol):
     """Declare binding independently using the stock VGI exchange mechanism."""
 
     protocol_name: ClassVar[str] = "org.queryfarm.Grainlift.v1"
-    protocol_version: ClassVar[str] = "0.4.0"
+    protocol_version: ClassVar[str] = "0.5.0"
 
     def bind(self, session_id: str, statement_id: str, schema_ipc: bytes) -> Stream[ExchangeState]:
         """Stage one parameter batch using the fixed nonempty exchange envelope."""

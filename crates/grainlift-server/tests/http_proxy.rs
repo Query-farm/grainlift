@@ -112,13 +112,23 @@ impl Backend for FakeBackend {
         _database_options: Vec<(String, OptionValue)>,
         _connection_options: Vec<(String, OptionValue)>,
     ) -> AdbcResult<Box<dyn BackendConnection>> {
-        Ok(Box::new(FakeConnection))
+        Ok(Box::new(FakeConnection { statistics: None }))
     }
 }
 
-struct FakeConnection;
+struct FakeConnection {
+    statistics: Option<bool>,
+}
 
 impl BackendConnection for FakeConnection {
+    fn statistics_supported(&self) -> Option<bool> {
+        self.statistics
+    }
+
+    fn statistic_names_supported(&self) -> Option<bool> {
+        self.statistics
+    }
+
     fn cancel_handle(&self) -> Arc<dyn CancelHandle> {
         Arc::new(FakeCancel)
     }
@@ -187,9 +197,18 @@ impl BackendConnection for FakeConnection {
         &self,
         _catalog: Option<&str>,
         _db_schema: Option<&str>,
-        _table_name: Option<&str>,
+        table_name: Option<&str>,
         _approximate: bool,
     ) -> AdbcResult<Box<dyn RecordBatchReader + Send + 'static>> {
+        if table_name == Some("unsupported_statistics") {
+            let mut error = adbc_core::error::Error::with_message_and_status(
+                "Statistics are unavailable",
+                Status::NotImplemented,
+            );
+            error.sqlstate = b"HYC00".map(|byte| byte as i8);
+            error.vendor_code = 72;
+            return Err(error);
+        }
         string_reader("statistic", "rows")
     }
 
@@ -916,8 +935,20 @@ async fn rejected_refresh_token_fails_the_connection_clearly() {
 }
 
 fn fake_manager(require_authentication: bool) -> Arc<SessionManager> {
-    Arc::new(SessionManager::new(
+    fake_manager_with_backend(
+        require_authentication,
         Arc::new(FakeBackend),
+        Duration::from_secs(60),
+    )
+}
+
+fn fake_manager_with_backend(
+    require_authentication: bool,
+    backend: Arc<dyn Backend>,
+    ttl: Duration,
+) -> Arc<SessionManager> {
+    Arc::new(SessionManager::new(
+        backend,
         HashMap::from([(
             "fake".to_string(),
             TargetConfig {
@@ -932,7 +963,7 @@ fn fake_manager(require_authentication: bool) -> Arc<SessionManager> {
                 init_statements: Vec::new(),
             },
         )]),
-        Duration::from_secs(60),
+        ttl,
         require_authentication,
     ))
 }
@@ -1233,6 +1264,171 @@ async fn start_lossy_http_server(
         axum::serve(listener, router).await.unwrap();
     });
     (format!("http://{address}"), task)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn http_unary_adbc_errors_preserve_capability_discovery() {
+    let server = Arc::new(build_server(fake_manager(false), "reuse-worker".into()));
+    let state = HttpState::builder().server(server).build();
+    let probes = Arc::new(AtomicUsize::new(0));
+    let observed = probes.clone();
+    let router = vgi_rpc::http::build_router(state).layer(axum::middleware::from_fn(
+        move |request: axum::extract::Request, next: axum::middleware::Next| {
+            let observed = observed.clone();
+            async move {
+                if request.uri().path() == "/health" {
+                    observed.fetch_add(1, Ordering::SeqCst);
+                }
+                next.run(request).await
+            }
+        },
+    ));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let task = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+    tokio::task::spawn_blocking(move || -> AdbcResult<()> {
+        let mut driver = GrainliftDriver;
+        let database = driver.new_database_with_opts([
+            (OptionDatabase::Uri, format!("http://{address}").into()),
+            (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+        ])?;
+        let connection = database.new_connection()?;
+        for _ in 0..2 {
+            let error =
+                match connection.get_statistics(None, None, Some("unsupported_statistics"), true) {
+                    Err(error) => error,
+                    Ok(_) => panic!("expected unsupported statistics"),
+                };
+            assert_eq!(error.status, Status::NotImplemented);
+            assert_eq!(error.sqlstate, b"HYC00".map(|byte| byte as i8));
+            assert_eq!(error.vendor_code, 72);
+            // A successful unary call and a multi-batch result must still work.
+            assert_eq!(
+                connection.get_table_schema(None, None, "test")?,
+                *value_schema()
+            );
+            assert_eq!(connection.get_table_types()?.count(), 1);
+        }
+        Ok(())
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(
+        probes.load(Ordering::SeqCst),
+        0,
+        "the first RPC and ordinary ADBC errors must not cause capability probes"
+    );
+    task.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn http_statistics_capabilities_are_per_session_and_refresh_on_reopen() {
+    struct CapabilitiesBackend(AtomicUsize);
+    impl Backend for CapabilitiesBackend {
+        fn open(
+            &self,
+            _: &TargetConfig,
+            _: Vec<(String, OptionValue)>,
+            _: Vec<(String, OptionValue)>,
+        ) -> AdbcResult<Box<dyn BackendConnection>> {
+            let statistics = match self.0.fetch_add(1, Ordering::SeqCst) {
+                0 => Some(false),
+                2 => None,
+                _ => Some(true),
+            };
+            Ok(Box::new(FakeConnection { statistics }))
+        }
+    }
+    let manager = fake_manager_with_backend(
+        false,
+        Arc::new(CapabilitiesBackend(AtomicUsize::new(0))),
+        Duration::from_secs(1),
+    );
+    let state = HttpState::builder()
+        .server(Arc::new(build_server(
+            manager.clone(),
+            "capabilities".into(),
+        )))
+        .build();
+    let requests = Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+    let observed = requests.clone();
+    let router = vgi_rpc::http::build_router(state).layer(axum::middleware::from_fn(
+        move |request: axum::extract::Request, next: axum::middleware::Next| {
+            let observed = observed.clone();
+            async move {
+                observed
+                    .lock()
+                    .unwrap()
+                    .push(request.uri().path().to_string());
+                next.run(request).await
+            }
+        },
+    ));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let task = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
+    tokio::task::spawn_blocking(move || -> AdbcResult<()> {
+        let mut driver = GrainliftDriver;
+        let database = driver.new_database_with_opts([
+            (OptionDatabase::Uri, format!("http://{address}").into()),
+            (OptionDatabase::Other(OPTION_TARGET.into()), "fake".into()),
+        ])?;
+        let unsupported = database.new_connection()?;
+        let supported = database.new_connection()?;
+        let unknown = database.new_connection()?;
+        requests.lock().unwrap().clear();
+        for result in [
+            unsupported.get_statistics(None, None, None, true),
+            unsupported.get_statistic_names(),
+        ] {
+            assert!(matches!(result, Err(error) if error.status == Status::NotImplemented));
+        }
+        assert!(
+            requests.lock().unwrap().is_empty(),
+            "explicit false must be answered locally"
+        );
+        for connection in [&supported, &unknown] {
+            assert_eq!(
+                connection.get_statistics(None, None, None, true)?.count(),
+                1
+            );
+            assert_eq!(connection.get_statistic_names()?.count(), 1);
+        }
+        for _ in 0..2 {
+            unsupported.get_table_schema(None, None, "test")?;
+        }
+        let count = |suffix: &str| {
+            requests
+                .lock()
+                .unwrap()
+                .iter()
+                .filter(|p| p.ends_with(suffix))
+                .count()
+        };
+        assert_eq!(count("/get_statistics"), 2);
+        assert_eq!(count("/get_statistic_names"), 2);
+        assert_eq!(count("/get_table_schema"), 2, "schemas must stay fresh");
+        assert_eq!(count("/health"), 0);
+        std::thread::sleep(Duration::from_millis(1100));
+        assert_eq!(manager.reap_expired()?, 3);
+        // A normal operation detects expiry and reopens the session. The new
+        // backend now supports statistics; the old false flags must be gone.
+        unsupported.get_table_schema(None, None, "test")?;
+        assert_eq!(
+            unsupported.get_statistics(None, None, None, true)?.count(),
+            1
+        );
+        assert_eq!(unsupported.get_statistic_names()?.count(), 1);
+        assert_eq!(count("/open_connection"), 1);
+        assert_eq!(count("/get_statistics"), 3);
+        assert_eq!(count("/health"), 0);
+        Ok(())
+    })
+    .await
+    .unwrap()
+    .unwrap();
+    task.abort();
 }
 
 fn int64_values(batch: &RecordBatch) -> Vec<i64> {

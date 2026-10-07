@@ -50,7 +50,7 @@ iroh = ["byte-transports", "dep:iroh", "dep:tokio", "dep:vgi-rpc-iroh"]
 iroh-browser = ["byte-transports"]
 
 [dependencies]
-grainlift-protocol = { version = "0.4.3", path = "../grainlift-protocol" }
+grainlift-protocol = { version = "0.5.0", path = "../grainlift-protocol" }
 adbc_core.workspace = true
 adbc_ffi.workspace = true
 arrow-array.workspace = true

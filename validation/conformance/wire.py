@@ -128,7 +128,7 @@ class Wire:
         method: str,
         values: dict[str, Any],
         *,
-        version: str = "0.4.0",
+        version: str = "0.5.0",
         record_schema: pa.Schema | None = None,
         record_rows: int = 1,
     ) -> Reply:

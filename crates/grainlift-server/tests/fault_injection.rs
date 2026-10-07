@@ -920,9 +920,10 @@ async fn incompatible_or_missing_versions_cannot_allocate_sessions() {
             None,
             Some("0.2.0"),
             Some("0.3.0"),
-            Some("0.4."),
-            Some("0.4.invalid"),
-            Some("0.5.0"),
+            Some("0.4.0"),
+            Some("0.5."),
+            Some("0.5.invalid"),
+            Some("0.6.0"),
         ] {
             let mut builder =
                 HttpClient::connect(endpoint.clone()).protocol(protocol::PROTOCOL_NAME);
@@ -942,7 +943,7 @@ async fn incompatible_or_missing_versions_cannot_allocate_sessions() {
         }
         let mut client = HttpClient::connect(endpoint.clone())
             .protocol(protocol::PROTOCOL_NAME)
-            .protocol_version("0.4.1")
+            .protocol_version("0.5.1")
             .build()
             .unwrap();
         let (response, _) = client

@@ -33,6 +33,8 @@ fn all_eight_typed_responses_round_trip() {
     round_trip(OkResponse { ok: true });
     round_trip(SessionResponse {
         session_id: "session".into(),
+        statistics_supported: Some(false),
+        statistic_names_supported: None,
     });
     round_trip(StatementResponse {
         session_id: "session".into(),

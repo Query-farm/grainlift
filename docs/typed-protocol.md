@@ -17,7 +17,7 @@ limitations under the License.
 
 # Typed Grainlift protocol
 
-Protocol 0.4.0 uses VGI-RPC's existing typed-dataclass unary encoding for named
+Protocol 0.5.0 uses VGI-RPC's existing typed-dataclass unary encoding for named
 control requests and responses. The Python service uses
 `ArrowSerializableDataclass` objects; the Rust client and server use matching
 typed structs. Semantic fields have declared Arrow shapes. Applications
@@ -74,13 +74,21 @@ in `vgi-python`. Query rows remain separate pull-based Arrow streams.
 | Response type | Record fields |
 | --- | --- |
 | `OkResponse` | `ok: bool` |
-| `SessionResponse` | `session_id: str` |
+| `SessionResponse` | `session_id: str`, `statistics_supported: bool or null`, `statistic_names_supported: bool or null` |
 | `StatementResponse` | `session_id: str`, `statement_id: str` |
 | `ExecuteResponse` | `result_id: str`, `rows_affected: int or null`, `schema_ipc: bytes` |
 | `SchemaResponse` | `schema_ipc: bytes` |
 | `ValueResponse` | `value: WireOptionValue` |
 | `UpdateResponse` | `rows_affected: int or null` |
 | `PartitionsResponse` | `rows_affected: int`, `schema_ipc: bytes`, `partitions: list[bytes]` |
+
+The two support flags describe the selected backend connection. `false` permits
+a local ADBC `NOT_IMPLEMENTED` response; `true` or `null` preserves remote
+dispatch. They are refreshed on session reopen and do not cache table schemas.
+Protocol 0.5.0 changes the response schema and requires coordinated client/server
+upgrades. HTTP transport capabilities arrive in the first RPC's response
+headers; the initial request is uncompressed and bounded to 64 KiB, with
+response-budget acknowledgement and size limits enforced immediately.
 
 Integers use Arrow int64. `schema_ipc` retains the explicit Arrow schema message
 encoding required for ADBC result schemas. These bytes describe the dynamic
