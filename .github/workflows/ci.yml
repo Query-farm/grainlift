@@ -69,6 +69,8 @@ jobs:
           version: v0.3.0
           drivers: sqlite=1.12.0,duckdb=1.5.5,datafusion=0.27.0
       - run: cargo build --workspace
+      - name: Verify connection profiles through the installed SQLite driver
+        run: cargo test -p grainlift-server --test connection_profiles -- --ignored
       - name: Quality and real-driver tests
         env:
           GRAINLIFT_SERVER: ${{ github.workspace }}/target/debug/grainlift-server
