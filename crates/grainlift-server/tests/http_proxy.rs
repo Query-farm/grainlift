@@ -374,7 +374,8 @@ async fn ordinary_adbc_client_reads_multiple_remote_batches() {
     targets.insert(
         "fake".to_string(),
         TargetConfig {
-            driver: "unused-in-test".to_string(),
+            driver: Some("unused-in-test".to_string()),
+            profile: None,
             entrypoint: None,
             database_options: Vec::new(),
             connection_options: vec![WireOption {
@@ -639,7 +640,8 @@ async fn authentication_is_required() {
         HashMap::from([(
             "fake".to_string(),
             TargetConfig {
-                driver: "unused".to_string(),
+                driver: Some("unused".to_string()),
+                profile: None,
                 entrypoint: None,
                 database_options: Vec::new(),
                 connection_options: Vec::new(),
@@ -952,7 +954,8 @@ fn fake_manager_with_backend(
         HashMap::from([(
             "fake".to_string(),
             TargetConfig {
-                driver: "unused".to_string(),
+                driver: Some("unused".to_string()),
+                profile: None,
                 entrypoint: None,
                 database_options: Vec::new(),
                 connection_options: Vec::new(),

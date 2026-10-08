@@ -106,7 +106,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     };
     let counters = Arc::new(Counters::default());
     let target = TargetConfig {
-        driver: "synthetic".into(),
+        driver: Some("synthetic".into()),
+        profile: None,
         entrypoint: None,
         database_options: vec![],
         connection_options: vec![],

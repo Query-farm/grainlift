@@ -1609,7 +1609,8 @@ mod tests {
 
     fn target() -> TargetConfig {
         TargetConfig {
-            driver: "dummy".to_string(),
+            driver: Some("dummy".to_string()),
+            profile: None,
             entrypoint: None,
             database_options: Vec::new(),
             connection_options: Vec::new(),

@@ -148,7 +148,8 @@ fn target() -> HashMap<String, TargetConfig> {
     HashMap::from([(
         "default".to_string(),
         TargetConfig {
-            driver: "producer".into(),
+            driver: Some("producer".into()),
+            profile: None,
             entrypoint: None,
             database_options: Vec::new(),
             connection_options: Vec::new(),

@@ -347,7 +347,8 @@ impl Service {
     /// are passed to [`Backend::open`], which accepts or rejects them.
     pub fn new(backend: impl Backend + 'static, target: &str) -> Self {
         let config = TargetConfig {
-            driver: target.to_string(),
+            driver: Some(target.to_string()),
+            profile: None,
             entrypoint: None,
             database_options: Vec::new(),
             connection_options: Vec::new(),

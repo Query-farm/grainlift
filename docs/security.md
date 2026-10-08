@@ -181,6 +181,19 @@ or the target must explicitly enable the broad allow flag. Do not place bearer
 tokens or downstream passwords in a committed TOML file; inject the runtime
 configuration through a secret-managed deployment mechanism.
 
+Connection profiles referenced by `targets.<name>.profile` are selected by the
+operator and resolved on the server after target authorization. Each open reads
+one profile snapshot through the ADBC driver manager; its environment-variable
+substitutions use the server process's environment. Clients cannot choose a
+profile or override its database keys via initial database/connection options
+or later connection-option writes, even with broad client option permissions.
+Explicit operator database options take precedence over profile defaults.
+Keep profile files and `ADBC_PROFILE_PATH` under the service operator's control:
+profiles select native driver code and database destinations. A changed profile
+affects new connections, not sessions that have already opened. Profile parsing
+and substitution diagnostics preserve the ADBC status but omit source contents,
+paths, and expanded values, which may contain credentials.
+
 Allowing the standard database `uri` option lets the principal choose a
 downstream network destination. Treat that as outbound-network authority: use
 it only for trusted principals and combine it with worker-level egress policy

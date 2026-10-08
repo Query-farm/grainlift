@@ -259,6 +259,56 @@ Server-configured options are immutable. Grainlift rejects attempts to supply
 or later replace those keys instead of silently ignoring the caller or
 overriding operator policy.
 
+### Reuse an ADBC connection profile
+
+A target can reference an existing server-side
+[ADBC connection profile](https://arrow.apache.org/adbc/current/format/connection_profiles.html)
+instead of specifying a driver and database options again:
+
+```toml
+[targets.analytics]
+profile = "reporting"
+allowed_client_connection_options = ["adbc.connection.autocommit"]
+```
+
+Use exactly one of `driver` or `profile`. The profile supplies the driver name;
+the optional target `entrypoint` can override the driver's initialization symbol.
+Named profiles use the ADBC driver manager's search locations, including
+`ADBC_PROFILE_PATH` and the service account's standard ADBC profile directory.
+An absolute path such as `profile = "/etc/adbc/profiles/reporting.toml"` also
+works. Relative file paths are resolved from the server's working directory.
+
+For example, `reporting.toml` can contain:
+
+```toml
+profile_version = 1
+driver = "postgresql"
+
+[Options]
+uri = "{{ env_var(REPORTING_DATABASE_URI) }}"
+```
+
+Set `REPORTING_DATABASE_URI` in the server's environment. Grainlift uses the
+upstream ADBC parser and environment substitutions; it does not send the profile
+to the client. Profiles must include a nonblank `driver`, `profile_version = 1`,
+and an `[Options]` table, as required by the Rust driver manager. Other
+driver-manager profile providers are not currently exposed by this server.
+
+The profile is read once for each new connection. Changes apply to subsequent
+connections, while existing sessions retain their settings. Explicit target
+`database_options` override the profile defaults. Profile and target database
+keys remain server-controlled: clients cannot override them through either
+database or connection options, including later connection option changes.
+Other client options still follow the target's allowlists. Authentication and
+target permissions are unchanged.
+
+`check --config grainlift.toml` validates the target configuration without
+reading profiles or connecting to a database. Missing or invalid profiles fail
+when the target is opened, with diagnostics that omit profile contents and
+resolved credentials.
+
+### Allow client-supplied connection settings
+
 A trusted target can instead allow callers to choose their destination and
 credentials:
 

@@ -158,7 +158,8 @@ impl SqliteArgs {
         let uri = database_uri(&self.database, self.create)?;
         let token = read_or_create_token(&self.token_file)?;
         let target = TargetConfig {
-            driver: self.driver.clone(),
+            driver: Some(self.driver.clone()),
+            profile: None,
             entrypoint: Some("AdbcDriverSqliteInit".into()),
             database_options: vec![WireOption {
                 key: "uri".into(),

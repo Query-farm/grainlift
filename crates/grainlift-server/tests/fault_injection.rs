@@ -433,7 +433,8 @@ fn value_batch(schema: SchemaRef, value: i64) -> RecordBatch {
 
 fn target() -> TargetConfig {
     TargetConfig {
-        driver: "fault-driver".to_string(),
+        driver: Some("fault-driver".to_string()),
+        profile: None,
         entrypoint: None,
         database_options: Vec::new(),
         connection_options: Vec::new(),

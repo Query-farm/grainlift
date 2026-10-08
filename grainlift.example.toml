@@ -122,6 +122,10 @@ development-token = "developer@example.com"
 
 [targets.sqlite]
 # Logical driver name from the manifest installed by `dbc install sqlite`.
+# To reuse an ADBC connection profile, replace driver with:
+# profile = "reporting"  # or an absolute path to a profile TOML file
+# The profile supplies the driver and database options. Profile keys are
+# server-controlled; explicit database_options below override profile defaults.
 driver = "sqlite"
 entrypoint = "AdbcDriverSqliteInit"
 allow_client_database_options = false

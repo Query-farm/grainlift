@@ -25,6 +25,9 @@ use adbc_core::{
     CancelHandle, Connection, Database, Driver, LOAD_FLAG_DEFAULT, Optionable, PartitionedResult,
     Statement,
 };
+use adbc_driver_manager::profile::{
+    ConnectionProfile, ConnectionProfileProvider, FilesystemProfileProvider, process_profile_value,
+};
 use adbc_driver_manager::{ManagedConnection, ManagedDriver, ManagedStatement};
 use arrow_array::{RecordBatch, RecordBatchReader};
 use arrow_schema::{ArrowError, Schema, SchemaRef};
@@ -400,15 +403,18 @@ impl Backend for DriverManagerBackend {
         database_options: Vec<(String, OptionValue)>,
         connection_options: Vec<(String, OptionValue)>,
     ) -> AdbcResult<Box<dyn BackendConnection>> {
+        // Resolve one snapshot per open. Profile options join the configured
+        // options before applying client policy, so callers cannot override
+        // profile credentials even when the target permits arbitrary options.
+        let uses_profile = target.profile.is_some();
+        let target = resolve_target(target, &FilesystemProfileProvider::default())?;
+        let mut connection_policy = target.connection_option_policy();
+        if uses_profile {
+            // A driver may accept a database setting again at connection level.
+            // Protect the resolved profile on both initial and later writes.
+            connection_policy.protect(target.database_options.iter().map(|o| o.key.clone()));
+        }
         let entrypoint = target.entrypoint.as_deref().map(str::as_bytes);
-        let mut driver = ManagedDriver::load_from_name(
-            &target.driver,
-            entrypoint,
-            AdbcVersion::V110,
-            LOAD_FLAG_DEFAULT,
-            None,
-        )?;
-
         let database_options = merge_options(
             database_options,
             &target.database_options,
@@ -418,10 +424,20 @@ impl Backend for DriverManagerBackend {
         let connection_options = merge_options(
             connection_options,
             &target.connection_options,
-            &target.connection_option_policy(),
+            &connection_policy,
             "connection",
         )?;
 
+        let mut driver = ManagedDriver::load_from_name(
+            target
+                .driver
+                .as_deref()
+                .expect("resolved target has a driver"),
+            entrypoint,
+            AdbcVersion::V110,
+            LOAD_FLAG_DEFAULT,
+            None,
+        )?;
         let database = driver.new_database_with_opts(
             database_options
                 .into_iter()
@@ -440,8 +456,66 @@ impl Backend for DriverManagerBackend {
                 batch?;
             }
         }
-        Ok(Box::new(ManagerConnection { connection }))
+        Ok(Box::new(ManagerConnection {
+            connection,
+            option_policy: connection_policy,
+        }))
     }
+}
+
+/// Reuse the upstream parser, profile search paths, and value substitutions.
+/// Do not reread the profile after checking policy: a concurrent file update
+/// must not change the protected keys or credentials of this open.
+fn resolve_target<'a>(
+    target: &'a TargetConfig,
+    provider: &FilesystemProfileProvider,
+) -> AdbcResult<std::borrow::Cow<'a, TargetConfig>> {
+    use adbc_core::error::{Error, Status};
+    use grainlift_protocol::{JsonOptionValue, WireOption};
+
+    target
+        .validate_source()
+        .map_err(|message| Error::with_message_and_status(message, Status::InvalidArguments))?;
+    let Some(name) = &target.profile else {
+        return Ok(std::borrow::Cow::Borrowed(target));
+    };
+    // Upstream parser errors can contain the TOML source, paths, or expanded
+    // environment values. Preserve status without exposing those diagnostics.
+    let profile_error = |error: Error| {
+        Error::with_message_and_status(
+            "could not resolve server ADBC connection profile",
+            error.status,
+        )
+    };
+    let profile = provider.get_profile(name).map_err(profile_error)?;
+    let (driver, _) = profile.get_driver_name().map_err(profile_error)?;
+    if driver.trim().is_empty() {
+        return Err(Error::with_message_and_status(
+            "server ADBC connection profile must specify a nonblank driver",
+            Status::InvalidArguments,
+        ));
+    }
+    let mut options = HashMap::new();
+    for (key, value) in profile.get_options().map_err(profile_error)? {
+        let value = match value {
+            OptionValue::String(value) => process_profile_value(&value).map_err(profile_error)?,
+            value => value,
+        };
+        options.insert(key.as_ref().to_owned(), JsonOptionValue::from(&value));
+    }
+    // Explicit operator options override profile defaults, matching ADBC's
+    // precedence. Both sets of keys remain protected from caller overrides.
+    for option in &target.database_options {
+        options.insert(option.key.clone(), option.value.clone());
+    }
+    let mut resolved = target.clone();
+    resolved.driver = Some(driver.to_owned());
+    resolved.profile = None;
+    resolved.database_options = options
+        .into_iter()
+        .map(|(key, value)| WireOption { key, value })
+        .collect();
+    Ok(std::borrow::Cow::Owned(resolved))
 }
 
 fn merge_options(
@@ -457,15 +531,7 @@ fn merge_options(
     rejected.sort_unstable();
     rejected.dedup();
     if let Some(key) = rejected.first() {
-        let reason = if policy.is_protected(key) {
-            "is controlled by the proxy server"
-        } else {
-            "is not allowed by the target policy"
-        };
-        return Err(adbc_core::error::Error::with_message_and_status(
-            format!("client {kind} option {key:?} {reason}"),
-            adbc_core::error::Status::InvalidArguments,
-        ));
+        check_client_option(policy, kind, key)?;
     }
 
     let mut merged: HashMap<String, OptionValue> = client.into_iter().collect();
@@ -483,8 +549,24 @@ fn merge_options(
     Ok(merged.into_iter().collect())
 }
 
+fn check_client_option(policy: &ClientOptionPolicy, kind: &str, key: &str) -> AdbcResult<()> {
+    if policy.permits(key) {
+        return Ok(());
+    }
+    let reason = if policy.is_protected(key) {
+        "is controlled by the proxy server"
+    } else {
+        "is not allowed by the target policy"
+    };
+    Err(adbc_core::error::Error::with_message_and_status(
+        format!("client {kind} option {key:?} {reason}"),
+        adbc_core::error::Status::InvalidArguments,
+    ))
+}
+
 struct ManagerConnection {
     connection: ManagedConnection,
+    option_policy: ClientOptionPolicy,
 }
 
 impl BackendConnection for ManagerConnection {
@@ -499,6 +581,7 @@ impl BackendConnection for ManagerConnection {
     }
 
     fn set_option(&mut self, key: &str, value: OptionValue) -> AdbcResult<()> {
+        check_client_option(&self.option_policy, "connection", key)?;
         self.connection
             .set_option(OptionConnection::from(key), value)
     }
@@ -665,16 +748,20 @@ impl BackendStatement for ManagerStatement {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use adbc_core::error::Status;
     use adbc_core::options::OptionValue;
+    use adbc_driver_manager::profile::FilesystemProfileProvider;
     use grainlift_protocol::{JsonOptionValue, WireOption};
 
-    use super::merge_options;
+    use super::{merge_options, resolve_target};
     use crate::config::TargetConfig;
 
     fn target() -> TargetConfig {
         TargetConfig {
-            driver: "unused".into(),
+            driver: Some("unused".into()),
+            profile: None,
             entrypoint: None,
             database_options: vec![WireOption {
                 key: "password".into(),
@@ -744,5 +831,162 @@ mod tests {
         assert_eq!(protected.status, Status::InvalidArguments);
         assert!(protected.message.contains("controlled by the proxy server"));
         assert!(!protected.message.contains("client-secret"));
+    }
+
+    #[test]
+    fn profiles_use_upstream_search_types_and_environment_substitution() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("reporting.toml");
+        std::fs::write(
+            &path,
+            r#"
+profile_version = 1
+driver = "postgresql"
+[Options]
+uri = "{{ env_var(CARGO_MANIFEST_DIR) }}/example"
+username = "reporting"
+vendor.enabled = true
+vendor.rows = 42
+vendor.timeout = 0.5
+"#,
+        )
+        .unwrap();
+        let provider = FilesystemProfileProvider::new_with_search_paths(Some(vec![
+            directory.path().to_owned(),
+        ]));
+        for name in ["reporting".to_owned(), path.to_str().unwrap().to_owned()] {
+            let mut target = target();
+            target.driver = None;
+            target.profile = Some(name);
+            target.entrypoint = Some("AdbcDriverPostgresqlInit".into());
+            let resolved = resolve_target(&target, &provider).unwrap();
+            assert_eq!(resolved.driver.as_deref(), Some("postgresql"));
+            assert_eq!(resolved.entrypoint, target.entrypoint);
+            assert!(resolved.profile.is_none());
+            let options: HashMap<_, _> = resolved
+                .database_options
+                .iter()
+                .map(|o| (o.key.as_str(), o.value.clone()))
+                .collect();
+            assert_eq!(
+                options["uri"],
+                JsonOptionValue::String(format!(
+                    "{}/example",
+                    std::env::var("CARGO_MANIFEST_DIR").unwrap()
+                ))
+            );
+            assert_eq!(
+                options["username"],
+                JsonOptionValue::String("reporting".into())
+            );
+            assert_eq!(
+                options["vendor.enabled"],
+                JsonOptionValue::String("true".into())
+            );
+            assert_eq!(options["vendor.rows"], JsonOptionValue::Int(42));
+            assert_eq!(options["vendor.timeout"], JsonOptionValue::Double(0.5));
+        }
+    }
+
+    #[test]
+    fn profile_options_are_protected_and_explicit_operator_options_take_precedence() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("reporting.toml");
+        std::fs::write(
+            &path,
+            r#"
+profile_version = 1
+driver = "postgresql"
+[Options]
+uri = "postgresql://server/app"
+password = "profile-secret"
+"#,
+        )
+        .unwrap();
+        let mut target = target();
+        target.driver = None;
+        target.profile = Some(path.to_str().unwrap().to_owned());
+        target.allow_client_database_options = true;
+        target.allowed_client_database_options.clear();
+        let resolved = resolve_target(&target, &FilesystemProfileProvider::default()).unwrap();
+        let policy = resolved.database_option_policy();
+        for key in ["uri", "password"] {
+            assert!(policy.is_protected(key));
+            let error = merge_options(
+                vec![(key.into(), OptionValue::String("client-secret".into()))],
+                &resolved.database_options,
+                &policy,
+                "database",
+            )
+            .unwrap_err();
+            assert_eq!(error.status, Status::InvalidArguments);
+            assert!(error.message.contains("controlled by the proxy server"));
+            assert!(!error.message.contains("client-secret"));
+        }
+        let merged: HashMap<_, _> = merge_options(
+            vec![("username".into(), OptionValue::String("alice".into()))],
+            &resolved.database_options,
+            &policy,
+            "database",
+        )
+        .unwrap()
+        .into_iter()
+        .collect();
+        assert_eq!(
+            JsonOptionValue::from(&merged["password"]),
+            JsonOptionValue::String("server-secret".into())
+        );
+        assert_eq!(
+            JsonOptionValue::from(&merged["username"]),
+            JsonOptionValue::String("alice".into())
+        );
+        assert_eq!(
+            JsonOptionValue::from(&merged["uri"]),
+            JsonOptionValue::String("postgresql://server/app".into())
+        );
+
+        // File changes apply to subsequent opens, never the already resolved
+        // options or the policy for an in-progress connection open.
+        std::fs::write(
+            &path,
+            r#"
+profile_version = 1
+driver = "sqlite"
+[Options]
+uri = ":memory:"
+"#,
+        )
+        .unwrap();
+        assert_eq!(resolved.driver.as_deref(), Some("postgresql"));
+        let next = resolve_target(&target, &FilesystemProfileProvider::default()).unwrap();
+        assert_eq!(next.driver.as_deref(), Some("sqlite"));
+    }
+
+    #[test]
+    fn profile_resolution_errors_do_not_expose_file_contents_or_substitutions() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("credential-canary.toml");
+        let mut target = target();
+        target.driver = None;
+        target.profile = Some(path.to_str().unwrap().to_owned());
+        for contents in [
+            "profile_version = 1\ndriver = 'postgresql'\n[Options]\npassword = 'secret-canary",
+            "profile_version = 'secret-canary'\ndriver = 'postgresql'\n[Options]",
+            "profile_version = 1\ndriver = 'postgresql'\n[Options]\npassword = '{{ secret-canary }}'",
+            "profile_version = 2\ndriver = 'postgresql'\n[Options]",
+            "profile_version = 1\n[Options]\npassword = 'secret-canary'",
+            "profile_version = 1\ndriver = ''\n[Options]",
+        ] {
+            std::fs::write(&path, contents).unwrap();
+            let error = resolve_target(&target, &FilesystemProfileProvider::default()).unwrap_err();
+            assert_eq!(error.status, Status::InvalidArguments);
+            let diagnostic = format!("{error:?}");
+            assert!(!diagnostic.contains("secret-canary"));
+            assert!(!diagnostic.contains("credential-canary"));
+        }
+        target.profile = Some(format!("missing-{}", uuid::Uuid::new_v4()));
+        let error = resolve_target(&target, &FilesystemProfileProvider::default()).unwrap_err();
+        assert_eq!(error.status, Status::NotFound);
+        assert!(!error.message.contains(target.profile.as_ref().unwrap()));
     }
 }

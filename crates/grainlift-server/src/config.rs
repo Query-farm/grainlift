@@ -428,7 +428,10 @@ const fn default_jwt_leeway_seconds() -> u64 {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TargetConfig {
-    pub driver: String,
+    /// Exactly one of `driver` and `profile` must be set.
+    pub driver: Option<String>,
+    /// Server-side ADBC connection profile name or filesystem path.
+    pub profile: Option<String>,
     pub entrypoint: Option<String>,
     #[serde(default)]
     pub database_options: Vec<WireOption>,
@@ -472,9 +475,21 @@ impl ClientOptionPolicy {
     pub fn is_protected(&self, key: &str) -> bool {
         self.protected.contains(key)
     }
+
+    pub(crate) fn protect(&mut self, keys: impl IntoIterator<Item = String>) {
+        self.protected.extend(keys);
+    }
 }
 
 impl TargetConfig {
+    pub(crate) fn validate_source(&self) -> Result<(), &'static str> {
+        match (&self.driver, &self.profile) {
+            (Some(driver), None) if !driver.trim().is_empty() => Ok(()),
+            (None, Some(profile)) if !profile.trim().is_empty() => Ok(()),
+            _ => Err("each target must specify exactly one nonblank driver or profile"),
+        }
+    }
+
     pub fn database_option_policy(&self) -> ClientOptionPolicy {
         ClientOptionPolicy::new(
             self.allow_client_database_options,
@@ -748,9 +763,10 @@ impl Config {
             }
         }
         for (name, target) in &self.targets {
-            if name.trim().is_empty() || target.driver.trim().is_empty() {
-                return Err("target names and driver names must not be blank".into());
+            if name.trim().is_empty() {
+                return Err("target names must not be blank".into());
             }
+            target.validate_source()?;
             validate_options(name, "database", &target.database_options)?;
             validate_options(name, "connection", &target.connection_options)?;
             if target
@@ -1141,6 +1157,38 @@ driver = "adbc_driver_sqlite"
             ["PRAGMA busy_timeout = 5000"]
         );
         assert!(config(r#"["  "]"#).is_err());
+    }
+
+    #[test]
+    fn targets_require_a_driver_or_connection_profile() {
+        let config = |source: &str| {
+            Config::from_toml(&format!(
+                "[server]\nrequire_authentication = false\n[targets.analytics]\n{source}\n"
+            ))
+        };
+        for source in [
+            "driver = 'postgresql'",
+            "profile = 'reporting'",
+            "profile = '/etc/adbc/profiles/reporting.toml'",
+        ] {
+            // Validation does not read profiles or connect to a database.
+            config(source).unwrap();
+        }
+        let parsed = config("profile = 'reporting'").unwrap();
+        assert_eq!(
+            parsed.targets["analytics"].profile.as_deref(),
+            Some("reporting")
+        );
+        assert!(parsed.targets["analytics"].driver.is_none());
+        for source in [
+            "",
+            "driver = ''",
+            "profile = '  '",
+            "driver = 'postgresql'\nprofile = 'reporting'",
+            "driver = ''\nprofile = 'reporting'",
+        ] {
+            assert!(config(source).is_err(), "accepted {source}");
+        }
     }
 
     #[test]

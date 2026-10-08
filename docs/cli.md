@@ -63,6 +63,32 @@ Clients cannot override the configured database URI. The shorthand only allows
 loopback HTTP; use the existing server configuration for remote deployments,
 TLS termination, mTLS, Iroh, multiple targets, JWT authentication, and quotas.
 
+## Serve an ADBC connection profile
+
+In an existing server configuration, a target can select a server-side profile:
+
+```toml
+[targets.analytics]
+profile = "reporting"
+allowed_client_connection_options = ["adbc.connection.autocommit"]
+```
+
+The profile's `driver` and `[Options]` supply the database configuration. Use a
+profile name found by the ADBC driver manager, or an absolute profile path.
+Set any environment variables referenced by the profile in the server process.
+Do not set `driver` alongside `profile` on the target. Keep your existing
+authentication settings and grant access to `analytics` through
+`auth.target_permissions`.
+
+```console
+grainlift-adbc-gateway serve --config grainlift.toml
+```
+
+See [connection profiles](../README.md#reuse-an-adbc-connection-profile) for a
+complete profile example, option precedence, search paths, and reload behavior.
+Configuration checks validate the target declaration without reading the
+profile or connecting to its database.
+
 ## Create an Iroh identity
 
 The Rust CLI creates identities for both servers and clients:
