@@ -1699,8 +1699,9 @@ fn transport_error(message: impl Into<String>) -> Error {
 }
 
 /// Drops the `user:password@` part of every URL in an error message. A
-/// gateway URI may carry HTTP basic credentials, and reqwest (and anything
-/// wrapping it) prints the full URL in its errors.
+/// gateway URI may carry HTTP basic credentials. reqwest strips them from the
+/// URLs in its errors, but the OAuth messages format URLs themselves, and a
+/// custom HTTP executor's errors may include them.
 pub(crate) fn redact_userinfo(message: impl Into<String>) -> String {
     let message = message.into();
     if !message.contains('@') {
