@@ -192,7 +192,15 @@ class Wire:
             "open_connection", {"target": "regression", "database_options": [], "connection_options": []}
         )
         assert response.status_code == 200
-        batch = decode_reply(response, pa.schema([pa.field("session_id", pa.string(), nullable=False)]))
+        # Protocol 0.5 reports backend statistics support with the session.
+        session_schema = pa.schema(
+            [
+                pa.field("session_id", pa.string(), nullable=False),
+                pa.field("statistics_supported", pa.bool_()),
+                pa.field("statistic_names_supported", pa.bool_()),
+            ]
+        )
+        batch = decode_reply(response, session_schema)
         return str(batch.column(0)[0].as_py())
 
 

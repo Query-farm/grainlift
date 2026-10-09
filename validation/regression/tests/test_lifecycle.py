@@ -69,16 +69,22 @@ def test_statement_reuse_releases_previous_result(harness: Harness) -> None:
         assert cursor.fetch_arrow_table().column(0).to_pylist() == [0, 1, 2]
 
 
-@pytest.mark.parametrize("limits", [Limits(batch_bytes=2048)], indirect=True)
-@pytest.mark.parametrize("size", [2047, 2048, 2049])
+# A result batch may be as large as anything a client can bind (grainlift 0.3.1):
+# the limit is max(batch_bytes, request_bytes). The request limit must still fit
+# the driver's own requests, so the boundary is set by it.
+RESULT_LIMIT = 64 * 1024
+
+
+@pytest.mark.parametrize("limits", [Limits(batch_bytes=2048, request_bytes=RESULT_LIMIT)], indirect=True)
+@pytest.mark.parametrize("size", [RESULT_LIMIT - 1, RESULT_LIMIT, RESULT_LIMIT + 1])
 def test_result_batch_limit(harness: Harness, size: int) -> None:
-    """Exercise immediately below, at, and above the toolkit's Arrow buffer limit."""
+    """Exercise immediately below, at, and above the toolkit's result batch limit."""
     schema = pa.schema([("bytes", pa.binary(1))])
     batch = pa.record_batch([[b"x"] * size], schema=schema)
     assert batch.get_total_buffer_size() == size
     harness.worker.plans["SELECT boundary"] = Plan(schema, (batch,))
     with harness.connect() as connection, connection.cursor() as cursor:
-        if size > 2048:
+        if size > RESULT_LIMIT:
             with pytest.raises(manager.Error):
                 cursor.execute("SELECT boundary")
             assert harness.worker.connections[0].readers[0].closed
