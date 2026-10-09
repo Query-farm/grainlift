@@ -79,7 +79,7 @@ pub struct ExternalStorageConfig {
 impl std::fmt::Debug for ExternalStorageConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ExternalStorageConfig")
-            .field("endpoint", &self.endpoint)
+            .field("endpoint", &redacted_endpoint(&self.endpoint))
             .field("bucket", &self.bucket)
             .field("region", &self.region)
             .field("prefix", &self.prefix)
@@ -146,6 +146,14 @@ impl ExternalStorageConfig {
         if endpoint.query().is_some() || endpoint.fragment().is_some() {
             return Err("external_storage.endpoint must not have a query or fragment".into());
         }
+        // Presigned URLs are built on the endpoint and handed to clients.
+        if !endpoint.username().is_empty() || endpoint.password().is_some() {
+            return Err(
+                "external_storage.endpoint must not contain credentials; set \
+                 access_key_id and secret_access_key instead"
+                    .into(),
+            );
+        }
         if self.bucket.trim().is_empty() {
             return Err("external_storage.bucket must not be empty".into());
         }
@@ -162,6 +170,19 @@ impl ExternalStorageConfig {
             );
         }
         Ok(())
+    }
+}
+
+/// The endpoint without any `user:password@`, for `Debug` output.
+fn redacted_endpoint(raw: &str) -> String {
+    match url::Url::parse(raw) {
+        Ok(mut url) => {
+            let _ = url.set_username("");
+            let _ = url.set_password(None);
+            url.to_string()
+        }
+        Err(_) if raw.contains('@') => "<redacted>".to_string(),
+        Err(_) => raw.to_string(),
     }
 }
 
@@ -915,6 +936,19 @@ driver = "adbc_driver_sqlite"
         }
         let bad_endpoint = storage("").replace("https://acct.r2.cloudflarestorage.com", "ftp://x");
         assert!(Config::from_toml(&bad_endpoint).is_err());
+
+        let with_userinfo =
+            storage("").replace("https://acct.r2", "https://AK:userinfo-canary@acct.r2");
+        let error = Config::from_toml(&with_userinfo).err().unwrap().to_string();
+        assert!(error.contains("must not contain credentials"), "{error}");
+        assert!(!error.contains("userinfo-canary"), "{error}");
+        let mut unvalidated = external.clone();
+        unvalidated.endpoint = "https://AK:userinfo-canary@acct.example/".into();
+        let debug = format!("{unvalidated:?}");
+        assert!(!debug.contains("userinfo-canary"), "{debug}");
+        assert!(debug.contains("https://acct.example/"), "{debug}");
+        unvalidated.endpoint = "not a url:userinfo-canary@x".into();
+        assert!(!format!("{unvalidated:?}").contains("userinfo-canary"));
     }
 
     #[test]

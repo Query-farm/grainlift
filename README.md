@@ -506,7 +506,8 @@ endpoint = "https://<account-id>.r2.cloudflarestorage.com"  # or https://s3.<reg
 bucket = "grainlift-exchange"
 region = "auto"              # the signing region; "auto" for R2
 prefix = "grainlift/"
-# access_key_id / secret_access_key, or AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# access_key_id / secret_access_key, or AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY;
+# never as user:password@ in the endpoint, which is rejected
 url_ttl_seconds = 900
 threshold_bytes = 1048576
 max_upload_bytes = 268435456

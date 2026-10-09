@@ -45,7 +45,8 @@ const SQLSTATE_UNAUTHENTICATED: [std::ffi::c_char; 5] = [
 pub(crate) const HTTP_UNAUTHORIZED_VENDOR_CODE: i32 = 401;
 
 pub(crate) fn unauthenticated(message: impl Into<String>) -> Error {
-    let mut error = Error::with_message_and_status(message, Status::Unauthenticated);
+    let mut error =
+        Error::with_message_and_status(crate::redact_userinfo(message), Status::Unauthenticated);
     error.sqlstate = SQLSTATE_UNAUTHENTICATED;
     error
 }
@@ -355,7 +356,7 @@ fn get_json(send: Send<'_>, url: &str) -> Result<Option<Value>> {
 /// on loopback (local development and tests).
 pub(crate) fn require_secure(raw: &str, what: &str) -> Result<()> {
     let parsed =
-        url::Url::parse(raw).map_err(|_| unauthenticated(format!("invalid {what} URL {raw}")))?;
+        url::Url::parse(raw).map_err(|_| unauthenticated(format!("invalid {what} URL")))?;
     let loopback = match parsed.host() {
         Some(url::Host::Domain(host)) => host.eq_ignore_ascii_case("localhost"),
         Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
@@ -543,5 +544,35 @@ mod tests {
         assert!(require_secure("http://127.0.0.1:9/token", "x").is_ok());
         assert!(require_secure("http://localhost/token", "x").is_ok());
         assert!(require_secure("https://idp.example/token", "x").is_ok());
+    }
+
+    #[test]
+    fn errors_redact_credentials_in_urls() {
+        let fake = Fake::new((200, "{}"));
+        let refresher = Refresher::new("https://alice:s3cret@gw.example", settings("r"));
+        let error = refresher
+            .refresh(&|request| fake.send(request))
+            .err()
+            .unwrap();
+        assert!(
+            error
+                .message
+                .contains("https://gw.example does not advertise OAuth"),
+            "{}",
+            error.message
+        );
+
+        let mut explicit = settings("r");
+        explicit.token_endpoint = Some("http://alice:s3cret@idp.example/token".into());
+        explicit.client_id = Some("c".into());
+        let insecure = Refresher::new("https://gw.example", explicit)
+            .refresh(&|request| fake.send(request))
+            .err()
+            .unwrap();
+        let unparsable = require_secure("https://alice:s3cret@", "x").err().unwrap();
+        for error in [error, insecure, unparsable] {
+            assert!(!error.message.contains("s3"), "{}", error.message);
+            assert!(!error.message.contains("alice"), "{}", error.message);
+        }
     }
 }

@@ -1693,9 +1693,39 @@ const SQLSTATE_CONNECTION_FAILURE: [std::ffi::c_char; 5] = [
 ];
 
 fn transport_error(message: impl Into<String>) -> Error {
-    let mut error = Error::with_message_and_status(message, Status::IO);
+    let mut error = Error::with_message_and_status(redact_userinfo(message), Status::IO);
     error.sqlstate = SQLSTATE_CONNECTION_FAILURE;
     error
+}
+
+/// Drops the `user:password@` part of every URL in an error message. A
+/// gateway URI may carry HTTP basic credentials, and reqwest (and anything
+/// wrapping it) prints the full URL in its errors.
+pub(crate) fn redact_userinfo(message: impl Into<String>) -> String {
+    let message = message.into();
+    if !message.contains('@') {
+        return message;
+    }
+    let mut redacted = String::with_capacity(message.len());
+    let mut rest = message.as_str();
+    while let Some(scheme_end) = rest.find("://") {
+        let (head, tail) = rest.split_at(scheme_end + 3);
+        redacted.push_str(head);
+        let authority_end = tail
+            .find(|c: char| {
+                matches!(
+                    c,
+                    '/' | '?' | '#' | '\\' | '"' | '\'' | '<' | '>' | '(' | ')'
+                ) || c.is_whitespace()
+            })
+            .unwrap_or(tail.len());
+        rest = match tail[..authority_end].rfind('@') {
+            Some(at) => &tail[at + 1..],
+            None => tail,
+        };
+    }
+    redacted.push_str(rest);
+    redacted
 }
 
 /// SQLSTATE HYT00: timeout expired.
@@ -1713,7 +1743,7 @@ const SQLSTATE_TIMEOUT: [std::ffi::c_char; 5] = [
 /// arrive quickly, such as a stale connection to a just-restarted peer, still
 /// count as lost sessions and are retried.
 fn timeout_error(message: impl Into<String>) -> Error {
-    let mut error = Error::with_message_and_status(message, Status::Timeout);
+    let mut error = Error::with_message_and_status(redact_userinfo(message), Status::Timeout);
     error.sqlstate = SQLSTATE_TIMEOUT;
     error
 }
@@ -3010,7 +3040,7 @@ fn get_double(options: &HashMap<String, OptionValue>, key: &str) -> Result<f64> 
 }
 
 fn invalid(message: impl Into<String>) -> Error {
-    Error::with_message_and_status(message, Status::InvalidArguments)
+    Error::with_message_and_status(redact_userinfo(message), Status::InvalidArguments)
 }
 
 fn internal(message: impl Into<String>) -> Error {
@@ -3467,6 +3497,62 @@ mod turn_budget_tests {
         // Large limits reserve the full 1 MiB.
         assert_eq!(TurnBudget::for_request(64 << 20).payload, 63 << 20);
         assert_eq!(TurnBudget::for_request(0).payload, 1);
+    }
+}
+
+#[cfg(test)]
+mod redaction_tests {
+    use super::{invalid, redact_userinfo, rpc_error, timeout_error, transport_error};
+    use vgi_rpc_client::RpcError;
+
+    #[test]
+    fn userinfo_is_dropped_from_every_url_in_a_message() {
+        assert_eq!(
+            redact_userinfo(
+                "error sending request for url (https://alice:s3cret@gw.example:8443/vgi/x?q=a@b)"
+            ),
+            "error sending request for url (https://gw.example:8443/vgi/x?q=a@b)"
+        );
+        assert_eq!(
+            redact_userinfo("http://token@a.example and http://u:p%40ss@b.example/"),
+            "http://a.example and http://b.example/"
+        );
+        assert_eq!(
+            redact_userinfo("ends at https://bob:pw@host"),
+            "ends at https://host"
+        );
+        // An `@` outside a URL authority is not a credential.
+        for unchanged in [
+            "mail alice@example.com",
+            "https://host/path@x",
+            "https://host?who=a@b",
+            "iroh://abc",
+            "no url here",
+        ] {
+            assert_eq!(redact_userinfo(unchanged), unchanged);
+        }
+    }
+
+    #[test]
+    fn driver_errors_never_carry_uri_credentials() {
+        let leaked = "connect https://alice:s3cret@gw.example/ failed";
+        let errors = [
+            transport_error(leaked),
+            timeout_error(leaked),
+            invalid(leaked),
+            rpc_error(RpcError::new("TransportError", leaked)),
+            rpc_error(RpcError::new("AuthenticationError", leaked)),
+            rpc_error(RpcError::new("PermissionError", leaked)),
+        ];
+        for error in errors {
+            assert!(!error.message.contains("s3cret"), "{}", error.message);
+            assert!(!error.message.contains("alice"), "{}", error.message);
+            assert!(
+                error.message.contains("https://gw.example/"),
+                "{}",
+                error.message
+            );
+        }
     }
 }
 
