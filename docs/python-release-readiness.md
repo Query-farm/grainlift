@@ -129,16 +129,21 @@ Earlier load and TLS-edge measurements have not been rerun for these new paths.
 
 ## Reviewable release artifact
 
-The [candidate v12 prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v12)
+The [candidate v13 prerelease](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v13)
 is the configured candidate (archive SHA-256
-`8008b3634576003b01fcc3efcfce3506bc7f959ef3fed1d98926122d4d8e1861`). It is
-built from grainlift-python 0.3.0 (published as `grainlift`, with object
-storage) and grainlift-hello-world-python `7dcf2d8`, with the current
-regression tests. It installs haybarn-cli, vgi-rpc's `external` extra and
-moto, so the Haybarn SQL example and the toolkit's object storage test run
+`ccf34d7ee8a9af6d7b9c64a864508010f8c9be70afd2b47b3d591d5404b874d8`). It is
+built from grainlift-python 0.4.0 (`5a9d750`, published as `grainlift`, wire
+protocol 0.5) and grainlift-hello-world-python 0.2.0 (`214aad9`), with the
+current regression tests. It installs haybarn-cli, vgi-rpc's `external` extra
+and moto, so the Haybarn SQL example and the toolkit's object storage test run
 rather than skipping. It passed the
-[wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/37013356724)
-on Linux and macOS with Python 3.13 and 3.14 without failures or skips.
+[wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/37980465526)
+on Linux and macOS with Python 3.13 and 3.14: 548 toolkit, 30 hello-world and
+172 regression tests per runtime, without failures or skips.
+
+[Candidate v12](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v12)
+covered grainlift-python 0.3.0 with wire protocol 0.4. Its toolkit tests fail
+against the protocol 0.5 driver released in Grainlift 0.5.0.
 [Candidate v11](https://github.com/Query-farm/grainlift/releases/tag/python-candidate-v11)
 covered grainlift-python 0.2.1; v8–v10 were intermediate builds.
 
