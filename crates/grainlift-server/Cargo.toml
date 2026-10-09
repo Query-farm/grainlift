@@ -26,7 +26,7 @@ description = "Grainlift service for server-hosted ADBC drivers"
 readme = "../../README.md"
 
 [dependencies]
-grainlift-protocol = { version = "0.6.0", path = "../grainlift-protocol" }
+grainlift-protocol = { version = "0.6.1", path = "../grainlift-protocol" }
 adbc_core.workspace = true
 adbc_driver_manager.workspace = true
 arrow-array.workspace = true
@@ -51,14 +51,14 @@ url.workspace = true
 vgi-rpc = { workspace = true, features = ["http", "jwt-jsonwebtoken", "otel", "tcp-mtls"] }
 iroh.workspace = true
 vgi-rpc-iroh.workspace = true
-vgi-rpc-s3 = "0.31.1"
+vgi-rpc-s3 = "0.31.4"
 tempfile = "3"
 hmac = "0.12"
 sha2 = "0.10"
 rand.workspace = true
 
 [dev-dependencies]
-adbc-driver-grainlift = { version = "0.6.0", path = "../adbc-driver-grainlift" }
+adbc-driver-grainlift = { version = "0.6.1", path = "../adbc-driver-grainlift" }
 arrow-array.workspace = true
 rcgen = "0.14"
 vgi-rpc-client = { workspace = true, features = ["reqwest", "tcp-tls"] }
