@@ -42,9 +42,9 @@ arrow-schema = "60"
 axum = "0.8"
 base64 = "0.23"
 clap = { version = "4", features = ["derive", "env"] }
-opentelemetry = { version = "0.32", default-features = false, features = ["trace"] }
-opentelemetry-otlp = { version = "0.32", default-features = false, features = ["http-proto", "reqwest-blocking-client", "trace"] }
-opentelemetry_sdk = { version = "0.32", default-features = false, features = ["trace"] }
+opentelemetry = { version = "0.33", default-features = false, features = ["trace"] }
+opentelemetry-otlp = { version = "0.33", default-features = false, features = ["http-proto", "reqwest-blocking-client", "trace"] }
+opentelemetry_sdk = { version = "0.33", default-features = false, features = ["trace"] }
 rand = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
@@ -54,7 +54,7 @@ thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 toml = "1.1"
 tracing = "0.1"
-tracing-opentelemetry = { version = "0.33", default-features = false }
+tracing-opentelemetry = { version = "0.34", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 url = "2"
@@ -62,6 +62,6 @@ iroh = { version = "=1.1.0", default-features = false, features = ["tls-ring"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 # Minimal feature sets: the client driver builds for wasm32-unknown-emscripten.
 # The server and the native driver transports opt into more in their manifests.
-vgi-rpc = { version = "0.31.4", default-features = false, features = ["macros"] }
-vgi-rpc-client = { version = "0.31.4", default-features = false, features = ["http"] }
-vgi-rpc-iroh = "0.31.4"
+vgi-rpc = { version = "0.32.0", default-features = false, features = ["macros"] }
+vgi-rpc-client = { version = "0.32.0", default-features = false, features = ["http"] }
+vgi-rpc-iroh = "0.32.0"
