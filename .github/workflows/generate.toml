@@ -33,7 +33,7 @@ vendor-version = "3.53"
 
 [[lang.script.validation.configs]]
 service-name = "duckdb"
-vendor-version = "1.5"
+vendor-version = "2.0"
 
 [[lang.script.validation.configs]]
 service-name = "postgresql"

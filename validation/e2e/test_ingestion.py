@@ -361,11 +361,7 @@ def test_sqlite_cancellation_reports_downstream_limitation(sqlite_proxy: Any, sc
         assert cursor.fetchone() == (42,)
 
 
-class StatementCancellationBlocked(RuntimeError):
-    """The pinned Rust manager blocked cancellation behind its execution mutex."""
-
-
-def cancel_running_query(connection: Any, scope: str, *, proxy_statement_timeout: bool = False) -> adbc.AdbcStatusCode:
+def cancel_running_query(connection: Any, scope: str) -> adbc.AdbcStatusCode | None:
     """Interrupt real computation and return the downstream execution status."""
     with connection.cursor() as cursor:
         cursor.adbc_prepare("SELECT sum(sin(i::DOUBLE)) FROM range(1000000000) t(i)")
@@ -393,21 +389,8 @@ def cancel_running_query(connection: Any, scope: str, *, proxy_statement_timeout
             cancel = cursor.adbc_cancel if scope == "statement" else connection.adbc_cancel
             try:
                 cancel()
-            except adbc.OperationalError as error:
+            except adbc.Error:
                 cancellation_failed = True
-                elapsed = time.monotonic() - begin
-                if (
-                    proxy_statement_timeout
-                    and scope == "statement"
-                    and error.status_code == adbc.AdbcStatusCode.IO
-                    and elapsed >= 4.5
-                    and "cancel_statement" in str(error)
-                    and "error sending request" in str(error)
-                ):
-                    raise StatementCancellationBlocked(
-                        "native StatementCancel exceeded the five-second HTTP deadline; "
-                        "pinned Rust driver manager waits for its execution mutex"
-                    ) from None
                 raise
             worker.join(timeout=2)
             assert not worker.is_alive(), "downstream cancellation did not stop computation"
@@ -422,38 +405,26 @@ def cancel_running_query(connection: Any, scope: str, *, proxy_statement_timeout
             # cleanup only; that timeout cannot satisfy the two-second check.
             worker.join(timeout=5)
         assert not rows
-        assert len(errors) == 1 and isinstance(errors[0], adbc.Error)
+        # DuckDB 2.0 executes lazily: interruption can surface from Arrow's
+        # get_next callback as OSError, which has no ADBC status code.
+        assert len(errors) == 1 and isinstance(errors[0], (adbc.Error, OSError))
         execution_error = errors[0]
         assert "interrupt" in str(execution_error).lower()
         cursor.execute("SELECT 42")
         assert cursor.fetchone() == (42,)
-        return execution_error.status_code
+        return execution_error.status_code if isinstance(execution_error, adbc.Error) else None
 
 
-@pytest.mark.parametrize(
-    "scope",
-    [
-        pytest.param(
-            "statement",
-            marks=pytest.mark.xfail(
-                raises=StatementCancellationBlocked,
-                strict=True,
-                reason=(
-                    "Upstream Rust ADBC manager locks the executing statement mutex: "
-                    "https://github.com/apache/arrow-adbc/issues/4817"
-                ),
-            ),
-        ),
-        "connection",
-    ],
-)
+@pytest.mark.parametrize("scope", ["statement", "connection"])
 def test_duckdb_inflight_cancellation_and_reuse(duckdb_proxy: Any, scope: str) -> None:
-    """Check downstream interruption and reuse, with upstream #4817 strictly xfailed."""
+    """Interrupt DuckDB 2.0's lazy Arrow execution and reuse the same statement."""
     with dbapi.connect(
         driver=duckdb_proxy.downstream_driver,
         entrypoint="duckdb_adbc_init",
         autocommit=True,
     ) as direct:
-        direct_status = cancel_running_query(direct, scope)
+        assert cancel_running_query(direct, scope) is None
     with duckdb_proxy.connect() as proxied:
-        assert cancel_running_query(proxied, scope, proxy_statement_timeout=True) == direct_status
+        # The Arrow C stream supplies an error string but no ADBC status;
+        # Grainlift maps this downstream stream failure to INTERNAL.
+        assert cancel_running_query(proxied, scope) == adbc.AdbcStatusCode.INTERNAL

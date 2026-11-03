@@ -25,7 +25,7 @@ from .grainlift import get_quirks
 class TestStatement(BaseTestStatement):
     def test_parameter_execute(self, driver, conn) -> None:
         if driver.name == "grainlift-duckdb":
-            pytest.skip("DuckDB 1.5.5 does not bind multiple parameter rows")
+            pytest.skip("DuckDB 2.0.0 does not bind multiple parameter rows")
         return super().test_parameter_execute(driver, conn)
 
     def test_rows_affected(self, driver, conn) -> None:

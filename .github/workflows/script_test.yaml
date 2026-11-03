@@ -189,7 +189,7 @@ jobs:
         include:
           # I think we only need to test one platform, but we can change that later
           - { platform: linux, arch: amd64, runner: ubuntu-latest, service_name: "sqlite", vendor_version: "3.53", environment: null, aws: false, azure: false, gcloud: false }
-          - { platform: linux, arch: amd64, runner: ubuntu-latest, service_name: "duckdb", vendor_version: "1.5", environment: null, aws: false, azure: false, gcloud: false }
+          - { platform: linux, arch: amd64, runner: ubuntu-latest, service_name: "duckdb", vendor_version: "2.0", environment: null, aws: false, azure: false, gcloud: false }
           - { platform: linux, arch: amd64, runner: ubuntu-latest, service_name: "postgresql", vendor_version: "14", environment: null, aws: false, azure: false, gcloud: false }
     environment: ${{ matrix.environment }}
     permissions:

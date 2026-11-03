@@ -134,7 +134,8 @@ is the configured candidate (archive SHA-256
 `ccf34d7ee8a9af6d7b9c64a864508010f8c9be70afd2b47b3d591d5404b874d8`). It is
 built from grainlift-python 0.4.0 (`5a9d750`, published as `grainlift`, wire
 protocol 0.5) and grainlift-hello-world-python 0.2.0 (`214aad9`), with the
-current regression tests. It installs haybarn-cli, vgi-rpc's `external` extra
+current regression tests. It installs `haybarn-cli==2.0.0rc11` (the published
+Haybarn 2.0 CLI build), vgi-rpc's `external` extra
 and moto, so the Haybarn SQL example and the toolkit's object storage test run
 rather than skipping. It passed the
 [wheel runtime matrix](https://github.com/Query-farm/grainlift/actions/runs/37980465526)

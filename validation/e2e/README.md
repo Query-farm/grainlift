@@ -39,7 +39,7 @@ Install Rust 1.97+, Python 3.13, `uv`, and the downstream driver versions used b
 
 ```sh
 dbc install sqlite=1.12.0
-dbc install duckdb=1.5.5
+dbc install duckdb=2.0.0
 dbc install datafusion=0.27.0
 cargo build --workspace
 
@@ -70,23 +70,24 @@ and uploads JUnit results.
 
 ## Coverage and interpretation
 
-**Known upstream limitation ([ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817)):**
-active statement cancellation through the unmodified pinned Rust ADBC driver
-manager blocks behind execution. One narrow strict expected failure reproduces
-it; connection cancellation of the statement query is tested successfully over
-HTTP. See [the defect and its required fix](KNOWN_FAILURES.md).
+DuckDB 2.0.0 executes lazily through Arrow streams. Both statement and connection
+cancellation over HTTP must interrupt computation promptly and leave the statement
+reusable. The direct Arrow callback reports interruption without an ADBC status;
+Grainlift maps that stream error to `INTERNAL`. The Rust driver manager's
+execution-lock limitation still applies to eager drivers; see
+[ADBC #4817 and transport limitations](KNOWN_FAILURES.md).
 
-**Known DuckDB 1.5.5 limitation ([DuckDB #26213](https://github.com/duckdb/duckdb/issues/26213)):**
-re-executing consumed parameter input without
-a fresh bind crashes the native driver, including when called directly. A second
-strict expected failure runs this case in isolated subprocesses and verifies the
-precise crash. See [downstream failure details](KNOWN_FAILURES.md).
+Re-executing consumed parameter input no longer reproduces the DuckDB 1.5.5 crash
+([DuckDB #26213](https://github.com/duckdb/duckdb/issues/26213)). The subprocess
+regression now requires both direct and proxied execution to survive with matching
+results or errors, and verifies subsequent connection reuse. Neither DuckDB test
+is an expected failure.
 
 - Ingestion modes, empty schemas, temporary tables, exact nullable values,
   independent-client visibility, transactions, schema errors, and reuse.
 - Partial-upload producer failure, cumulative server limits, server shutdown,
   and abrupt client loss with transaction rollback and session reclamation.
-- Real DuckDB connection cancellation and subsequent reuse, alongside SQLite's
+- Real DuckDB statement/connection cancellation and subsequent reuse, alongside SQLite's
   explicit unsupported cancellation responses and continued query completion.
 - Integer extremes, Unicode/NULs, binary, decimals, zoned timestamps, dates,
   dictionaries, lists, structs, and large values against real storage.
@@ -131,11 +132,12 @@ These are short loopback functional and bounded-pressure tests. They do not esta
 reliability, sustained memory stability, every downstream driver's capabilities,
 or successful downstream cancellation where the driver reports `NOT_IMPLEMENTED`.
 The current matrix does not claim prompt statement cancellation on TCP, mTLS,
-or Iroh; [ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817) still
-blocks the downstream cancellation path.
+or Iroh, where calls share a persistent stream. The DuckDB HTTP result does not
+establish cancellation for eager drivers affected by
+[ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817).
 Partition replay after a server restart is deliberately rejected: this suite
 does not claim portable live session state. Error-field comparison cannot prove
 preservation of nonempty SQLSTATE/vendor/details when the chosen backend omits
 those fields; deterministic fault-injection tests cover those populated values.
-DuckDB 1.5.5 reports `-1` (unknown) for a no-match DELETE's affected-row count;
-SQLite reports zero. The tests require exact parity with each direct driver.
+DuckDB 2.0.0 and SQLite report zero for a no-match DELETE's affected-row count.
+The tests require exact parity with each direct driver.

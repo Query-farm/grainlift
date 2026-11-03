@@ -128,14 +128,15 @@ Capabilities ultimately depend on the selected downstream driver. Grainlift
 preserves downstream ADBC errors, including `NOT_IMPLEMENTED`, rather than
 pretending an unsupported operation succeeded.
 
-Active statement cancellation is currently limited by
-[upstream ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817): the Rust
-driver manager blocks cancellation behind the executing statement. Grainlift
-uses unmodified upstream ADBC dependencies and records this as a strict expected
-failure in its [real-driver tests](validation/e2e/KNOWN_FAILURES.md).
-Those tests also record a DuckDB 1.5.5 crash when executing an already-consumed
-parameter binding without rebinding. Native driver crashes terminate the hosting
-server process; see the [known downstream limitations](validation/e2e/KNOWN_FAILURES.md).
+Validation targets DuckDB 2.0.0 and Haybarn CLI 2.0.0rc11 (the published Haybarn
+2.0 CLI build). DuckDB 2.0's lazy Arrow execution permits statement and connection
+cancellation over HTTP, and re-executing consumed parameter input no longer
+reproduces the DuckDB 1.5.5 crash. Both are required regression passes.
+The unmodified Rust driver manager still has an execution-lock limitation for
+eager drivers ([ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817));
+these results do not qualify cancellation on persistent transports. Native
+driver crashes still terminate their hosting server process. See the
+[downstream limitations](validation/e2e/KNOWN_FAILURES.md).
 
 ## Quick start
 

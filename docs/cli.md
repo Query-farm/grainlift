@@ -136,8 +136,8 @@ when the target allows them. See [security](security.md) for the full policy.
 
 ## Connect from DuckDB
 
-DuckDB can load the native Grainlift ADBC client through the published
-[`adbc_scanner` community extension](https://duckdb.org/community_extensions/extensions/adbc_scanner).
+DuckDB 2.0 and Haybarn 2.0 can load the native Grainlift ADBC client through the
+published [`adbc_scanner` extension](https://query.farm/products/extensions/adbc_scanner).
 The separate [Python client wheel](python-driver.md) can supply the native
 library path through `adbc_driver_grainlift.driver_path()` after installation.
 The connection path is DuckDB → ADBC scanner → Grainlift client driver →
@@ -155,47 +155,60 @@ In DuckDB, use an absolute client-library path for your platform (`.dylib` on
 macOS, `.so` on Linux, or `.dll` on Windows) and the server's token-file path:
 
 ```sql
-INSTALL adbc_scanner FROM community;
-LOAD adbc_scanner;
--- Temporary workaround for side-effect folding in extension 7a21dda.
-PRAGMA disable_optimizer;
+SET allow_extension_repositories = 'allowed';
+INSTALL adbc_scanner FROM query_farm;
+LOAD adbc_scanner FROM query_farm;
 
-SET VARIABLE gl = (
-    SELECT adbc_connect({
-        'driver': '/absolute/path/to/libadbc_driver_grainlift.dylib',
-        'entrypoint': 'AdbcDriverGrainliftInit',
-        'grainlift.uri': 'grainlift+http://127.0.0.1:8080',
-        'grainlift.target': 'sqlite',
-        'grainlift.auth.bearer_token': trim(content, chr(10) || chr(13))
-    }) FROM read_text('/absolute/path/to/.grainlift-token')
+SET VARIABLE grainlift_token = (
+    SELECT trim(content, chr(10) || chr(13))
+    FROM read_text('/absolute/path/to/.grainlift-token')
 );
+CREATE SECRET grainlift_client (
+    TYPE adbc,
+    DRIVER '/absolute/path/to/libadbc_driver_grainlift.dylib',
+    URI 'grainlift+http://127.0.0.1:8080',
+    EXTRA_OPTIONS MAP {
+        'grainlift.target': 'sqlite',
+        'grainlift.auth.bearer_token': getvariable('grainlift_token')
+    }
+);
+ATTACH '' AS gl (TYPE adbc, SECRET 'grainlift_client');
 
-SELECT * FROM adbc_scan(getvariable('gl')::BIGINT, 'SELECT 42 AS answer');
-SELECT * FROM adbc_tables(getvariable('gl')::BIGINT);
-CALL adbc_disconnect(getvariable('gl')::BIGINT);
+SELECT * FROM adbc_scan('gl', 'SELECT 42 AS answer', columns := {'answer': 'BIGINT'});
+SELECT * FROM adbc_tables('gl');
+DETACH gl;
 ```
 
-Pass driver-specific options directly in the `adbc_connect` struct.
-`extra_options` is a parameter of `CREATE SECRET (... TYPE adbc, ...)`, not
-an option container for `adbc_connect`.
+Haybarn's signed extension catalog uses `INSTALL adbc_scanner FROM community;
+LOAD adbc_scanner;` instead of the three repository statements above.
+DuckDB's `query_farm` repository verifies extension signatures; unsigned loading
+is not needed. Use extension builds matching the engine version.
+
+Pass string driver options in a secret's `EXTRA_OPTIONS` map, or typed options
+directly to `ATTACH`. The extension uses the attachment alias in its functions;
+the old `adbc_connect`/`adbc_disconnect` handle API has been removed. Use
+`BEGIN`, `COMMIT`, and `ROLLBACK` for transactions.
 The token is read from the file instead of embedded in SQL history. The SQL
 string given to `adbc_scan` runs on the server; its result can be joined to local
 DuckDB tables or files. Use `CALL adbc_execute(...)` for server-side DDL and DML;
-adbc_scanner runs connection commands (`adbc_execute`, `adbc_disconnect`, ...)
-as `CALL` table functions.
+SQLite cannot describe arbitrary queries through ADBC, so `adbc_scan` needs the
+explicit `columns` declaration shown above; `adbc_scan_table` can use table
+metadata. `EXPLAIN CALL adbc_execute(...)` does not execute the write.
 
-Validated on EC2 Linux AArch64 with DuckDB 1.5.5, community extension `7a21dda`,
+The earlier handle-based recipe was validated on EC2 Linux AArch64 with DuckDB
+1.5.5, community extension `7a21dda`,
 and the CLI wheel from commit `4b3ac43`: a 10,000-row scan, local join, table
 discovery, insert, persisted-write check after shutdown, and the token-file SQL
-example above all passed. This check used the published extension without
+example all passed. This historical check used the published extension without
 rebuilding DuckDB or the extension.
 
 Further lock-contention tests found a bug in published extension `7a21dda`:
 `EXPLAIN SELECT adbc_execute(...)` executed a write, and a forced SQLite lock
 timeout took approximately three times the configured busy timeout. Disabling
 the DuckDB optimizer prevented the `EXPLAIN` write and restored the expected
-timeout. The recipe includes that temporary session-wide workaround pending an
-extension fix; it disables query optimizations in that DuckDB session.
+timeout. The DuckDB 2.0 recipe uses the newer attachment API and does not need
+that workaround. The updated contention harness verifies rollback/retry,
+connection reuse, and `EXPLAIN` without writes with the optimizer enabled.
 
 ## Configuration and persistent installation
 

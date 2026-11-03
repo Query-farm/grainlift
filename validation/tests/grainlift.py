@@ -127,13 +127,13 @@ class GrainliftDuckdbQuirks(model.DriverQuirks):
     driver = "adbc_driver_grainlift"
     driver_name = "Grainlift ADBC Driver"
     vendor_name = "duckdb"
-    vendor_version = re.compile(r"v1\.5\..*")
-    short_version = "1.5"
+    vendor_version = re.compile(r"v2\.0\..*")
+    short_version = "2.0"
     features = model.DriverFeatures(
         connection_get_table_schema=True,
         connection_get_statistics=True,
         connection_transactions=True,
-        # DuckDB 1.5.5 metadata differs from Foundry's generic hierarchy.
+        # DuckDB metadata differs from Foundry's generic hierarchy.
         get_objects=False,
         statement_bind=True,
         statement_bulk_ingest=True,
@@ -173,7 +173,7 @@ class GrainliftDuckdbQuirks(model.DriverQuirks):
                     {
                         "skip": (
                             "generic Foundry SQL/batch expectations do not model "
-                            "DuckDB 1.5.5 behavior"
+                            "DuckDB behavior"
                         )
                     },
                 )

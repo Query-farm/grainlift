@@ -17,6 +17,48 @@
 
 # Validation results
 
+## DuckDB 2.0 and Haybarn 2.0 migration — 2026-11-03
+
+Validated locally on macOS 15.6.1 ARM64 with Rust 1.97.1, Python 3.13.16,
+ADBC driver manager 1.12.0, PyArrow 25.0.1, DuckDB 2.0.0 (both the `dbc`
+ADBC library and Python package), and Haybarn CLI 2.0.0rc11. The Haybarn package
+reports DuckDB v2.0.0; its published package version still carries the RC suffix.
+[Machine-readable results](conformance/results/2026-11-03-duckdb-2/summary.json)
+and [Iroh contention evidence](conformance/results/2026-11-03-duckdb-2/iroh-contention.json)
+record this run separately from the older benchmark results.
+
+- Focused end-to-end suite: **28 passed**, no skips or expected failures. This
+  includes DuckDB ingestion, metadata, and prepared rebinding over HTTP, TCP,
+  mTLS, and Iroh; HTTP statement/connection cancellation and reuse; and safe
+  re-execution of consumed bindings. The two historical DuckDB expected-failure
+  markers have been removed. No-match DELETE now reports zero affected rows.
+- HTTP C-ABI smoke: **passed**. Driver Foundry against DuckDB 2.0.0:
+  **141 passed, 190 skipped, 3 expected failures**. The existing Foundry limits
+  remain explicit, including unsupported multi-row binding and ingestion error
+  differences. The pinned Foundry revision's `duckdb<2` dependency is overridden
+  to 2.0.0 without changing the ADBC/PyArrow baseline.
+- Published `adbc_scanner` builds `02ccfac995` (DuckDB `query_farm`) and
+  `a956fc85ad` (Haybarn `community`) use named attachments. The updated CLI
+  token-file recipe and sibling hello-world SQL example passed. The latter used
+  the local `grainlift-python` SDK matching protocol 0.5.0; its older locked
+  published SDK advertises protocol 0.4.0 and cannot serve this native client.
+- Two independent Iroh clients passed lock contention, rollback/retry, 50 further
+  updates, and `EXPLAIN` without a write, with the optimizer enabled. The 3,000 ms
+  busy timeout returned in 3.150 seconds, commit unblocked the waiting writer,
+  and the server shut down cleanly. This is a functional check, not a load test.
+- Rust: **166 passed, 2 ignored**, with formatting and Clippy clean. Release
+  artifact tests: **40 passed**. End-to-end Ruff, formatting, mypy, and pydoclint
+  checks passed, as did shell syntax, ShellCheck, and Python compilation.
+
+The full end-to-end run, using the CI-pinned DataFusion 0.27.0, finished with
+**134 passed, 2 Linux-only skips, and 1 unrelated failure**:
+`test_process_group_cleanup[False]` encounters macOS `PermissionError` from
+`os.killpg(group, 0)` after sending SIGTERM. That unchanged supervisor test
+prevents claiming a completely green full suite on this host. Earlier runs
+with local DataFusion 0.25.0 and concurrent release compilation also encountered
+unsupported partition operations and timing failures; the final run used 0.27.0
+after compilation finished.
+
 ## HTTP connection handshake and backend statistics — 2026-10-07
 
 Protocol 0.5.0 negotiates HTTP capabilities on the first RPC and reports

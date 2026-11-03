@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-03",
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "rust": "1.97.1",
+  "python": "3.13.16",
+  "adbc_driver_manager": "1.12.0",
+  "pyarrow": "25.0.1",
+  "duckdb": "2.0.0",
+  "haybarn_cli": "2.0.0rc11",
+  "duckdb_adbc_scanner": "02ccfac995",
+  "haybarn_adbc_scanner": "a956fc85ad",
+  "results": {
+    "focused_e2e": {
+      "tests": 28,
+      "failed": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "passed": 28
+    },
+    "foundry_http": {
+      "tests": 334,
+      "failed": 0,
+      "skipped": 190,
+      "xfailed": 3,
+      "passed": 141
+    },
+    "full_e2e": {
+      "passed": 134,
+      "skipped": 2,
+      "failed": 1,
+      "failure": "test_process_group_cleanup[False]: macOS PermissionError from os.killpg(group, 0); unchanged supervisor test"
+    }
+  },
+  "smoke_http": "passed",
+  "haybarn_hello_world": "passed with the local grainlift-python SDK (protocol 0.5.0)",
+  "duckdb_documented_sql_recipe": "passed",
+  "rust_tests": {
+    "passed": 166,
+    "ignored": 2,
+    "failed": 0
+  },
+  "release_artifact_tests": {
+    "passed": 40,
+    "failed": 0
+  },
+  "source_sha256": {
+    "validation/pyproject.toml": "b4370d7f542144924c8fad449abe57838f322136f202a479368433118f540d52",
+    "validation/uv.lock": "cf0f7d4694eb6fa93368fbed97b2c81f70034441ed971a752eedb557756d84e9",
+    "validation/release_bundle.py": "579df1498065c6b2afd219535f3b5020e0acd76be9858e64d7aef0071f05a259",
+    "validation/e2e/test_downstream_failures.py": "7196035a343d3d6ac14386d6f4da85870b9b850f78dc4d6583d85425b2c8fc63",
+    "validation/e2e/test_ingestion.py": "7016185b0c33d0d6491153dcd1b61d98681c55eb6972dbf2af5fe83502e8b2b5",
+    "validation/e2e/test_statement_lifecycle.py": "50760be61f2fa60cef5edcbfd3bc42d2db07a61de96944225300d81a2bdb40e4",
+    "validation/e2e/test_transports.py": "084d7bf3dc5e4980e8f1902628381f308daa1f96c7e26d7a5823eb317048fb00",
+    "validation/iroh_sqlite_contention.py": "2d38561c21c861ad21e2e45501462a80f88afb9748c81ef94da3a192a061e705",
+    "docs/cli.md": "57eed5c1c4bef5958871e01787b938553bf09f9b9fe1dc3b6f9ecf1b98bbc99e"
+  },
+  "datafusion": "0.27.0"
+}

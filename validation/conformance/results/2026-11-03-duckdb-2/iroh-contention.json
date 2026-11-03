@@ -1,0 +1,83 @@
+{
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "duckdb": "2.0.0",
+  "extension": "02ccfac995",
+  "transport": "iroh_direct",
+  "clients": 2,
+  "busy_timeout_ms": 3000,
+  "watchdog_seconds": 12,
+  "optimizer_disabled": false,
+  "status": "passed",
+  "cases": [
+    {
+      "case": "commit_unblocks_waiting_writer",
+      "commit": {
+        "ok": true,
+        "rows": [],
+        "seconds": 0.007406374905258417
+      },
+      "waiting_writer": {
+        "ok": true,
+        "rows": [
+          [
+            1
+          ]
+        ],
+        "seconds": 0.37809091713279486
+      }
+    },
+    {
+      "case": "busy_timeout_then_connection_reuse",
+      "exceeds_single_busy_timeout": false,
+      "ok": false,
+      "locked": true,
+      "exception": "IOException",
+      "seconds": 3.149508667178452
+    },
+    {
+      "case": "opposite_order_upgrade_rollback_retry",
+      "ok": false,
+      "locked": true,
+      "exception": "IOException",
+      "seconds": 0.011911999899893999
+    },
+    {
+      "case": "post_contention_50_updates",
+      "rows": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ]
+    },
+    {
+      "case": "explain_must_not_execute_write",
+      "unexpected_write": false,
+      "before": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ],
+      "after": [
+        [
+          1,
+          28
+        ],
+        [
+          2,
+          29
+        ]
+      ]
+    }
+  ],
+  "server_exit_code": 0
+}

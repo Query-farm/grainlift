@@ -74,7 +74,10 @@ python validation/iroh_sqlite_contention.py \
   --output /path/to/contention.json
 ```
 
-This requires `duckdb`, `cryptography`, and installed server/client binaries.
+This requires `duckdb==2.0.0`, `cryptography`, and installed server/client binaries.
+It installs the signed `adbc_scanner` extension from `query_farm` and uses named
+attachments with `BEGIN`/`COMMIT`/`ROLLBACK`. Arbitrary SQLite query scans declare
+their result columns explicitly. The default run keeps the optimizer enabled.
 It creates a temporary server and WAL-mode SQLite database, authorizes two
 distinct Iroh identities, and drives each from its own Python process. Iroh
 relays are disabled and the clients use a loopback direct-address hint, so this
@@ -117,7 +120,7 @@ Python ADBC driver manager
 
   ```sh
   dbc install "sqlite=1.12.0" --level user
-  dbc install "duckdb=1.5.5" --level user
+  dbc install "duckdb=2.0.0" --level user
   dbc install "postgresql=1.12.0" --level user
   dbc install "mysql=0.4.0" --level user
   dbc install "flightsql=1.9.0" --level user
@@ -132,6 +135,12 @@ with `ADBC_<BACKEND>_DRIVER`. PostgreSQL uses `ADBC_POSTGRESQL_URI` when supplie
 otherwise the script creates a disposable local cluster with `initdb` and
 `pg_ctl`. Driver installation is deliberately separate from test execution so
 CI can cache or provision pinned artifacts.
+
+The Foundry environment pins the Python `duckdb` package to 2.0.0 with a uv
+override: the reviewed Foundry revision still declares `duckdb<2`. This keeps
+its ADBC driver manager and PyArrow versions unchanged while testing DuckDB 2.0.
+Haybarn release validation pins `haybarn-cli==2.0.0rc11`; that distribution
+reports DuckDB v2.0.0 but retains an RC package version.
 
 ## Commands
 

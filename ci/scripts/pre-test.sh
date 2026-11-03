@@ -31,7 +31,7 @@ case "$service_name" in
     driver="sqlite=1.12.0"
     ;;
   duckdb)
-    driver="duckdb=1.5.5"
+    driver="duckdb=2.0.0"
     ;;
   postgresql)
     driver="postgresql=1.12.0"

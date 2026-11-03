@@ -19,7 +19,7 @@
 
 ## Active statement cancellation: Apache Arrow ADBC #4817
 
-The real DuckDB test demonstrates an unresolved upstream limitation tracked in
+The DuckDB 1.5.5 regression demonstrated an upstream limitation tracked in
 [Apache Arrow ADBC #4817](https://github.com/apache/arrow-adbc/issues/4817):
 
 1. Direct `AdbcStatementCancel` interrupts an active DuckDB aggregate promptly.
@@ -28,23 +28,27 @@ The real DuckDB test demonstrates an unresolved upstream limitation tracked in
 3. `AdbcStatementCancel` through Grainlift times out instead of reaching the
    executing downstream statement.
 
-The pinned Apache Rust driver manager (`616acfdfcea9b66956fdb3d11437b6cf24edbc39`)
+The Apache Rust driver manager originally tested (`616acfdfcea9b66956fdb3d11437b6cf24edbc39`)
 holds its statement mutex throughout `StatementExecuteQuery`. Its
 `StatementCancelHandle::try_cancel` takes that same mutex. Grainlift's actor
 cancellation path bypasses the operation queue, but the downstream manager then
 blocks it. Apache `main` at `c942d481c6e083040c68676e3dd454dad89503e9` still contains
 this locking on 2026-09-27; updating the pin alone is insufficient.
 
-`test_duckdb_inflight_cancellation_and_reuse[statement]` executes the direct and
-proxied paths on every run. Only the reproduced proxy cancellation timeout is
-classified as an expected failure. The marker is strict: an unexpected pass
-fails CI and requires removing it. Other exceptions and failed assertions remain
-failures. Connection cancellation and SQLite's explicit `NOT_IMPLEMENTED`
-responses are tested separately, without expected-failure markers.
+DuckDB 2.0.0 changes the exercised path: computation happens lazily in Arrow
+stream reads, after `StatementExecuteQuery` releases the statement mutex.
+`test_duckdb_inflight_cancellation_and_reuse` now requires both statement and
+connection cancellation over HTTP to finish within two seconds, interrupt the
+query, and permit statement reuse. The expected-failure marker has been removed.
+The direct Arrow callback produces `OSError` with an interruption message and no
+ADBC status code. Grainlift maps that downstream stream error to `INTERNAL`;
+the test requires that specific mapping. SQLite's explicit `NOT_IMPLEMENTED`
+responses are tested separately.
 
 Grainlift uses the unmodified pinned upstream `adbc_driver_manager` and `adbc_ffi`
-crates; there are no local ADBC dependency patches. Keep this strict expected
-failure until an upstream fix is integrated and the real-driver test passes.
+crates; there are no local ADBC dependency patches. The passing DuckDB 2.0 test
+does not establish an upstream fix for drivers that execute eagerly while holding
+the statement mutex.
 
 There is no production workaround in this change. Substituting connection
 cancellation could interrupt other statements and would change ADBC semantics.
@@ -59,11 +63,9 @@ also serializes calls on its primary stream, which can delay a cancellation
 request behind an active call. That separate Grainlift transport limitation is
 not fixed by upstream #4817 and is not qualified by this HTTP test.
 
-Do not treat a green suite containing this expected failure as qualification for
-working statement cancellation. The regression is a recorded defect, not a
-downstream capability skip.
+Do not generalize the DuckDB HTTP result to other drivers or transports.
 
-## DuckDB 1.5.5: re-executing consumed parameter input crashes the driver
+## Historical DuckDB 1.5.5 consumed-binding crash
 
 Tracked upstream as [DuckDB #26213](https://github.com/duckdb/duckdb/issues/26213).
 
@@ -74,15 +76,15 @@ Grainlift terminates the server hosting that native driver. SQLite 1.12 instead
 returns `INVALID_STATE` and remains usable. Applications should bind fresh
 parameter input before each execution.
 
-`test_consumed_binding_does_not_crash_native_driver[duckdb]` retains this as a
-strict expected failure. Both first query results must be verified before the
-second call; only matching `SIGSEGV` exits in the direct driver process and
-isolated proxy server, plus the resulting client `IO` status, trigger the
-expected failure. A timeout, another signal, or unrelated exception fails the
-test. The subprocess probes have deadlines and disable core dumps. The SQLite
-case requires safe rejection, a live server, and successful subsequent queries.
+The crash no longer reproduces with DuckDB 2.0.0.
+`test_consumed_binding_does_not_crash_native_driver[duckdb]` now requires a normal
+exit and matching direct/proxy results or errors, followed by a successful query
+on a new connection to the surviving server. Both first query results must be
+verified before the second call. Crashes and timeouts fail the test; there is no
+expected-failure marker. Subprocess probes still have deadlines and disable core
+dumps. SQLite continues to require `INVALID_STATE` and successful reuse.
 
-No local driver patch or upstream fix is assumed. This is a separate downstream
+No local driver patch is applied. This was a separate downstream
 defect from #4817. Because drivers run inside the
 server process, a native driver crash affects sessions in that process. These
 tests do not establish containment between targets sharing one server.

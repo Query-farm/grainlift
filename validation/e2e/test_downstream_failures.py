@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import multiprocessing
 import resource
-import signal
 from typing import TYPE_CHECKING, Any
 
 import adbc_driver_manager as manager
@@ -18,10 +17,6 @@ from adbc_driver_manager import dbapi
 
 if TYPE_CHECKING:
     from multiprocessing.connection import Connection
-
-
-class ConsumedBindingCrash(RuntimeError):
-    """DuckDB 1.5.5 segfaults when executing an already-consumed parameter binding."""
 
 
 def repeat_binding(driver: str, entrypoint: str, options: dict[str, Any], report: Connection) -> None:
@@ -73,20 +68,7 @@ def probe(driver: str, entrypoint: str, options: dict[str, Any]) -> tuple[int, l
         process.close()
 
 
-@pytest.mark.parametrize(
-    "backend",
-    [
-        "sqlite",
-        pytest.param(
-            "duckdb",
-            marks=pytest.mark.xfail(
-                raises=ConsumedBindingCrash,
-                strict=True,
-                reason=("DuckDB 1.5.5 segfaults on a consumed binding: https://github.com/duckdb/duckdb/issues/26213"),
-            ),
-        ),
-    ],
-)
+@pytest.mark.parametrize("backend", ["sqlite", "duckdb"])
 def test_consumed_binding_does_not_crash_native_driver(proxy_factory: Any, backend: str) -> None:
     """Require safe rejection or completion instead of crashing an executing process."""
     core_limit = resource.getrlimit(resource.RLIMIT_CORE)
@@ -109,12 +91,6 @@ def test_consumed_binding_does_not_crash_native_driver(proxy_factory: Any, backe
     )
     assert direct_reports[0] == proxy_reports[0] == "first_result_verified"
     assert proxy_exit == 0
-    if backend == "duckdb" and direct_exit == -signal.SIGSEGV:
-        assert direct_reports == ["first_result_verified"]
-        assert proxy_reports == ["first_result_verified", ("error", int(manager.AdbcStatusCode.IO))]
-        assert proxy.process is not None
-        assert proxy.process.wait(timeout=2) == -signal.SIGSEGV
-        raise ConsumedBindingCrash("the direct DuckDB driver and the proxy's downstream host both received SIGSEGV")
     assert direct_exit == 0
     assert proxy_reports == direct_reports
     if backend == "sqlite":

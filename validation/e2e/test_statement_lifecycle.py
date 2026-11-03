@@ -80,8 +80,8 @@ def test_affected_rows_match_direct_driver(proxy_factory: Any, backend: str) -> 
             counts.append(actual)
             statement.set_sql_query("SELECT id, value FROM affected ORDER BY id")
             assert read(statement).to_pylist() == [{"id": 1, "value": 99}, {"id": 2, "value": 99}]
-    # DuckDB 1.5.5 reports unknown (-1) for a no-match DELETE; SQLite reports zero.
-    assert counts[0] == [3, 2, 1, -1 if backend == "duckdb" else 0]
+    # DuckDB 2.0 now reports zero for a no-match DELETE, matching SQLite.
+    assert counts[0] == [3, 2, 1, 0]
     assert counts[1] == counts[0]
 
 

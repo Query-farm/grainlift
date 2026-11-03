@@ -17,9 +17,10 @@ TRANSPORTS = ("http", "tcp", "mtls", "iroh")
 
 
 @pytest.mark.parametrize("transport", TRANSPORTS)
-def test_ingestion_prepared_rebind_and_metadata(proxy_factory: Any, transport: str) -> None:
+@pytest.mark.parametrize("backend", ["sqlite", "duckdb"])
+def test_ingestion_prepared_rebind_and_metadata(proxy_factory: Any, transport: str, backend: str) -> None:
     """Round-trip nulls, binary values, streams, and prepared parameters through each transport."""
-    proxy = proxy_factory(transport=transport)
+    proxy = proxy_factory(backend, transport=transport)
     batch = pa.record_batch(
         [
             pa.array([1, 2, 3], type=pa.int64()),

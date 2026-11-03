@@ -28,6 +28,11 @@ foundry = [
   "adbc-drivers-validation @ git+https://github.com/adbc-drivers/validation.git@3c67c7b9ea9a3e4ab714bad828e373b614c41910",
 ]
 
+[tool.uv]
+# Keep the reviewed Foundry revision and ADBC/PyArrow versions while exercising
+# DuckDB 2.0; this revision's transitive constraint still requires DuckDB <2.
+override-dependencies = ["duckdb==2.0.0"]
+
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
